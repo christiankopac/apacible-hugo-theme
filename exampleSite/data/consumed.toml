@@ -1,0 +1,245 @@
+# Combined collection of all consumed media (movies and books)
+# For display as tiny posters on the consumed page
+
+# MOVIES
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "My Neighbor Totoro"
+year = "1988"
+director = "Hayao Miyazaki"
+rating = 5
+content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Gentle and heartwarming tale of two sisters who encounter friendly forest spirits in rural Japan, sed do eiusmod tempor incididunt."
+footer = "Watched Jan 2024"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "The Secret Life of Walter Mitty"
+year = "2013"
+director = "Ben Stiller"
+rating = 4
+content = "Duis aute irure dolor in reprehenderit. Inspiring journey of self-discovery through breathtaking landscapes, in voluptate velit esse cillum dolore. Peaceful exploration of finding oneself."
+footer = "Watched Jan 2024"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "Amélie"
+year = "2001"
+director = "Jean-Pierre Jeunet"
+rating = 5
+content = "Excepteur sint occaecat cupidatat non proident. Whimsical tale of a shy waitress who dedicates her life to helping others, sunt in culpa qui officia deserunt. Charming and uplifting Parisian fairy tale."
+footer = "Watched Dec 2023"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "Paterson"
+year = "2016"
+director = "Jim Jarmusch"
+rating = 5
+content = "Sed ut perspiciatis unde omnis iste natus error. Meditative portrait of a bus driver and poet living a routine life in New Jersey, sit voluptatem accusantium. Finds beauty in the everyday and mundane."
+footer = "Watched Nov 2023"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "Kiki's Delivery Service"
+year = "1989"
+director = "Hayao Miyazaki"
+rating = 5
+content = "Totam rem aperiam eaque ipsa quae ab illo. Coming-of-age story about a young witch finding her place in the world, inventore veritatis et quasi architecto. Gentle and encouraging narrative about independence."
+footer = "Watched Oct 2023"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "Little Forest"
+year = "2018"
+director = "Yim Soon-rye"
+rating = 4
+content = "Nemo enim ipsam voluptatem quia voluptas. Serene story of a young woman returning to her countryside home, sit aspernatur aut odit aut fugit. Focuses on cooking, nature, and finding peace through simplicity."
+footer = "Watched Sep 2023"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "A River Runs Through It"
+year = "1992"
+director = "Robert Redford"
+rating = 5
+content = "Neque porro quisquam est qui dolorem ipsum. Contemplative drama about family, fly fishing, and the Montana wilderness, quia dolor sit amet consectetur. Beautiful cinematography and meditative pacing."
+footer = "Watched Aug 2023"
+
+[[collection]]
+type = "art_simple"
+category = "movies"
+img = "/img/placeholder-poster.jpg"
+link = "https://example.com"
+title = "The Straight Story"
+year = "1999"
+director = "David Lynch"
+rating = 5
+content = "Adipisci velit sed quia non numquam eius. True story of an elderly man's journey across Iowa on a riding lawnmower, modi tempora incidunt ut labore. Slow-paced and deeply moving road movie about reconciliation."
+footer = "Watched Jul 2023"
+
+# BOOKS
+[[collection]]
+type = "art"
+category = "books"
+img = "/img/placeholder-poster.jpg"
+title = "De Finibus Bonorum et Malorum"
+link = "https://example.com"
+author = "Marcus Tullius Cicero"
+year = "45 BC"
+content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+rating = 5
+footer = "Read Jan 2024"
+date_read = "2024-01"
+
+[[collection]]
+type = "art"
+category = "books"
+img = "/img/placeholder-poster.jpg"
+title = "Sed Ut Perspiciatis"
+link = "https://example.com"
+author = "Unde Omnis Iste"
+year = "1914"
+content = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit."
+rating = 4
+footer = "Read Dec 2023"
+date_read = "2023-12"
+
+[[collection]]
+type = "art"
+category = "books"
+img = "/img/placeholder-poster.jpg"
+title = "At Vero Eos"
+link = "https://example.com"
+author = "Et Accusamus"
+year = "1932"
+content = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga."
+rating = 5
+footer = "Read Nov 2023"
+date_read = "2023-11"
+
+[[collection]]
+type = "art"
+category = "books"
+img = "/img/placeholder-poster.jpg"
+title = "Temporibus Autem"
+link = "https://example.com"
+author = "Quibusdam Et Aut"
+year = "1905"
+content = "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
+rating = 4
+footer = "Read Oct 2023"
+date_read = "2023-10"
+
+[[collection]]
+type = "art"
+category = "books"
+img = "/img/placeholder-poster.jpg"
+title = "Nam Libero Tempore"
+link = "https://example.com"
+author = "Soluta Nobis Est"
+year = "1895"
+content = "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae."
+rating = 5
+footer = "Read Sep 2023"
+date_read = "2023-09"
+
+# MUSIC
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "Artaud"
+link = "https://example.com"
+artist = "Pescado Rabioso"
+year = "1973"
+label = "Talent/Microfón"
+content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Seminal album from Luis Alberto Spinetta's Pescado Rabioso, sed do eiusmod tempor incididunt ut labore. Considered one of the most important albums in Argentine rock history, featuring complex arrangements and poetic lyrics."
+rating = 5
+footer = "Listened Jan 2024"
+
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "Almendra"
+link = "https://example.com"
+artist = "Almendra"
+year = "1969"
+label = "RCA Victor"
+content = "Duis aute irure dolor in reprehenderit in voluptate velit. Debut album from one of Argentina's most influential rock bands, featuring psychedelic and progressive rock elements. Excepteur sint occaecat cupidatat non proident sunt in culpa."
+rating = 5
+footer = "Listened Dec 2023"
+
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "La Máquina de Hacer Pájaros"
+link = "https://example.com"
+artist = "La Máquina de Hacer Pájaros"
+year = "1976"
+label = "Talent/Microfón"
+content = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem. Progressive rock masterpiece from Charly García's supergroup, accusantium doloremque laudantium. Features complex time signatures and innovative keyboard work that defined Argentine progressive rock."
+rating = 5
+footer = "Listened Nov 2023"
+
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "Sui Generis"
+link = "https://example.com"
+artist = "Sui Generis"
+year = "1972"
+label = "Talent/Microfón"
+content = "Totam rem aperiam eaque ipsa quae ab illo inventore veritatis. Acoustic rock duo's debut featuring Charly García and Nito Mestre, et quasi architecto beatae vitae dicta sunt explicabo. Intimate and poetic songwriting that resonated with a generation."
+rating = 4
+footer = "Listened Oct 2023"
+
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "Invisible"
+link = "https://example.com"
+artist = "Invisible"
+year = "1974"
+label = "Columbia"
+content = "Nemo enim ipsam voluptatem quia voluptas sit aspernatur. Avant-garde rock masterpiece featuring Luis Alberto Spinetta's experimental period, aut odit aut fugit sed quia consequuntur. Blends jazz fusion with psychedelic rock in groundbreaking ways."
+rating = 5
+footer = "Listened Sep 2023"
+
+[[collection]]
+type = "art"
+category = "music"
+img = "/img/placeholder-poster.jpg"
+title = "Desatormentándonos"
+link = "https://example.com"
+artist = "Crucis"
+year = "1975"
+label = "Philips"
+content = "Magni dolores eos qui ratione voluptatem sequi nesciunt. Symphonic progressive rock with classical influences, neque porro quisquam est qui dolorem. Features intricate instrumental passages and epic compositions that showcase technical virtuosity."
+rating = 5
+footer = "Listened Aug 2023"
+

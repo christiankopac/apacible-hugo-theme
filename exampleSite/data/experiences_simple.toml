@@ -1,0 +1,20 @@
+[[collection]]
+type = "card_simple"
+icon = ""
+title = "Acme Corporation"
+content = "Senior Software Engineer"
+date = "2022-present"
+
+[[collection]]
+type = "card_simple"
+icon = ""
+title = "Tech Solutions Inc"
+content = "Full Stack Developer"
+date = "2019-2022"
+
+[[collection]]
+type = "card_simple"
+icon = ""
+title = "Digital Innovations Ltd"
+content = "Junior Developer"
+date = "2017-2019"

@@ -1,0 +1,41 @@
+[[collection]]
+type = "card_simple"
+title = "Project Alpha"
+link = "https://example.com"
+content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+date = "2025"
+
+[[collection]]
+type = "card_simple"
+title = "Project Beta"
+link = "https://example.com"
+content = "Sed ut perspiciatis unde omnis iste natus error"
+date = "2024"
+
+[[collection]]
+type = "card_simple"
+title = "Project Gamma"
+link = "https://example.com"
+content = "Nemo enim ipsam voluptatem quia voluptas sit aspernatur"
+date = "2023"
+
+[[collection]]
+type = "card_simple"
+title = "Project Delta"
+link = "https://example.com"
+content = "Duis aute irure dolor in reprehenderit in voluptate"
+date = "2022"
+
+[[collection]]
+type = "card_simple"
+title = "Project Epsilon"
+link = "https://example.com"
+content = "Excepteur sint occaecat cupidatat non proident"
+date = "2021"
+
+[[collection]]
+type = "card_simple"
+title = "Project Zeta"
+link = "https://example.com"
+content = "Totam rem aperiam eaque ipsa quae ab illo inventore"
+date = "2020"
