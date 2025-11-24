@@ -16,7 +16,12 @@
         </div>
         <label class="newsletter-consent-label">
           <input type="checkbox" name="consent" autocomplete="off" required />
-          <span>{{ i18n "consent" | default "Consent" }}</span>
+          <span>
+            {{ i18n "newsletterConsent" | default "I consent to the processing of my name and email address for the purpose of receiving the newsletter." }}{{ i18n "newsletterConsentWithdraw" | default "I can withdraw my consent at any time." }}
+            {{ if .Site.Params.privacy_policy_url }}
+            {{ i18n "newsletterConsentSee" | default "See the" }} <a href="{{ .Site.Params.privacy_policy_url | relLangURL }}" target="_blank" rel="noopener">{{ i18n "privacyPolicy" | default "Privacy Policy" }}</a>.
+            {{ end }}
+          </span>
         </label>
         <button type="submit">{{ i18n "send" | default "Send" }}</button>
       </div>

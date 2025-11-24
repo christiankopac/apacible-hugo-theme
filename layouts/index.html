@@ -46,30 +46,74 @@
     <div class="home-intro">
       {{ $avatar := $.Params.avatar }}
       {{ if $avatar }}
-      <img src="{{ $avatar | relURL }}" alt="{{ . }}" class="intro-avatar">
-      {{ else }}
-      <div class="intro-avatar-container">
-        {{/* Regular avatar - use static optimized versions */}}
-        <picture class="intro-avatar-picture">
-          <source srcset="{{ "img/avatar.avif" | relURL }}" type="image/avif">
-          <source srcset="{{ "img/avatar.webp" | relURL }}" type="image/webp">
-          <img src="{{ "img/avatar.webp" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
-        </picture>
-        {{/* Dithered avatar - process through Hugo for AVIF/WebP */}}
-        {{ $ditheredAvatar := resources.Get "img/avatar_dithered.png" }}
-        {{ if $ditheredAvatar }}
-          {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
-          {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
-          <picture class="intro-avatar-picture-dithered">
-            <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
-            <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
-            <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
+        {{/* Custom avatar - try to find dithered version */}}
+        {{ $avatarPath := strings.TrimPrefix "/" $avatar }}
+        {{ $ext := path.Ext $avatarPath }}
+        {{ $baseName := strings.TrimSuffix $ext $avatarPath }}
+        {{ $ditheredPath := printf "%s_dithered.png" $baseName }}
+        {{ $ditheredAvatar := resources.Get $ditheredPath }}
+        {{ $avatarResource := resources.Get $avatarPath }}
+        <div class="intro-avatar-container">
+          {{/* Original avatar - hidden by default, shown on hover */}}
+          <picture class="intro-avatar-picture">
+            {{ if $avatarResource }}
+              {{ $avatarAVIF := $avatarResource.Resize (printf "%dx avif q85" $avatarResource.Width) }}
+              {{ $avatarWebP := $avatarResource.Resize (printf "%dx webp q85" $avatarResource.Width) }}
+              <source srcset="{{ $avatarAVIF.RelPermalink }}" type="image/avif">
+              <source srcset="{{ $avatarWebP.RelPermalink }}" type="image/webp">
+              <img src="{{ $avatarWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-original" width="{{ $avatarWebP.Width }}" height="{{ $avatarWebP.Height }}">
+            {{ else }}
+              <img src="{{ $avatar | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
+            {{ end }}
           </picture>
+          {{/* Dithered avatar - visible by default with blend mode */}}
+          {{ if $ditheredAvatar }}
+            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
+            {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
+            <picture class="intro-avatar-picture-dithered">
+              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
+              <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
+              <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
+            </picture>
+          {{ else }}
+            {{/* Fallback: try static dithered file */}}
+            {{ $staticDitheredPath := printf "/%s" $ditheredPath }}
+            <img src="{{ $staticDitheredPath | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" onerror="this.style.display='none'">
+          {{ end }}
+        </div>
+      {{ else }}
+        {{/* Check if avatar images exist as resources */}}
+        {{ $avatarWebP := resources.Get "img/avatar.webp" }}
+        {{ $avatarAVIF := resources.Get "img/avatar.avif" }}
+        {{ $ditheredAvatar := resources.Get "img/avatar_dithered.png" }}
+        {{ if or $avatarWebP $avatarAVIF $ditheredAvatar }}
+        <div class="intro-avatar-container">
+          {{/* Regular avatar - use static optimized versions */}}
+          <picture class="intro-avatar-picture">
+            <source srcset="{{ "img/avatar.avif" | relURL }}" type="image/avif">
+            <source srcset="{{ "img/avatar.webp" | relURL }}" type="image/webp">
+            <img src="{{ "img/avatar.webp" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
+          </picture>
+          {{/* Dithered avatar - process through Hugo for AVIF/WebP */}}
+          {{ if $ditheredAvatar }}
+            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
+            {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
+            <picture class="intro-avatar-picture-dithered">
+              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
+              <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
+              <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
+            </picture>
+          {{ else }}
+            {{/* Fallback to static file if resource not found */}}
+            <img src="{{ "img/avatar_dithered.png" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered">
+          {{ end }}
+        </div>
         {{ else }}
-          {{/* Fallback to static file if resource not found */}}
-        <img src="{{ "img/avatar_dithered.png" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered">
+        {{/* Fallback to letter avatar if no images exist */}}
+        <div class="intro-avatar-container intro-avatar-letter">
+          <span class="intro-avatar-letter-text">{{ substr . 0 1 | upper }}</span>
+        </div>
         {{ end }}
-      </div>
       {{ end }}
       
       <div class="intro-text">

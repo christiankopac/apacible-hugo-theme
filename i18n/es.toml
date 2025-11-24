@@ -80,6 +80,18 @@ other = "Por favor ingresa una dirección de correo válida"
 [consent]
 other = "Consentimiento"
 
+[newsletterConsent]
+other = "Consiento el procesamiento de mi nombre y dirección de correo electrónico con el fin de recibir el boletín."
+
+[newsletterConsentWithdraw]
+other = "Puedo retirar mi consentimiento en cualquier momento."
+
+[newsletterConsentSee]
+other = "Ver la"
+
+[privacyPolicy]
+other = "Política de Privacidad"
+
 [send]
 other = "Enviar"
 

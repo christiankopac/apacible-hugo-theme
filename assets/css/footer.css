@@ -3,7 +3,7 @@
 .site-footer {
   flex-shrink: 0;
   margin-block-start: auto; /* Push to bottom */
-  padding-block: var(--space-xl) var(--space-md);
+  padding-block: var(--space-md) var(--space-sm);
   box-sizing: border-box;
   /* Wider footer to match main content */
   width: min(1200px, 100% - clamp(1rem, 5vw, 3rem) * 2);
@@ -28,7 +28,7 @@ body.section-posts .site-footer {
 
 @media (max-width: 600px) {
   .site-footer {
-    padding-block: var(--space-lg) var(--space-lg);
+    padding-block: var(--space-md) var(--space-md);
     padding-inline: clamp(0.75rem, 2vw, 1rem);
     width: 100%;
     margin-inline: 0;
@@ -348,21 +348,20 @@ body.section-posts .site-footer {
 
 .newsletter-content {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--space-md);
-  max-width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+  max-width: 600px;
   margin-inline: auto;
 }
 
 .newsletter-label {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  white-space: nowrap;
-  margin: 0;
-  margin-inline-end: var(--space-xs);
+  white-space: normal;
+  margin: 0 0 calc(var(--space-xs) * 0.5) 0;
+  text-align: center;
+  width: 100%;
 }
 
 .newsletter-label span {
@@ -383,27 +382,13 @@ body.section-posts .site-footer {
   border-radius: var(--radius-sm);
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
   box-sizing: border-box;
-  width: auto;
-  min-width: 140px;
-  max-width: 180px;
-  flex: 0 1 auto;
-}
-
-@media (min-width: 1024px) {
-  .newsletter-content input[type="text"],
-  .newsletter-content input[type="email"] {
-    min-width: 180px;
-    max-width: 240px;
-  }
+  width: 100%;
 }
 
 /* Group inputs together - smaller gap between them */
-.newsletter-content input[type="text"] {
-  margin-inline-end: calc(var(--space-xs) * 0.5);
-}
-
+.newsletter-content input[type="text"],
 .newsletter-content input[type="email"] {
-  margin-inline-end: 0;
+  margin: 0;
 }
 
 .newsletter-content input[type="text"]:focus,
@@ -426,27 +411,47 @@ body.section-posts .site-footer {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   cursor: pointer;
-  white-space: nowrap;
   user-select: none;
   margin: 0;
-  margin-inline-end: var(--space-xs);
+  width: 100%;
+  justify-content: flex-start;
+  line-height: 1.5;
+  max-width: 100%;
 }
 
 .newsletter-consent-label input[type="checkbox"] {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
   accent-color: var(--color-accent);
   flex-shrink: 0;
   margin: 0;
+  margin-inline-end: calc(var(--space-xs) * 0.5);
+  align-self: center;
 }
 
 .newsletter-consent-label span {
-  line-height: 1;
+  flex: 1;
+  line-height: 1.5;
+  min-width: 0;
+}
+
+.newsletter-consent-label a {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-secondary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  transition: color var(--transition-base), text-decoration-color var(--transition-base);
+}
+
+.newsletter-consent-label a:hover {
+  color: var(--color-text);
+  text-decoration-color: var(--color-text);
 }
 
 .newsletter-content button {
-  padding: calc(var(--space-xs) * 0.875) var(--space-lg);
+  padding: calc(var(--space-xs) * 0.875) var(--space-md);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   font-family: inherit;
@@ -458,6 +463,7 @@ body.section-posts .site-footer {
   transition: background-color var(--transition-base), transform var(--transition-fast);
   white-space: nowrap;
   margin: 0;
+  width: 100%;
 }
 
 .newsletter-content button:hover {
@@ -545,54 +551,9 @@ body.section-posts .site-footer {
   opacity: var(--opacity-full);
 }
 
+/* Responsive adjustments */
 @media (max-width: 600px) {
   .newsletter-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-
-  .newsletter-label {
-    font-size: var(--font-size-xs);
-    width: 100%;
-    margin: 0 0 calc(var(--space-xs) * 0.5) 0;
-    text-align: center;
-  }
-
-  .newsletter-content input[type="text"],
-  .newsletter-content input[type="email"] {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    font-size: var(--font-size-xs);
-    padding: calc(var(--space-xs) * 0.75) var(--space-sm);
-    margin: 0;
-  }
-
-  .newsletter-consent-label {
-    width: 100%;
-    justify-content: center;
-    margin: 0;
-    white-space: nowrap;
-  }
-
-  .newsletter-content button {
-    width: 100%;
-    font-size: var(--font-size-xs);
-    padding: calc(var(--space-xs) * 0.875) var(--space-md);
-    margin: 0;
-  }
-
-  .newsletter-error {
-    width: 100%;
-    margin: calc(var(--space-xs) * 0.5) 0;
-  }
-
-  .newsletter-success {
-    padding: var(--space-sm);
-  }
-
-  .newsletter-success p {
-    font-size: var(--font-size-xs);
+    max-width: 100%;
   }
 }

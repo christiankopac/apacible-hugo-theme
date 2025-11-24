@@ -106,9 +106,9 @@
   --container-padding-x-md: var(--space-xl);
   --container-padding-x-lg: var(--space-3xl);
   
-  --container-padding-y-sm: var(--space-lg);
-  --container-padding-y-md: var(--space-xl);
-  --container-padding-y-lg: var(--space-2xl);
+  --container-padding-y-sm: var(--space-md);
+  --container-padding-y-md: var(--space-lg);
+  --container-padding-y-lg: var(--space-xl);
 
   /* ============================================
      GAP SCALE

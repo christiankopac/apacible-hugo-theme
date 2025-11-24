@@ -80,6 +80,18 @@ other = "Please enter a valid email address"
 [consent]
 other = "Consent"
 
+[newsletterConsent]
+other = "I consent to the processing of my name and email address for the purpose of receiving the newsletter."
+
+[newsletterConsentWithdraw]
+other = "I can withdraw my consent at any time."
+
+[newsletterConsentSee]
+other = "See the"
+
+[privacyPolicy]
+other = "Privacy Policy"
+
 [send]
 other = "Send"
 
