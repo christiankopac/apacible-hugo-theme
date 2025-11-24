@@ -94,14 +94,14 @@
 /* Keep the old fixed button styles for backward compatibility (if used elsewhere) */
 #back-to-top:not(.back-to-top-footer) {
   position: fixed;
-  bottom: 5.5rem;
-  right: 1.5rem;
+  inset-block-end: 5.5rem;
+  inset-inline-end: var(--space-lg);
   width: 2.5rem;
   height: 2.5rem;
   background: transparent;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-base-sm);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -109,13 +109,13 @@
   vertical-align: middle;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 1000;
-  border: 1px solid var(--color-text-secondary);
+  transition: opacity var(--transition-base), transform var(--transition-base);
+  z-index: var(--z-fixed);
+  border: var(--border-width-thin) solid var(--color-text-secondary);
   border-radius: 0;
   padding: 0;
   cursor: pointer;
-  font-weight: 300;
+  font-weight: var(--font-weight-light);
   transform: rotate(45deg);
   box-sizing: border-box;
 }
@@ -131,17 +131,16 @@
 }
 
 #back-to-top:not(.back-to-top-footer).visible {
-  opacity: 0.5;
+  opacity: var(--opacity-muted);
   visibility: visible;
 }
 
 #back-to-top:not(.back-to-top-footer):hover {
-  opacity: 1;
+  opacity: var(--opacity-full);
   transform: rotate(45deg) scale(1.1);
 }
 
 #back-to-top:not(.back-to-top-footer):active {
-  opacity: 1;
+  opacity: var(--opacity-full);
   transform: rotate(45deg) scale(0.95);
 }
-

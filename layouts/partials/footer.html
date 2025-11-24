@@ -1,6 +1,6 @@
 <footer class="site-footer">
-  {{/* Newsletter subscription form */}}
-  {{ if .Site.Params.newsletter_enabled }}
+  {{/* Newsletter subscription form - hidden on consumed single pages */}}
+  {{ if and .Site.Params.newsletter_enabled (not (hasPrefix .RelPermalink "/consumed/")) }}
   <div class="footer-newsletter">
     <form name="newsletter" netlify data-netlify="true" netlify-honeypot="bot-field">
       <input type="hidden" name="form-name" value="contact" />
@@ -11,8 +11,8 @@
         <span class="newsletter-label">{{ i18n "newsletterSubscribe" | default "Subscribe to my" }} <span>{{ i18n "newsletterIrregular" | default "irregular" }}</span> {{ i18n "newsletterNewsletter" | default "newsletter" }}:</span>
         <input type="text" name="name" autocomplete="name" placeholder="{{ i18n "name" | default "Name" }}" aria-label="{{ i18n "name" | default "Name" }}" />
         <input type="email" name="email" autocomplete="email" required placeholder="{{ i18n "email" | default "Email" }}" aria-label="{{ i18n "emailAddress" | default "Email address" }}" />
-        <div class="newsletter-error" hidden role="alert">
-          <span>{{ i18n "emailError" | default "Please enter a valid email address" }}</span>
+        <div class="newsletter-error" style="display: none;" role="alert">
+          <span>Please enter a valid email address</span>
         </div>
         <label class="newsletter-consent-label">
           <input type="checkbox" name="consent" autocomplete="off" required />
@@ -26,7 +26,7 @@
         <button type="submit">{{ i18n "send" | default "Send" }}</button>
       </div>
     </form>
-    <div class="newsletter-success" hidden>
+    <div class="newsletter-success" style="display: none;">
       <p>{{ i18n "newsletterThanks" | default "Thanks for subscribing! I promise I won't send any spam." }}</p>
     </div>
   </div>
@@ -95,10 +95,10 @@
         {{ end }}
       {{ end }}
       
-      <button id="color-scheme-toggle" aria-label="Toggle color scheme" title="Toggle color scheme" class="footer-icon">
-        ⚅
+      <button id="color-scheme-toggle" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="footer-icon">
+        ⚄
       </button>
-      
+
       <button id="theme-toggle" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="footer-icon">
         <!-- Sun icon (shown in light theme) -->
         <svg class="theme-icon theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
