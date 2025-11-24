@@ -64,7 +64,17 @@
     <div class="consumed-hero">
         <div class="consumed-poster">
             {{ with $mediaData.img }}
-                <img src="{{ . }}" alt="{{ $mediaData.title }}" loading="eager">
+                {{/* Try to get image as resource for processing */}}
+                {{ $imgPath := strings.TrimPrefix "/" . }}
+                {{ $imgResource := resources.Get $imgPath }}
+                {{ if $imgResource }}
+                    {{/* Process image - resize to reasonable size */}}
+                    {{ $processedImg := $imgResource.Resize "800x q90" }}
+                    <img src="{{ $processedImg.RelPermalink }}" alt="{{ $mediaData.title }}" loading="eager">
+                {{ else }}
+                    {{/* Fallback to original path if not found in assets */}}
+                    <img src="{{ . }}" alt="{{ $mediaData.title }}" loading="eager">
+                {{ end }}
             {{ else }}
                 <div class="consumed-poster-placeholder">
                     <span>{{ substr $mediaData.title 0 1 }}</span>
@@ -196,11 +206,11 @@
                     {{/* Get translated verb based on category - use as label */}}
                     {{ $verbLabel := "" }}
                     {{ if $isBook }}
-                        {{ $verbLabel = i18n "readLabel" | default "Read" }}
+                        {{ $verbLabel = i18n "read" | default "Read" }}
                     {{ else if $isMusic }}
-                        {{ $verbLabel = i18n "listenedLabel" | default "Listened" }}
+                        {{ $verbLabel = i18n "listened" | default "Listened" }}
                     {{ else if $isMovie }}
-                        {{ $verbLabel = i18n "watchedLabel" | default "Watched" }}
+                        {{ $verbLabel = i18n "watched" | default "Watched" }}
                     {{ end }}
                     <div class="metadata-badge consumed-date" data-label="{{ $verbLabel }}">
                         <span>{{ $consumedDate }}</span>
@@ -385,4 +395,3 @@
     {{ end }}
 </article>
 {{ end }}
-

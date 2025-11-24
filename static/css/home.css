@@ -360,7 +360,7 @@
 
 .explore-label {
   color: var(--color-text-secondary);
-  opacity: 0.5;
+  opacity: 0.75;
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -403,7 +403,7 @@
 
 .connect-label {
   color: var(--color-text-secondary);
-  opacity: 0.5;
+  opacity: 0.75;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;

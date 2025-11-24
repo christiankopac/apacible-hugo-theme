@@ -90,11 +90,45 @@ hugo new posts/my-first-post.md
 
 Place images in the `assets/` directory and use the image shortcodes:
 
+#### Basic Image
+
 ```markdown
-{{< img src="assets/photo.jpg" alt="My photo" caption="A dithered photo" dithered="true" >}}
+{{< img src="assets/trees.jpg" alt="A forest scene" caption="A beautiful forest" >}}
 ```
 
-Hugo will automatically process and optimize your images.
+#### Dithered Image (with toggle to original)
+
+The `dithered` shortcode automatically creates a dithered version using Hugo's native image processing:
+
+```markdown
+{{< dithered src="assets/trees.jpg" alt="A forest scene" caption="A dithered forest scene with toggle" >}}
+```
+
+#### Image with Custom Size
+
+```markdown
+{{< img src="assets/trees.jpg" alt="A forest scene" width="1200" height="800" caption="Custom sized image" >}}
+```
+
+#### Image without Caption
+
+```markdown
+{{< img src="assets/trees.jpg" alt="A forest scene" width="800" >}}
+```
+
+#### Dithered Image without Toggle
+
+```markdown
+{{< dithered src="assets/trees.jpg" alt="A forest scene" caption="Dithered only" show_original="false" >}}
+```
+
+**Image Processing:**
+- Images are automatically optimized (WebP with JPEG fallback)
+- Aspect ratio is preserved when using width/height
+- Lazy loading is enabled by default
+- All images are responsive and contained within their container
+
+**Note:** The `dithered` shortcode uses Hugo's built-in `images.Dither` filter, so no pre-dithered files are needed. The dithering is applied during the build process.
 
 ### 4. Build and serve
 
@@ -160,7 +194,7 @@ Create a `consumed` section to display your media consumption with ratings, date
 ## Documentation
 
 For detailed documentation on:
-- Image processing and shortcodes
+- **Image processing and shortcodes**: See [IMAGE_GUIDE.md](IMAGE_GUIDE.md) for comprehensive examples
 - Configuration options
 - Collections system
 - Customization

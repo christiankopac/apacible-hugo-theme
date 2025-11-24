@@ -1,180 +1,102 @@
-// Back to top button functionality with Intersection Observer
+// Back to top button - vanilla JS implementation
 (function() {
-  const backToTopButton = document.getElementById('back-to-top');
-  const inlineBackToTop = document.querySelector('.back-to-top-link');
+  const buttons = document.querySelectorAll('.back-to-top-footer, .back-to-top-link');
+  if (buttons.length === 0) return;
 
-  // Scroll to top function - always scrolls to absolute top
-  function scrollToTop(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  // Create sentinel for Intersection Observer (better performance than scroll listener)
+  const sentinel = document.createElement('div');
+  sentinel.style.cssText = 'position:absolute;top:300px;height:1px;width:1px;pointer-events:none';
+  document.body.prepend(sentinel);
 
-    // Smooth scroll to top
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    });
-  }
+  // Show/hide buttons based on scroll position
+  const observer = new IntersectionObserver(
+    function(entries) {
+      const visible = !entries[0].isIntersecting;
+      buttons.forEach(function(button) {
+        if (visible) {
+          button.style.display = 'inline-flex';
+          button.style.opacity = '1';
+          button.style.visibility = 'visible';
+          button.classList.add('visible');
+        } else {
+          button.style.opacity = '0';
+          button.style.visibility = 'hidden';
+          setTimeout(function() {
+            if (button.style.opacity === '0') {
+              button.style.display = 'none';
+              button.classList.remove('visible');
+            }
+          }, 300);
+        }
+      });
+    },
+    { threshold: 0 }
+  );
 
-  // Add event listeners
-  if (backToTopButton) {
-    backToTopButton.addEventListener('click', scrollToTop);
+  observer.observe(sentinel);
 
-    // Use Intersection Observer instead of scroll events for better performance
-    // Create a sentinel element at the top of the page
-    const sentinel = document.createElement('div');
-    sentinel.style.position = 'absolute';
-    sentinel.style.top = '300px';
-    sentinel.style.height = '1px';
-    sentinel.style.width = '1px';
-    sentinel.style.pointerEvents = 'none';
-    document.body.prepend(sentinel);
-
-    const observer = new IntersectionObserver(
-      function(entries) {
-        entries.forEach(function(entry) {
-          // Show button when sentinel is out of view (scrolled past 300px)
-          backToTopButton.classList.toggle('visible', !entry.isIntersecting);
-        });
-      },
-      { threshold: 0 }
-    );
-
-    observer.observe(sentinel);
-  }
-
-  // Add event listener for inline link
-  if (inlineBackToTop) {
-    inlineBackToTop.addEventListener('click', scrollToTop);
-  }
-})();
-
-// Theme toggle functionality
-(function() {
-  const themeToggles = document.querySelectorAll('[id="theme-toggle"], [id="theme-toggle-top"]');
-  if (!themeToggles.length) return;
-  
-  const htmlElement = document.documentElement;
-  const THEME_KEY = 'theme';
-  const DEFAULT_THEME = 'light';
-  
-  // Apply theme to all elements
-  function applyTheme(theme) {
-    htmlElement.setAttribute('data-theme', theme);
-    document.body.setAttribute('data-theme', theme);
-    htmlElement.style.colorScheme = theme;
-    // Update all theme toggle buttons if they exist
-    themeToggles.forEach(function(toggle) {
-      if (toggle) {
-        toggle.setAttribute('data-theme', theme);
-      }
-    });
-  }
-  
-  // Initialize theme from localStorage with error handling
-  let currentTheme = DEFAULT_THEME;
-  try {
-    const storedTheme = localStorage.getItem(THEME_KEY);
-    if (storedTheme) {
-      currentTheme = storedTheme;
-    }
-  } catch (e) {
-    console.error('Failed to read theme preference:', e);
-  }
-  applyTheme(currentTheme);
-  
-  // Add click event to all theme toggle buttons
-  themeToggles.forEach(function(themeToggle) {
-    themeToggle.addEventListener('click', function(e) {
+  // Add click handlers
+  buttons.forEach(function(button) {
+    button.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-      
-      // Save to localStorage with error handling
-      try {
-        localStorage.setItem(THEME_KEY, currentTheme);
-      } catch (e) {
-        console.error('Failed to save theme preference:', e);
-      }
-      
-      applyTheme(currentTheme);
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+      });
     });
   });
-  
-  // Re-sync theme when page is restored from bfcache (back/forward navigation)
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-      // Page was restored from bfcache, re-read theme from localStorage
-      try {
-        const storedTheme = localStorage.getItem(THEME_KEY);
-        if (storedTheme) {
-          currentTheme = storedTheme;
-        } else {
-          currentTheme = DEFAULT_THEME;
-        }
-        applyTheme(currentTheme);
-      } catch (e) {
-        console.error('Failed to sync theme on pageshow:', e);
-      }
-    }
-  });
 })();
 
-// Color scheme toggle functionality (dice button)
+// Image toggles - vanilla JS for dithered/original switching
 (function() {
-  const colorSchemeToggle = document.getElementById('color-scheme-toggle');
-  if (!colorSchemeToggle) return;
-  
-  const htmlElement = document.documentElement;
-  const COLOR_SCHEME_KEY = 'colorScheme';
-  const COLOR_SCHEMES = ['default', 'blue', 'purple', 'green', 'orange', 'red'];
-  const DEFAULT_COLOR_SCHEME = 'default';
-  
-  // Apply color scheme
-  function applyColorScheme(scheme) {
-    htmlElement.setAttribute('data-color-scheme', scheme);
-  }
-  
-  // Initialize color scheme from localStorage
-  let currentColorScheme;
-  try {
-    currentColorScheme = localStorage.getItem(COLOR_SCHEME_KEY) || DEFAULT_COLOR_SCHEME;
-  } catch (e) {
-    console.error('Failed to read color scheme preference:', e);
-    currentColorScheme = DEFAULT_COLOR_SCHEME;
-  }
-  applyColorScheme(currentColorScheme);
-  
-  // Add click event to color scheme toggle
-  colorSchemeToggle.addEventListener('click', function() {
-    const currentIndex = COLOR_SCHEMES.indexOf(currentColorScheme);
-    const nextIndex = (currentIndex + 1) % COLOR_SCHEMES.length;
-    currentColorScheme = COLOR_SCHEMES[nextIndex];
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem(COLOR_SCHEME_KEY, currentColorScheme);
-    } catch (e) {
-      console.error('Failed to save color scheme preference:', e);
-    }
-    
-    applyColorScheme(currentColorScheme);
-  });
-  
-  // Re-sync color scheme when page is restored from bfcache
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-      try {
-        currentColorScheme = localStorage.getItem(COLOR_SCHEME_KEY) || DEFAULT_COLOR_SCHEME;
-        applyColorScheme(currentColorScheme);
-      } catch (e) {
-        console.error('Failed to sync color scheme on pageshow:', e);
+  const figures = document.querySelectorAll('figure.has-toggle');
+
+  figures.forEach(function(figure) {
+    const ditheredImg = figure.querySelector('.dithered-img');
+    const originalImg = figure.querySelector('.original-img');
+    const toggleBtn = figure.querySelector('.toggle-original');
+
+    if (!ditheredImg || !originalImg || !toggleBtn) return;
+
+    let showOriginal = false;
+
+    // Update visibility
+    function updateImages() {
+      if (showOriginal) {
+        ditheredImg.style.display = 'none';
+        originalImg.style.display = 'block';
+        toggleBtn.setAttribute('aria-pressed', 'true');
+        // Update button text
+        const spans = toggleBtn.querySelectorAll('span');
+        if (spans.length === 2) {
+          spans[0].style.display = 'none'; // "show original"
+          spans[1].style.display = 'inline'; // "dither"
+        }
+      } else {
+        ditheredImg.style.display = 'block';
+        originalImg.style.display = 'none';
+        toggleBtn.setAttribute('aria-pressed', 'false');
+        // Update button text
+        const spans = toggleBtn.querySelectorAll('span');
+        if (spans.length === 2) {
+          spans[0].style.display = 'inline'; // "show original"
+          spans[1].style.display = 'none'; // "dither"
+        }
       }
     }
+
+    // Initialize
+    updateImages();
+
+    // Toggle on click
+    toggleBtn.addEventListener('click', function() {
+      showOriginal = !showOriginal;
+      updateImages();
+    });
   });
 })();
-
-// Image toggles are now handled by Alpine.js - removed toggleOriginal function
 
 // Cursor gradient effect - only on headings and links
 (function() {
@@ -445,182 +367,7 @@
   });
 })();
 
-// Table of Contents - Substack-style with line indicators
-(function() {
-  const tocElement = document.querySelector('.toc');
-  if (!tocElement) return;
-  
-  const tocLinks = document.querySelectorAll('.toc-content a');
-  if (tocLinks.length === 0) return;
-  
-  const headings = Array.from(document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]'));
-  
-  // Create lines container and generate lines based on TOC structure
-  function initializeTOCLines() {
-    // Check if we're on large screen
-    if (window.innerWidth < 940) return;
-    
-    // Remove existing lines if any
-    const existingLines = tocElement.querySelector('.toc-lines');
-    if (existingLines) existingLines.remove();
-    
-    // Create lines container
-    const linesContainer = document.createElement('div');
-    linesContainer.className = 'toc-lines';
-    
-    // Generate a line for each TOC link
-    tocLinks.forEach(function(link) {
-      const href = link.getAttribute('href');
-      if (!href || !href.startsWith('#')) return;
-      
-      const targetId = href.substring(1);
-      const targetHeading = document.getElementById(targetId);
-      if (!targetHeading) return;
-      
-      // Determine heading level
-      const tagName = targetHeading.tagName.toLowerCase();
-      const level = tagName.charAt(1); // Extract number from h1, h2, etc.
-      
-      // Create line element
-      const line = document.createElement('div');
-      line.className = 'toc-line';
-      line.setAttribute('data-level', Math.min(level, 3)); // Cap at level 3
-      line.setAttribute('data-target', targetId);
-      
-      linesContainer.appendChild(line);
-    });
-    
-    // Add click handler to lines container to toggle TOC
-    linesContainer.addEventListener('click', function(e) {
-      e.stopPropagation();
-      toggleTOC();
-    });
-    
-    // Insert lines before toc-content
-    const tocContent = tocElement.querySelector('.toc-content');
-    if (tocContent) {
-      tocElement.insertBefore(linesContainer, tocContent);
-    }
-  }
-  
-  // Toggle TOC expanded/collapsed state
-  function toggleTOC() {
-    tocElement.classList.toggle('toc-expanded');
-  }
-  
-  // Close TOC when clicking outside
-  function closeTOC() {
-    tocElement.classList.remove('toc-expanded');
-  }
-  
-  // Smooth scroll to heading with animation
-  function scrollToHeading(targetId) {
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    
-    const offset = 80;
-    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-    
-    window.scrollTo({
-      top: targetPosition,
-      behavior: 'smooth'
-    });
-  }
-  
-  // Update active line and link highlighting
-  function updateActiveTOC() {
-    let current = '';
-    
-    // Find the heading currently in view
-    headings.forEach(function(heading) {
-      const rect = heading.getBoundingClientRect();
-      if (rect.top <= 100) {
-        current = heading.id;
-      }
-    });
-    
-    // Update active state on links
-    tocLinks.forEach(function(link) {
-      const href = link.getAttribute('href');
-      const id = href ? href.substring(1) : '';
-      
-      if (id === current) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
-    
-    // Update active state on lines
-    const lines = document.querySelectorAll('.toc-line');
-    lines.forEach(function(line) {
-      const targetId = line.getAttribute('data-target');
-      
-      if (targetId === current) {
-        line.classList.add('active');
-      } else {
-        line.classList.remove('active');
-      }
-    });
-  }
-  
-  // Initialize lines
-  initializeTOCLines();
-  
-  // Update on scroll (throttled with requestAnimationFrame)
-  let ticking = false;
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      requestAnimationFrame(function() {
-        updateActiveTOC();
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true });
-  
-  // Update on page load
-  updateActiveTOC();
-  
-  // Reinitialize on resize (in case screen size changes)
-  let resizeTimeout;
-  window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(function() {
-      initializeTOCLines();
-      updateActiveTOC();
-    }, 250);
-  });
-  
-  // Smooth scroll for TOC links in the expanded card
-  tocLinks.forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      const href = this.getAttribute('href');
-      if (href && href.startsWith('#')) {
-        const targetId = href.substring(1);
-        e.preventDefault();
-        scrollToHeading(targetId);
-        // Close TOC after navigation
-        closeTOC();
-      }
-    });
-  });
-  
-  // Close TOC when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!tocElement.contains(e.target) && tocElement.classList.contains('toc-expanded')) {
-      closeTOC();
-    }
-  });
-  
-  // Prevent clicks inside TOC card from closing it
-  const tocContent = tocElement.querySelector('.toc-content');
-  if (tocContent) {
-    tocContent.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-  }
-})();
+// Table of Contents is handled by toc.js
 
 // Prefetch recent post links on hover for faster navigation
 (function() {
@@ -662,116 +409,140 @@
   });
 })();
 
-// Newsletter form validation and success message
+// Newsletter form validation - vanilla JS
 (function() {
-  const newsletterForm = document.querySelector('form[name="newsletter"]');
-  if (!newsletterForm) return;
-  
-  const formContent = newsletterForm.querySelector('.newsletter-form');
-  const successMessage = document.querySelector('.newsletter-success');
-  const errorMessage = newsletterForm.querySelector('.newsletter-error');
-  const emailInput = newsletterForm.querySelector('input[type="email"]');
-  
-  if (!formContent || !successMessage || !errorMessage || !emailInput) return;
-  
-  // Email validation regex pattern
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
-  // Validate email function
+  const newsletterContainer = document.querySelector('.footer-newsletter');
+  if (!newsletterContainer) return;
+
+  const form = newsletterContainer.querySelector('form');
+  const emailInput = form.querySelector('input[type="email"]');
+  const submitButton = form.querySelector('button[type="submit"]');
+  const formContent = newsletterContainer.querySelector('.newsletter-form');
+  const successMessage = newsletterContainer.querySelector('.newsletter-success');
+  const errorContainer = newsletterContainer.querySelector('.newsletter-error');
+  const errorMessage = errorContainer ? errorContainer.querySelector('span') : null;
+
+  let submitting = false;
+
   function validateEmail(email) {
-    if (!email || email.trim() === '') {
-      return false;
+    if (!email || email.trim() === '') return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  function showError(message) {
+    if (errorContainer && errorMessage) {
+      errorMessage.textContent = message;
+      errorContainer.style.display = 'block';
+      emailInput.setAttribute('aria-invalid', 'true');
     }
-    return emailRegex.test(email.trim());
   }
-  
-  // Show error message
-  function showError() {
-    errorMessage.removeAttribute('hidden');
-    emailInput.setAttribute('aria-invalid', 'true');
-    emailInput.focus();
-  }
-  
-  // Hide error message
+
   function hideError() {
-    errorMessage.setAttribute('hidden', '');
-    emailInput.removeAttribute('aria-invalid');
+    if (errorContainer) {
+      errorContainer.style.display = 'none';
+      emailInput.removeAttribute('aria-invalid');
+    }
   }
-  
-  // Clear error when user starts typing (but don't validate until submit)
-  emailInput.addEventListener('input', function() {
-    hideError();
-    // Reset error message text
-    const errorSpan = errorMessage.querySelector('span');
-    if (errorSpan && errorSpan.textContent !== 'Please enter a valid email address') {
-      errorSpan.textContent = 'Please enter a valid email address';
-    }
-  });
-  
-  // Validate and submit form
-  newsletterForm.addEventListener('submit', function(e) {
+
+  function showSuccess() {
+    formContent.style.display = 'none';
+    successMessage.style.display = 'block';
+  }
+
+  // Clear error on input
+  if (emailInput) {
+    emailInput.addEventListener('input', hideError);
+  }
+
+  // Handle form submission
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const email = emailInput.value.trim();
-    
-    // Validate email before submission
+
+    // Validate email
     if (!validateEmail(email)) {
-      showError();
-      return false;
+      showError('Please enter a valid email address');
+      return;
     }
-    
-    // Hide error if email is valid
+
     hideError();
-    
-    // Disable submit button to prevent double submission
-    const submitButton = newsletterForm.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton.textContent;
+    submitting = true;
     submitButton.disabled = true;
     submitButton.textContent = 'Sending...';
-    
-    // Submit form to Netlify
-    const formData = new FormData(newsletterForm);
-    
-    fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(formData).toString()
-    })
-    .then(function(response) {
+
+    // Submit to Netlify
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(formData).toString()
+      });
+
       if (response.ok) {
-        // Success - hide form and show success message
-        formContent.setAttribute('hidden', '');
-        successMessage.removeAttribute('hidden');
-        
-        // Scroll success message into view if needed
-        successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-        // Reset form
-        newsletterForm.reset();
+        form.reset();
+        showSuccess();
       } else {
-        // Error - show error message
-        showError();
-        errorMessage.querySelector('span').textContent = 'Something went wrong. Please try again.';
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
+        showError('Something went wrong. Please try again.');
       }
-    })
-    .catch(function(error) {
+    } catch (error) {
       console.error('Form submission error:', error);
-      showError();
-      errorMessage.querySelector('span').textContent = 'Something went wrong. Please try again.';
+      showError('Something went wrong. Please try again.');
+    } finally {
+      submitting = false;
       submitButton.disabled = false;
-      submitButton.textContent = originalButtonText;
-    });
-    
-    return false;
+      submitButton.textContent = 'Send';
+    }
   });
-  
-  // Also handle Netlify's built-in success handling via URL hash
-  if (window.location.hash === '#success') {
-    formContent.setAttribute('hidden', '');
-    successMessage.removeAttribute('hidden');
-  }
+})();
+
+// Spoiler galleries - vanilla JS for expand/collapse
+(function() {
+  const containers = document.querySelectorAll('.spoiler-gallery-container');
+
+  containers.forEach(function(container) {
+    const button = container.querySelector('.spoiler-toggle');
+    const content = container.querySelector('.spoiler-content');
+
+    if (!button || !content) return;
+
+    let isOpen = false;
+
+    function updateState() {
+      if (isOpen) {
+        button.classList.add('active');
+        button.setAttribute('aria-expanded', 'true');
+        content.style.display = 'block';
+        // Update button text
+        const spans = button.querySelectorAll('span');
+        if (spans.length === 2) {
+          spans[0].style.display = 'none'; // Show label
+          spans[1].style.display = 'inline'; // Hide label
+        }
+      } else {
+        button.classList.remove('active');
+        button.setAttribute('aria-expanded', 'false');
+        content.style.display = 'none';
+        // Update button text
+        const spans = button.querySelectorAll('span');
+        if (spans.length === 2) {
+          spans[0].style.display = 'inline'; // Show label
+          spans[1].style.display = 'none'; // Hide label
+        }
+      }
+    }
+
+    // Initialize
+    updateState();
+
+    // Toggle on click
+    button.addEventListener('click', function() {
+      isOpen = !isOpen;
+      updateState();
+    });
+  });
 })();
 
 // Giscus: Hide comment form when comments are disabled (reactions only mode)

@@ -226,13 +226,10 @@
     {{/* First check footer (e.g., "Watched Nov 2025", "Read Oct 2025", "Listened Aug 2025") */}}
     {{ if .footer }}
       {{ $footerTrimmed := strings.TrimSpace .footer }}
-      {{/* Extract year from footer - search for 4-digit year pattern */}}
-      {{ $footerLower := lower $footerTrimmed }}
-      {{ range $i := seq 2000 2100 }}
-        {{ $yearStr := printf "%d" $i }}
-        {{ if in $footerLower $yearStr }}
-          {{ $consumedYear = $yearStr }}
-        {{ end }}
+      {{/* Extract year from footer using regex - look for 4-digit year (2000-2099) */}}
+      {{ $yearMatches := findRE `20[0-9]{2}` $footerTrimmed }}
+      {{ if $yearMatches }}
+        {{ $consumedYear = index $yearMatches 0 }}
       {{ end }}
     {{ end }}
     {{/* Add year to map if found */}}
@@ -381,13 +378,10 @@ class="collection-wrapper">
       {{/* First check footer (e.g., "Watched Nov 2025", "Read Oct 2025", "Listened Aug 2025") */}}
       {{ if .footer }}
         {{ $footerTrimmed := strings.TrimSpace .footer }}
-        {{/* Extract year from footer - search for 4-digit year pattern */}}
-        {{ $footerLower := lower $footerTrimmed }}
-        {{ range $i := seq 2000 2100 }}
-          {{ $yearStr := printf "%d" $i }}
-          {{ if in $footerLower $yearStr }}
-            {{ $consumedYear = $yearStr }}
-          {{ end }}
+        {{/* Extract year from footer using regex - look for 4-digit year (2000-2099) */}}
+        {{ $yearMatches := findRE `20[0-9]{2}` $footerTrimmed }}
+        {{ if $yearMatches }}
+          {{ $consumedYear = index $yearMatches 0 }}
         {{ end }}
       {{ end }}
       {{ $ratingValue := 0.0 }}
