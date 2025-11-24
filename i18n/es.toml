@@ -60,10 +60,10 @@ other = "Libros"
 other = "Suscríbete a mi"
 
 [newsletterIrregular]
-other = "newsletter"
+other = "irregular"
 
 [newsletterNewsletter]
-other = "irregular"
+other = "newsletter"
 
 [name]
 other = "Nombre"
@@ -166,3 +166,6 @@ other = "Se encontraron %d artículo%s en esta etiqueta"
 
 [foundArticlesInCategory]
 other = "Se encontraron %d artículo%s en esta categoría"
+
+[scene]
+other = "Escena"

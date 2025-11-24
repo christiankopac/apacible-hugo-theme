@@ -166,3 +166,6 @@ other = "Found %d article%s in this tag"
 
 [foundArticlesInCategory]
 other = "Found %d article%s in this category"
+
+[scene]
+other = "Scene"

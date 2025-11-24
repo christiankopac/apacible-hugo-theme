@@ -288,7 +288,7 @@
                         {{ $screenshots := $mediaData.screenshots }}
                         {{ if $screenshots }}
                             <div class="consumed-gallery-before-footnotes">
-                                {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" .) }}
+                                {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" . "title" $mediaData.title) }}
                             </div>
                         {{ end }}
                     {{ end }}
@@ -299,7 +299,7 @@
                     {{ $screenshots := $mediaData.screenshots }}
                     {{ if $screenshots }}
                         <div class="consumed-content-section">
-                            {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" .) }}
+                            {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" . "title" $mediaData.title) }}
                         </div>
                     {{ end }}
                 {{ end }}

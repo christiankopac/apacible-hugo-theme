@@ -15,6 +15,7 @@
 {{ $thumbQuality := .thumb_quality | default "75" }}
 {{ $fullQuality := .full_quality | default "95" }}
 {{ $context := .context }}
+{{ $titleParam := .title }}
 
 {{ $images := slice }}
 {{/* First check if images are passed directly (from frontmatter) */}}
@@ -47,9 +48,30 @@
        style="display: none;">
     {{ if $images }}
     <div class="spoiler-screenshots">
+      {{ $sceneNumber := 0 }}
+      {{ $movieTitle := "" }}
+      {{/* Get movie title from title param, context params, or context title */}}
+      {{ if $titleParam }}
+        {{ $movieTitle = $titleParam }}
+      {{ else if $context }}
+        {{ $movieTitle = $context.Params.title | default $context.Title }}
+      {{ end }}
       {{ range $images }}
         {{ $imgSrc := .src }}
-        {{ $imgAlt := .alt | default "Screenshot" }}
+        {{ $sceneNumber = add $sceneNumber 1 }}
+        {{/* Auto-generate alt text if not set: "Movie Title - Scene X" */}}
+        {{ $imgAlt := .alt }}
+        {{ if not $imgAlt }}
+          {{ $sceneLabel := "Scene" }}
+          {{ if $context }}
+            {{ $sceneLabel = i18n "scene" | default "Scene" }}
+          {{ end }}
+          {{ if $movieTitle }}
+            {{ $imgAlt = printf "%s - %s %d" $movieTitle $sceneLabel $sceneNumber }}
+          {{ else }}
+            {{ $imgAlt = printf "%s %d" $sceneLabel $sceneNumber }}
+          {{ end }}
+        {{ end }}
         {{ $imgCaption := .caption | default "" }}
         
         {{/* Get image resource from assets directory (for optimization) */}}
