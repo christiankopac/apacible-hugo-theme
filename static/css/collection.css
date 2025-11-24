@@ -220,6 +220,25 @@
   height: 100%;
 }
 
+/* Picks page - images fill container */
+.collection.picks-grid.poster-grid .collection-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: filter 0.3s ease, opacity 0.3s ease, image-rendering 0.3s ease;
+  filter: none;
+  opacity: 1;
+  image-rendering: auto;
+  mix-blend-mode: none;
+}
+
+/* Music items in picks - keep square sizes with contain */
+.collection.picks-grid.poster-grid .collection-item[data-category="music"] img {
+  object-fit: contain;
+}
+
 /* Poster detail overlay - minimal inline display */
 .poster-detail-overlay {
   position: fixed;
