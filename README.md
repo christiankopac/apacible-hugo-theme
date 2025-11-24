@@ -6,6 +6,7 @@ A minimalist Hugo theme prioritizing accessibility and smolweb principles, with 
 
 ## Features
 
+### Core Features
 - ✅ **Smolweb-focused**: Small, fast, accessible
 - 🎨 **Dithered images**: Lo-fi aesthetic with toggle to original
 - 🌓 **Dark mode**: Automatic theme switching with localStorage
@@ -18,6 +19,13 @@ A minimalist Hugo theme prioritizing accessibility and smolweb principles, with 
 - 💥 **Animated 404**: Playful error page with floating runes
 - 📱 **Responsive**: Mobile-first design
 - ♿ **Accessible**: WCAG compliant
+
+### Advanced Features
+- 🌐 **Gemini Protocol**: Full support for Gemini capsule export (`.gmi` templates for all page types)
+- 📬 **Newsletter Templates**: Generate HTML newsletter content for picks and posts
+- 📚 **Consumed Content**: Track and display books, movies, music with ratings and reviews
+- 💬 **Giscus Integration**: Custom themed comment system
+- 🌍 **Multilingual**: i18n support (English and Spanish included)
 
 ## Installation
 
@@ -97,6 +105,57 @@ hugo server -D
 # Production build
 hugo --minify
 ```
+
+## Advanced Features
+
+### Gemini Protocol Support
+
+The theme includes full Gemini protocol support with `.gmi` templates for all page types:
+
+- Homepage with bio and navigation
+- Post listings and individual posts
+- Tag and category pages
+- Collections and consumed content
+- Automatic "Web version" links
+
+All Gemini templates use your site's `baseURL` configuration, making them portable across domains.
+
+### Newsletter Generation
+
+Generate newsletter-ready HTML for email campaigns:
+
+**Monthly Picks Newsletter:**
+```bash
+hugo --renderToMemory --renderStaticToDisk=false \
+  --baseURL="http://localhost:1313" \
+  -d public
+# Access: http://localhost:1313/picks/list.newsletter.html
+```
+
+**New Posts Newsletter:**
+```bash
+# Access: http://localhost:1313/posts/list.newsletter.html
+```
+
+The templates filter content by current month and generate copy-paste ready HTML for platforms like Substack or Buttondown.
+
+### Consumed Content Tracking
+
+Track books, movies, and music you've consumed in `data/consumed.toml`:
+
+```toml
+[[collection]]
+title = "Book Title"
+author = "Author Name"
+category = "books"
+year = "2024"
+rating = 4.5
+date_read = "2024-11"
+content = "Your thoughts here..."
+review = "Detailed review..."
+```
+
+Create a `consumed` section to display your media consumption with ratings, dates, and reviews.
 
 ## Documentation
 
