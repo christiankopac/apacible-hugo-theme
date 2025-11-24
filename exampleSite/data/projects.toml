@@ -1,0 +1,20 @@
+[[collection]]
+type = "card"
+title = "Project Alpha"
+link = "https://example.com"
+content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+tags = ["web", "frontend", "design"]
+
+[[collection]]
+type = "card"
+title = "Project Beta"
+link = "https://example.com"
+content = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo."
+tags = ["backend", "api", "database"]
+
+[[collection]]
+type = "card"
+title = "Project Gamma"
+link = "https://example.com"
+content = "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt."
+tags = ["mobile", "responsive", "ux"]
