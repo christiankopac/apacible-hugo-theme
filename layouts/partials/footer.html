@@ -1,0 +1,118 @@
+<footer class="site-footer">
+  {{/* Newsletter subscription form */}}
+  {{ if .Site.Params.newsletter_enabled }}
+  <div class="footer-newsletter">
+    <form name="newsletter" netlify data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="contact" />
+      <p style="display: none;">
+        <label>{{ i18n "doNotFill" | default "Don't fill this out if you're human:" }} <input name="bot-field" autocomplete="off" /></label>
+      </p>
+      <div class="newsletter-content newsletter-form">
+        <span class="newsletter-label">{{ i18n "newsletterSubscribe" | default "Subscribe to my" }} <span>{{ i18n "newsletterIrregular" | default "irregular" }}</span> {{ i18n "newsletterNewsletter" | default "newsletter" }}:</span>
+        <input type="text" name="name" autocomplete="name" placeholder="{{ i18n "name" | default "Name" }}" aria-label="{{ i18n "name" | default "Name" }}" />
+        <input type="email" name="email" autocomplete="email" required placeholder="{{ i18n "email" | default "Email" }}" aria-label="{{ i18n "emailAddress" | default "Email address" }}" />
+        <div class="newsletter-error" hidden role="alert">
+          <span>{{ i18n "emailError" | default "Please enter a valid email address" }}</span>
+        </div>
+        <label class="newsletter-consent-label">
+          <input type="checkbox" name="consent" autocomplete="off" required />
+          <span>{{ i18n "consent" | default "Consent" }}</span>
+        </label>
+        <button type="submit">{{ i18n "send" | default "Send" }}</button>
+      </div>
+    </form>
+    <div class="newsletter-success" hidden>
+      <p>{{ i18n "newsletterThanks" | default "Thanks for subscribing! I promise I won't send any spam." }}</p>
+    </div>
+  </div>
+  {{ end }}
+
+  <div class="footer-content">
+    {{/* Left: License/Copyright + Credits */}}
+    <div class="footer-left">
+      {{ $license := .Site.Params.footer_license | default "cc-by-nc-nd" }}
+      {{ $copyrightYear := .Site.Params.copyright_year | default (now.Year) }}
+      {{ $copyrightHolder := .Site.Params.copyright_holder | default "Your Name" }}
+      
+      {{ if eq $license "cc-by" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution 4.0 International License" class="cc-license-text">
+          CC BY 4.0
+        </a>
+      {{ else if eq $license "cc-by-sa" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-ShareAlike 4.0 International License" class="cc-license-text">
+          CC BY-SA 4.0
+        </a>
+      {{ else if eq $license "cc-by-nc" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial 4.0 International License" class="cc-license-text">
+          CC BY-NC 4.0
+        </a>
+      {{ else if eq $license "cc-by-nc-sa" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License" class="cc-license-text">
+          CC BY-NC-SA 4.0
+        </a>
+      {{ else if eq $license "cc-by-nd" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NoDerivatives 4.0 International License" class="cc-license-text">
+          CC BY-ND 4.0
+        </a>
+      {{ else if eq $license "cc-by-nc-nd" }}
+        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License" class="cc-license-text">
+          CC BY-NC-ND 4.0
+        </a>
+      {{ else if eq $license "copyright" }}
+        <span class="footer-copyright">© {{ $copyrightYear }} {{ $copyrightHolder }}</span>
+      {{ end }}
+      {{ if .Site.Params.footer_credits }}
+        <span class="footer-credits">{{ .Site.Params.footer_credits | safeHTML }}</span>
+      {{ else }}
+        <span class="footer-credits">{{ $hugoLink := "<a href=\"https://gohugo.io/\" target=\"_blank\" rel=\"noopener\">Hugo</a>" }}{{ $themeLink := "<a href=\"https://github.com/christiankopac/apacible\" target=\"_blank\" rel=\"noopener\">apacible</a>" }}{{ printf (i18n "footerCredits" | default "Built with %s and the %s theme") $hugoLink $themeLink | safeHTML }}</span>
+      {{ end }}
+    </div>
+    
+    {{/* Center: Empty (for spacing) */}}
+    <div class="footer-center">
+    </div>
+    
+    {{/* Right: Icons */}}
+    <div class="footer-right">
+      {{/* Atom feed link on blog listing and consumed pages */}}
+      {{ if .IsSection }}
+        {{ if or (in .RelPermalink "/posts/") (in .RelPermalink "/consumed/") }}
+          {{- $atom := .OutputFormats.Get "Atom" -}}
+          {{- if $atom }}
+      <a href="{{ $atom.RelPermalink }}" aria-label="{{ i18n "atomFeed" | default "Atom Feed" }}" title="{{ i18n "atomFeed" | default "Atom Feed" }}" class="footer-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11a9 9 0 0 1 9 9"></path>
+          <path d="M4 4a16 16 0 0 1 16 16"></path>
+          <circle cx="5" cy="19" r="1"></circle>
+        </svg>
+      </a>
+          {{- end }}
+        {{ end }}
+      {{ end }}
+      
+      <button id="color-scheme-toggle" aria-label="Toggle color scheme" title="Toggle color scheme" class="footer-icon">
+        ⚅
+      </button>
+      
+      <button id="theme-toggle" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="footer-icon">
+        <!-- Sun icon (shown in light theme) -->
+        <svg class="theme-icon theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <!-- Moon icon (shown in dark theme) -->
+        <svg class="theme-icon theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</footer>
+

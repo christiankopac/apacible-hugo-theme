@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="{{ .Site.Language.Lang | default "en" }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Set theme and color scheme immediately to prevent flash -->
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme') || 'light';
+          const colorScheme = localStorage.getItem('colorScheme') || 'default';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.setAttribute('data-color-scheme', colorScheme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          // Fallback to light theme and default color scheme if localStorage fails
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.setAttribute('data-color-scheme', 'default');
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
+    {{ block "desc" . }}
+      {{ if .Description }}
+        <meta name="description" content="{{ .Description }}" />
+      {{ else if .Site.Params.description }}
+        <meta name="description" content="{{ .Site.Params.description }}" />
+      {{ end }}
+    {{ end }}
+    <title>{{ block "title" . }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ "img/favicon.svg" | relURL }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ "img/favicon-32x32.png" | relURL }}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ "img/favicon-16x16.png" | relURL }}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ "img/apple-touch-icon.png" | relURL }}" />
+    
+    <!-- NOTE: Optional: add custom fonts -->
+    {{ partialCached "custom_font.html" . }}
+    <!-- NOTE: Optional: add custom css -->
+    {{ partialCached "custom_css.html" . }}
+
+    {{/* Base CSS - always needed - bundled with Hugo pipes */}}
+    {{ $baseFiles := slice "css/tokens.css" "css/theme.css" "css/layout.css" "css/typography.css" "css/navigation.css" "css/footer.css" "css/back-to-top.css" "css/cursor.css" }}
+    {{ $baseCSS := slice }}
+    {{ range $baseFiles }}
+      {{ $css := resources.Get . }}
+      {{ if $css }}
+        {{ $baseCSS = $baseCSS | append $css }}
+      {{ end }}
+    {{ end }}
+    {{ $baseBundled := $baseCSS | resources.Concat "css/base-bundle.css" | minify | fingerprint }}
+    <link rel="stylesheet" href="{{ $baseBundled.Permalink }}" integrity="{{ $baseBundled.Data.Integrity }}" crossorigin="anonymous">
+    
+    {{/* Template-specific CSS */}}
+    {{ if .IsHome }}
+      {{/* Home page */}}
+      {{ $homeFiles := slice "css/home.css" }}
+      {{ if .Content }}
+        {{ $homeFiles = $homeFiles | append "css/syntax.css" "css/shortcodes.css" "css/responsive-images.css" "css/anchors.css" }}
+      {{ end }}
+      {{ $homeCSS := slice }}
+      {{ range $homeFiles }}
+        {{ $css := resources.Get . }}
+        {{ if $css }}
+          {{ $homeCSS = $homeCSS | append $css }}
+        {{ end }}
+      {{ end }}
+      {{ $homeBundled := $homeCSS | resources.Concat "css/home-bundle.css" | minify | fingerprint }}
+      <link rel="stylesheet" href="{{ $homeBundled.Permalink }}" integrity="{{ $homeBundled.Data.Integrity }}" crossorigin="anonymous">
+    {{ else if .IsPage }}
+      {{/* Check if this is a post page */}}
+      {{ $isPost := false }}
+      {{ if .Params.tags }}
+        {{ $isPost = true }}
+      {{ else if .Date }}
+        {{ $blogSection := .Site.Params.blog_section_path | default "/posts" }}
+        {{ if or (hasPrefix .RelPermalink $blogSection) (in .RelPermalink "/posts/") (hasPrefix .RelPermalink "/reviews/") }}
+          {{ $isPost = true }}
+        {{ end }}
+      {{ end }}
+      
+      {{ if $isPost }}
+        {{/* Post page */}}
+        {{ $postFiles := slice "css/blog.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
+        {{ $postCSS := slice }}
+        {{ range $postFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $postCSS = $postCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $postBundled := $postCSS | resources.Concat "css/post-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $postBundled.Permalink }}" integrity="{{ $postBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else }}
+        {{/* Check if this is a consumed single page */}}
+        {{ if or (hasPrefix .RelPermalink "/consumed/") (in .RelPermalink "/consumed/") }}
+          {{/* Consumed single page */}}
+          {{ $consumedFiles := slice "css/prose.css" "css/consumed-single.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+          {{ $consumedCSS := slice }}
+          {{ range $consumedFiles }}
+            {{ $css := resources.Get . }}
+            {{ if $css }}
+              {{ $consumedCSS = $consumedCSS | append $css }}
+            {{ end }}
+          {{ end }}
+          {{ $consumedBundled := $consumedCSS | resources.Concat "css/consumed-bundle.css" | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ $consumedBundled.Permalink }}" integrity="{{ $consumedBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ else if or (hasPrefix .RelPermalink "/playlists/") (in .RelPermalink "/playlists/") }}
+          {{/* Playlist single page */}}
+          {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+          {{ $playlistCSS := slice }}
+          {{ range $playlistFiles }}
+            {{ $css := resources.Get . }}
+            {{ if $css }}
+              {{ $playlistCSS = $playlistCSS | append $css }}
+            {{ end }}
+          {{ end }}
+          {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-bundle.css" | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ $playlistBundled.Permalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ else if or (eq .Layout "password-protected") (eq .Params.layout "password-protected") }}
+          {{/* Password-protected pages */}}
+          {{ $passwordFiles := slice "css/prose.css" "css/password-protected.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+          {{ $passwordCSS := slice }}
+          {{ range $passwordFiles }}
+            {{ $css := resources.Get . }}
+            {{ if $css }}
+              {{ $passwordCSS = $passwordCSS | append $css }}
+            {{ end }}
+          {{ end }}
+          {{ $passwordBundled := $passwordCSS | resources.Concat "css/password-bundle.css" | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ $passwordBundled.Permalink }}" integrity="{{ $passwordBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ else }}
+          {{/* Prose/other pages */}}
+          {{ $proseFiles := slice "css/prose.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
+          {{ $proseCSS := slice }}
+          {{ range $proseFiles }}
+            {{ $css := resources.Get . }}
+            {{ if $css }}
+              {{ $proseCSS = $proseCSS | append $css }}
+            {{ end }}
+          {{ end }}
+          {{ $proseBundled := $proseCSS | resources.Concat "css/prose-bundle.css" | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ $proseBundled.Permalink }}" integrity="{{ $proseBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ end }}
+      {{ end }}
+    {{ else if .IsSection }}
+      {{ $blogPath := .Site.Params.blog_section_path | default "/posts/" }}
+      {{ if or (eq .RelPermalink $blogPath) (hasPrefix .RelPermalink "/posts") (in .RelPermalink "/posts/") }}
+        {{/* Blog listing page */}}
+        {{ $blogListFiles := slice "css/blog.css" "css/collection.css" }}
+        {{ $blogListCSS := slice }}
+        {{ range $blogListFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $blogListCSS = $blogListCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $blogListBundled := $blogListCSS | resources.Concat "css/blog-list-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $blogListBundled.Permalink }}" integrity="{{ $blogListBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else if hasPrefix .RelPermalink "/playlists/" }}
+        {{/* Playlist section page */}}
+        {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $playlistCSS := slice }}
+        {{ range $playlistFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $playlistCSS = $playlistCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $playlistBundled.Permalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else }}
+        {{/* Other section pages */}}
+        {{ $sectionFiles := slice "css/prose.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
+        {{ $sectionCSS := slice }}
+        {{ range $sectionFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $sectionCSS = $sectionCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $sectionBundled := $sectionCSS | resources.Concat "css/section-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $sectionBundled.Permalink }}" integrity="{{ $sectionBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ end }}
+    {{ else if .Data.Plural }}
+      {{/* Taxonomy pages */}}
+      {{ $taxonomyFiles := slice "css/taxonomy.css" }}
+      {{ if .Data.Term }}
+        {{ $taxonomyFiles = $taxonomyFiles | append "css/blog.css" "css/collection.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+      {{ end }}
+      {{ $taxonomyCSS := slice }}
+      {{ range $taxonomyFiles }}
+        {{ $css := resources.Get . }}
+        {{ if $css }}
+          {{ $taxonomyCSS = $taxonomyCSS | append $css }}
+        {{ end }}
+      {{ end }}
+      {{ $taxonomyBundled := $taxonomyCSS | resources.Concat "css/taxonomy-bundle.css" | minify | fingerprint }}
+      <link rel="stylesheet" href="{{ $taxonomyBundled.Permalink }}" integrity="{{ $taxonomyBundled.Data.Integrity }}" crossorigin="anonymous">
+    {{ else if eq .Kind "404" }}
+      {{/* 404 error page */}}
+      {{ $errorFiles := slice "css/prose.css" }}
+      {{ $errorCSS := slice }}
+      {{ range $errorFiles }}
+        {{ $css := resources.Get . }}
+        {{ if $css }}
+          {{ $errorCSS = $errorCSS | append $css }}
+        {{ end }}
+      {{ end }}
+      {{ $errorBundled := $errorCSS | resources.Concat "css/error-bundle.css" | minify | fingerprint }}
+      <link rel="stylesheet" href="{{ $errorBundled.Permalink }}" integrity="{{ $errorBundled.Data.Integrity }}" crossorigin="anonymous">
+    {{ end }}
+    
+    {{/* Math rendering with KaTeX */}}
+    {{ if .Param "math" }}
+      {{ partialCached "math.html" . }}
+    {{ end }}
+    
+    {{ block "head" . }}{{ end }}
+  </head>
+  <body class="{{ block "page" . }}{{ end }}{{ if eq .Site.Params.force_theme "dark" }} dark{{ end }}{{ if .IsSection }}{{ if or (hasPrefix .RelPermalink "/posts") (in .RelPermalink "/posts/") }} section-posts{{ end }}{{ end }}" id="body-element">
+    {{ if ne .Site.Params.force_theme "dark" }}{{ end }}
+
+    <!-- Skip to main content link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Language switcher and theme toggle (non-home pages only) -->
+    {{ if not .IsHome }}
+    <div class="global-theme-toggle-wrapper">
+      {{ if .IsTranslated }}
+      <nav class="global-language-switcher">
+        {{ range .Translations }}
+          <a href="{{ .Permalink }}" title="{{ .Language.LanguageName }}" aria-label="Switch to {{ .Language.LanguageName }}">
+            {{ if eq .Language.Lang "es" }}ES{{ else if eq .Language.Lang "en" }}EN{{ else }}{{ .Language.Lang | upper }}{{ end }}
+          </a>
+        {{ end }}
+      </nav>
+      {{ end }}
+      <button id="theme-toggle-top" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="global-theme-toggle">
+        <svg class="theme-icon theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="theme-icon theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+    {{ end }}
+
+    <!-- Back button (hidden on homepage) -->
+    {{ if not .IsHome }}
+      <nav class="back-nav">
+        <a href="javascript:history.back()" class="back-link" aria-label="Go back">
+          ← {{ .Site.Params.back_link_text | default "Back" }}
+        </a>
+      </nav>
+    {{ end }}
+
+    <!-- NOTE: Main content section -->
+    <div id="main-content" tabindex="-1">
+      {{ block "content" . }}{{ end }}
+    </div>
+    
+    <!-- NOTE: Footer (hidden on homepage and 404 page) -->
+    {{ if not .IsHome }}
+      {{ if not (eq .Kind "404") }}
+        {{ partial "footer.html" . }}
+      {{ end }}
+    {{ end }}
+    
+    <!-- Back to top link - fixed position, aligned with footer icons -->
+    <button id="back-to-top" class="back-to-top-footer" aria-label="Back to top" title="Back to top">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M10 4L10 16M10 4L4 10M10 4L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    
+    <!-- NOTE: Scripts -->
+    {{ block "script" . }}{{ end }}
+    {{/* Main JS - always loaded */}}
+    {{ $mainJS := resources.Get "js/main.js" | minify | fingerprint }}
+    <script src="{{ $mainJS.Permalink }}" integrity="{{ $mainJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+
+    {{/* Alpine.js - minimal reactive framework for interactivity (filters, toggles, etc.) */}}
+    {{/* Load Alpine.js on pages that might need interactivity */}}
+    {{ $loadAlpine := false }}
+    {{ if .Params.collections }}
+      {{ $loadAlpine = true }}
+    {{ else if and .IsSection (or (in .RelPermalink "/posts") (in .RelPermalink "/picks") (in .RelPermalink "/consumed")) }}
+      {{ $loadAlpine = true }}
+    {{ else if .Data.Term }}
+      {{ $loadAlpine = true }}
+    {{ else if or (hasPrefix .RelPermalink "/reviews/") (hasPrefix .RelPermalink "/consumed/") }}
+      {{ $loadAlpine = true }}
+    {{ else if .Content }}
+      {{/* Load on any page with content (might have shortcodes with interactivity) */}}
+      {{ $loadAlpine = true }}
+    {{ end }}
+    {{ if $loadAlpine }}
+      <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{ end }}
+    
+    {{/* Collection filter JS - only load on pages with collections or reviews (for spoiler galleries) */}}
+    {{ $loadCollectionJS := false }}
+    {{ if .Params.collections }}
+      {{ $loadCollectionJS = true }}
+    {{ else if and .IsSection (or (in .RelPermalink "/posts") (in .RelPermalink "/picks") (in .RelPermalink "/consumed")) }}
+      {{ $loadCollectionJS = true }}
+    {{ else if .Data.Term }}
+      {{ $loadCollectionJS = true }}
+    {{ else if or (hasPrefix .RelPermalink "/reviews/") (hasPrefix .RelPermalink "/consumed/") }}
+      {{ $loadCollectionJS = true }}
+    {{ end }}
+    {{ if $loadCollectionJS }}
+      {{ $collectionJS := resources.Get "js/collection-filter.js" | minify | fingerprint }}
+      <script src="{{ $collectionJS.Permalink }}" integrity="{{ $collectionJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+    {{ end }}
+    
+    {{/* Mermaid for diagrams - auto-loaded when mermaid code blocks are present */}}
+    {{ if .Store.Get "hasMermaid" }}
+      {{ partial "mermaid.html" . }}
+    {{ end }}
+    
+    {{/* KaTeX auto-render */}}
+    {{ if .Params.math }}
+      <script>
+        // Wait for both DOM and deferred scripts to load
+        function initKaTeX() {
+          if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(document.body, {
+              delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false},
+                {left: "\\[", right: "\\]", display: true},
+                {left: "\\(", right: "\\)", display: false}
+              ],
+              throwOnError: false
+            });
+          } else {
+            // If not ready yet, wait for window load
+            window.addEventListener('load', initKaTeX);
+          }
+        }
+        
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initKaTeX);
+        } else {
+          // DOM already loaded, try immediately or wait for load
+          initKaTeX();
+        }
+      </script>
+    {{ end }}
+  </body>
+</html>
+
