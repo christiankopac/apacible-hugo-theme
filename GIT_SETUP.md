@@ -54,20 +54,20 @@ git tag -l
 git show v1.0.0
 ```
 
-### 4. Create GitHub Repository
+### 4. Create sourcehut Repository
 
-1. Go to https://github.com/new
-2. Repository name: `apacible`
-3. Description: `A calm, accessible Hugo theme for the smolweb`
-4. **Public** repository
-5. **Do NOT** initialize with README, LICENSE, or .gitignore (already exists)
+1. Go to https://git.sr.ht/
+2. Click "Create a new repository"
+3. Repository name: `apacible`
+4. Description: `A calm, accessible Hugo theme for the smolweb`
+5. **Public** repository
 6. Click "Create repository"
 
-### 5. Push to GitHub
+### 5. Push to sourcehut
 
 ```bash
-# Add remote (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/christiankopac/apacible.git
+# Add remote
+git remote add origin https://git.sr.ht/~ckopac/apacible
 
 # Push main branch
 git branch -M main
@@ -80,51 +80,51 @@ git push origin v1.0.0
 git push --tags
 ```
 
-### 6. Verify on GitHub
+### 6. Verify on sourcehut
 
-Visit your repository: https://github.com/christiankopac/apacible
+Visit your repository: https://git.sr.ht/~ckopac/apacible
 
 You should see:
 - All files committed
-- v1.0.0 tag in the "Releases" section
+- v1.0.0 tag in the refs section
 - README displayed on the homepage
 
-### 7. Create GitHub Release (Optional but Recommended)
+### 7. Create Release Notes (Optional but Recommended)
 
-1. Go to https://github.com/christiankopac/apacible/releases
-2. Click "Draft a new release"
-3. Choose tag: `v1.0.0`
-4. Release title: `v1.0.0 - Initial Release`
-5. Description:
-   ```markdown
-   # Apacible Hugo Theme v1.0.0
-   
-   First public release of the Apacible Hugo theme - a calm, accessible theme for the smolweb.
-   
-   ## ✨ Features
-   
-   - **Accessibility First**: WCAG compliant, semantic HTML
-   - **Smolweb Philosophy**: Minimal JavaScript, small file sizes
-   - **Hugo-Native**: Uses Hugo's built-in image processing
-   - **Dark/Light Mode**: Theme persistence with localStorage
-   - **Rich Shortcodes**: Callouts, galleries, collections, and more
-   - **Mermaid & Math**: Built-in diagram and equation support
-   - **Responsive**: Mobile-first design
-   
-   ## 📦 Installation
-   
-   ```bash
-   cd your-hugo-site
-   git submodule add https://github.com/christiankopac/apacible.git themes/apacible
-   ```
-   
-   See [README.md](README.md) for full documentation.
-   
-   ## 🎨 Demo
-   
-   Check out the `exampleSite/` directory for a working demo.
-   ```
-6. Click "Publish release"
+You can create release notes by:
+1. Go to https://git.sr.ht/~ckopac/apacible
+2. View the tag: `v1.0.0`
+3. Create a post or update README with release information
+
+Release notes template:
+```markdown
+# Apacible Hugo Theme v1.0.0
+
+First public release of the Apacible Hugo theme - a calm, accessible theme for the smolweb.
+
+## ✨ Features
+
+- **Accessibility First**: WCAG compliant, semantic HTML
+- **Smolweb Philosophy**: Minimal JavaScript, small file sizes
+- **Hugo-Native**: Uses Hugo's built-in image processing
+- **Dark/Light Mode**: Theme persistence with localStorage
+- **Rich Shortcodes**: Callouts, galleries, collections, and more
+- **Mermaid & Math**: Built-in diagram and equation support
+- **Responsive**: Mobile-first design
+
+## 📦 Installation
+
+```bash
+cd your-hugo-site
+git submodule add https://git.sr.ht/~ckopac/apacible themes/apacible
+```
+
+See [README.md](README.md) for full documentation.
+
+## 🎨 Demo
+
+Check out the `exampleSite/` directory for a working demo.
+```
 
 ## Future Updates
 
@@ -152,13 +152,13 @@ git push origin v1.0.1
 
 ## Submit to Hugo Themes Showcase
 
-After pushing to GitHub:
+After pushing to sourcehut:
 
 1. Fork https://github.com/gohugoio/hugoThemes
 2. Clone your fork
 3. Add your theme as a submodule:
    ```bash
-   git submodule add https://github.com/christiankopac/apacible.git apacible
+   git submodule add https://git.sr.ht/~ckopac/apacible apacible
    ```
 4. Commit and create a pull request
 5. Hugo team will review and merge

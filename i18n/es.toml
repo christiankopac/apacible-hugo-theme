@@ -148,3 +148,9 @@ other = "Feed Atom"
 
 [toggleTheme]
 other = "Alternar tema"
+
+[foundArticlesInTag]
+other = "Se encontraron %d artículo%s en esta etiqueta"
+
+[foundArticlesInCategory]
+other = "Se encontraron %d artículo%s en esta categoría"

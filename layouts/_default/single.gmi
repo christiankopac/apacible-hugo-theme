@@ -1,21 +1,21 @@
-{{- $title := .Title | default "Untitled" -}}
+{{- $title := .Title | default "Untitled" | plainify }}
 # {{ $title }}
 
 {{- with .Date }}
 Published {{ .Format "2006-01-02" }}{{ with $.Lastmod }}{{ if ne . $.Date }} · Updated {{ .Format "2006-01-02" }}{{ end }}{{ end }}
 
-{{- end -}}
+{{- end }}
 {{- with .Description }}
 {{ printf "%s\n\n" (. | plainify) }}
-{{- end -}}
+{{- end }}
 {{ partial "gemini/content.gmi" . }}
 
-{{- with .Params.tags }}
-## Tags
-{{- range . }}
-* {{ . }}
-{{- end }}
-
+{{- $webURL := "" -}}
+{{- with .OutputFormats.Get "HTML" -}}
+  {{- $webURL = .Permalink -}}
+{{- else -}}
+  {{- $webURL = printf "%s%s" .Site.BaseURL .RelPermalink -}}
 {{- end -}}
-=> {{ .Permalink }} Web version
+{{- $webURL = replace $webURL "gemini://" "https://" -}}
+=> {{ $webURL }} Web version
 

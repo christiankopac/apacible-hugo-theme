@@ -24,7 +24,7 @@ A minimalist Hugo theme prioritizing accessibility and smolweb principles, with 
 1. Add as a Git submodule:
 ```bash
 cd your-hugo-site
-git submodule add https://github.com/christiankopac/apacible.git themes/apacible
+git submodule add https://git.sr.ht/~ckopac/apacible themes/apacible
 ```
 
 2. Update your `hugo.toml`:

@@ -1,8 +1,8 @@
 name = "apacible"
 license = "MIT"
-licenselink = "https://github.com/christiankopac/apacible/blob/main/LICENSE"
+licenselink = "https://git.sr.ht/~ckopac/apacible/tree/item/LICENSE"
 description = "A good-tempered, calm, pleasant Hugo theme - prioritizing accessibility and smolweb principles"
-homepage = "https://github.com/christiankopac/apacible"
+homepage = "https://git.sr.ht/~ckopac/apacible"
 tags = ["minimal", "blog", "clean", "responsive", "simple", "accessibility", "smolweb", "dark-mode", "a11y"]
 features = ["blog", "syntax-highlighting", "responsive", "dark-mode", "image-processing", "rss", "mermaid", "math"]
 min_version = "0.100.0"

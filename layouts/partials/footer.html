@@ -64,7 +64,7 @@
       {{ if .Site.Params.footer_credits }}
         <span class="footer-credits">{{ .Site.Params.footer_credits | safeHTML }}</span>
       {{ else }}
-        <span class="footer-credits">{{ $hugoLink := "<a href=\"https://gohugo.io/\" target=\"_blank\" rel=\"noopener\">Hugo</a>" }}{{ $themeLink := "<a href=\"https://github.com/christiankopac/apacible\" target=\"_blank\" rel=\"noopener\">apacible</a>" }}{{ printf (i18n "footerCredits" | default "Built with %s and the %s theme") $hugoLink $themeLink | safeHTML }}</span>
+        <span class="footer-credits">{{ $hugoLink := "<a href=\"https://gohugo.io/\" target=\"_blank\" rel=\"noopener\">Hugo</a>" }}{{ $themeLink := "<a href=\"https://git.sr.ht/~ckopac/apacible\" target=\"_blank\" rel=\"noopener\">apacible</a>" }}{{ printf (i18n "footerCredits" | default "Built with %s and the %s theme") $hugoLink $themeLink | safeHTML }}</span>
       {{ end }}
     </div>
     

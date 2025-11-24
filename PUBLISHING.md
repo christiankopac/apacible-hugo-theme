@@ -8,14 +8,14 @@ git add .
 git commit -m "Initial commit: Apacible Hugo theme v1.0.0"
 ```
 
-### 5. Create GitHub Repository
+### 5. Create sourcehut Repository
 
-1. Create a new repository on GitHub named `apacible`
+1. Create a new repository on sourcehut named `apacible`
 2. **Do not** initialize with README, LICENSE, or .gitignore (already exists)
 3. Push the theme:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/apacible.git
+git remote add origin https://git.sr.ht/~YOUR_USERNAME/apacible
 git branch -M main
 git push -u origin main
 ```
@@ -32,7 +32,7 @@ git push origin v1.0.0
 1. Fork the Hugo Themes repository: https://github.com/gohugoio/hugoThemes
 2. Add your theme as a Git submodule:
    ```bash
-   git submodule add https://github.com/YOUR_USERNAME/apacible.git apacible
+   git submodule add https://git.sr.ht/~YOUR_USERNAME/apacible apacible
    ```
 3. Create a pull request with:
    - Theme name
@@ -71,7 +71,7 @@ Users will install your theme with:
 
 ```bash
 cd their-hugo-site
-git submodule add https://github.com/YOUR_USERNAME/apacible.git themes/apacible
+git submodule add https://git.sr.ht/~YOUR_USERNAME/apacible themes/apacible
 ```
 
 Then add to their `hugo.toml`:
@@ -106,7 +106,7 @@ Before or after publishing:
 ## 📧 Support
 
 After publishing, consider:
-- Enable GitHub Issues for bug reports
-- Create GitHub Discussions for Q&A
+- Enable sourcehut ticket tracker for bug reports
+- Create a mailing list for Q&A
 - Add a SUPPORT.md file with contact info
 

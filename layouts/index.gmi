@@ -1,4 +1,4 @@
-{{- $title := .Params.name | default .Site.Title -}}
+{{- $title := .Params.name | default .Site.Title | plainify }}
 # {{ $title }}
 
 {{- with .Site.Params.description }}
@@ -34,5 +34,12 @@
 {{- printf "\n" -}}
 {{- end -}}
 
-=> {{ .Permalink }} Web version
+{{- $webURL := "" -}}
+{{- with .OutputFormats.Get "HTML" -}}
+  {{- $webURL = .Permalink -}}
+{{- else -}}
+  {{- $webURL = printf "%s%s" .Site.BaseURL .RelPermalink -}}
+{{- end -}}
+{{- $webURL = replace $webURL "gemini://" "https://" -}}
+=> {{ $webURL }} Web version
 

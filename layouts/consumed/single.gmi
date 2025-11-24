@@ -1,0 +1,185 @@
+{{- /* Get metadata from page params */ -}}
+{{- $mediaData := dict
+    "title" (.Params.title | default .Title)
+    "year" (.Params.year | default "")
+    "director" (.Params.director | default "")
+    "author" (.Params.author | default "")
+    "artist" (.Params.artist | default "")
+    "publisher" (.Params.publisher | default "")
+    "label" (.Params.label | default "")
+    "rating" (.Params.rating | default 0)
+    "content" (.Params.content | default "")
+    "review" (.Params.review | default "")
+    "footer" (.Params.footer | default "")
+    "genre" (.Params.genre | default "")
+    "genres" (.Params.genres | default slice)
+    "style" (.Params.style | default "")
+    "category" (.Params.category | default "")
+    "date_read" (.Params.date_read | default "")
+-}}
+{{- $isMovie := eq $mediaData.category "movie" -}}
+{{- $isBook := eq $mediaData.category "book" -}}
+{{- $isMusic := eq $mediaData.category "music" -}}
+
+{{- /* Title */ -}}
+{{- if $isMusic -}}
+  {{- if and $mediaData.artist $mediaData.title -}}
+    {{- printf "# %s - %s\n\n" ($mediaData.artist | plainify) ($mediaData.title | plainify) -}}
+  {{- else -}}
+    {{- printf "# %s\n\n" ($mediaData.title | plainify) -}}
+  {{- end -}}
+{{- else if $isMovie -}}
+  {{- printf "# %s" ($mediaData.title | plainify) -}}
+  {{- with $mediaData.year -}}
+    {{- printf " (%s)" . -}}
+  {{- end -}}
+  {{- printf "\n\n" -}}
+{{- else -}}
+  {{- printf "# %s\n\n" ($mediaData.title | plainify) -}}
+{{- end -}}
+
+{{- /* Subtitle */ -}}
+{{- if $isBook -}}
+  {{- with $mediaData.author -}}
+    {{- printf "by %s\n\n" (. | plainify) -}}
+  {{- end -}}
+{{- else if $isMovie -}}
+  {{- with $mediaData.director -}}
+    {{- printf "Directed by %s\n\n" (. | plainify) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Metadata */ -}}
+{{- if not $isMovie -}}
+  {{- with $mediaData.year -}}
+    {{- printf "* Year: %s\n" . -}}
+  {{- end -}}
+{{- end -}}
+
+{{- with $mediaData.rating -}}
+  {{- $rating := float . -}}
+  {{- if gt $rating 0 -}}
+    {{- $fullStars := int (math.Floor $rating) -}}
+    {{- $ratingTimes2 := mul $rating 2.0 -}}
+    {{- $ratingTimes2Int := int $ratingTimes2 -}}
+    {{- $hasHalf := ne (mod $ratingTimes2Int 2) 0 -}}
+    {{- $emptyStars := sub 5 (add $fullStars (cond $hasHalf 1 0)) -}}
+    {{- $stars := "" -}}
+    {{- range seq $fullStars -}}
+      {{- $stars = printf "%s★" $stars -}}
+    {{- end -}}
+    {{- if $hasHalf -}}
+      {{- $stars = printf "%s⯪" $stars -}}
+    {{- end -}}
+    {{- range seq $emptyStars -}}
+      {{- $stars = printf "%s☆" $stars -}}
+    {{- end -}}
+    {{- printf "* Rating: %s\n" $stars -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if $isBook -}}
+  {{- with $mediaData.publisher -}}
+    {{- printf "* Publisher: %s\n" (. | plainify) -}}
+  {{- end -}}
+  {{- $genresToShow := $mediaData.genres -}}
+  {{- if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") -}}
+    {{- $genresToShow = slice $mediaData.genre -}}
+  {{- end -}}
+  {{- if gt (len $genresToShow) 0 -}}
+    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+  {{- end -}}
+{{- else if $isMusic -}}
+  {{- with $mediaData.label -}}
+    {{- printf "* Label: %s\n" (. | plainify) -}}
+  {{- end -}}
+  {{- $genresToShow := $mediaData.genres -}}
+  {{- if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") -}}
+    {{- $genresToShow = slice $mediaData.genre -}}
+  {{- end -}}
+  {{- if gt (len $genresToShow) 0 -}}
+    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+  {{- end -}}
+{{- else if $isMovie -}}
+  {{- $genresToShow := $mediaData.genres -}}
+  {{- if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") -}}
+    {{- $genresToShow = slice $mediaData.genre -}}
+  {{- end -}}
+  {{- if gt (len $genresToShow) 0 -}}
+    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- with $mediaData.footer -}}
+  {{- $footerText := . | plainify -}}
+  {{- $dateOnly := $footerText -}}
+  {{- if $isBook -}}
+    {{- $dateOnly = replace $footerText "Read " "" -}}
+  {{- else if $isMusic -}}
+    {{- $dateOnly = replace $footerText "Listened " "" -}}
+  {{- else if $isMovie -}}
+    {{- $dateOnly = replace $footerText "Watched " "" -}}
+  {{- end -}}
+  {{- printf "* %s: %s\n" (cond $isBook "Read" (cond $isMusic "Listened" (cond $isMovie "Watched" "Date"))) $dateOnly -}}
+{{- end -}}
+
+{{- printf "\n" -}}
+
+{{- /* Content - exclude images */ -}}
+{{- with $mediaData.content -}}
+  {{- $content := . | plainify -}}
+  {{- /* Remove markdown image syntax */ -}}
+  {{- $content = replaceRE `!\[([^\]]*)\]\([^)]+\)` "" $content -}}
+  {{- $content = replaceRE `\*\*([^*]+)\*\*` "$1" $content -}}
+  {{- $content = replaceRE `\*([^*]+)\*` "$1" $content -}}
+  {{- $content = replaceRE `__([^_]+)__` "$1" $content -}}
+  {{- $content = replaceRE `_([^_]+)_` "$1" $content -}}
+  {{- $content = replaceRE `~~([^~]+)~~` "$1" $content -}}
+  {{- $content = strings.TrimSpace $content -}}
+  {{- if ne $content "" -}}
+    {{- printf "%s\n\n" $content -}}
+  {{- end -}}
+{{- end -}}
+
+{{- with $mediaData.review -}}
+  {{- printf "## Review\n\n" -}}
+  {{- $review := . | plainify -}}
+  {{- /* Remove markdown image syntax */ -}}
+  {{- $review = replaceRE `!\[([^\]]*)\]\([^)]+\)` "" $review -}}
+  {{- $review = replaceRE `\*\*([^*]+)\*\*` "$1" $review -}}
+  {{- $review = replaceRE `\*([^*]+)\*` "$1" $review -}}
+  {{- $review = replaceRE `__([^_]+)__` "$1" $review -}}
+  {{- $review = replaceRE `_([^_]+)_` "$1" $review -}}
+  {{- $review = replaceRE `~~([^~]+)~~` "$1" $review -}}
+  {{- $review = strings.TrimSpace $review -}}
+  {{- if ne $review "" -}}
+    {{- printf "%s\n\n" $review -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Page content - exclude images */ -}}
+{{- if .Content -}}
+  {{- $pageContent := .Content | plainify -}}
+  {{- /* Remove markdown image syntax */ -}}
+  {{- $pageContent = replaceRE `!\[([^\]]*)\]\([^)]+\)` "" $pageContent -}}
+  {{- $pageContent = replaceRE `\*\*([^*]+)\*\*` "$1" $pageContent -}}
+  {{- $pageContent = replaceRE `\*([^*]+)\*` "$1" $pageContent -}}
+  {{- $pageContent = replaceRE `__([^_]+)__` "$1" $pageContent -}}
+  {{- $pageContent = replaceRE `_([^_]+)_` "$1" $pageContent -}}
+  {{- $pageContent = replaceRE `~~([^~]+)~~` "$1" $pageContent -}}
+  {{- $pageContent = strings.TrimSpace $pageContent -}}
+  {{- if ne $pageContent "" -}}
+    {{- printf "%s\n\n" $pageContent -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Web version link */ -}}
+{{- $webURL := "" -}}
+{{- with .OutputFormats.Get "HTML" -}}
+  {{- $webURL = .Permalink -}}
+{{- else -}}
+  {{- $webURL = printf "%s%s" .Site.BaseURL $.RelPermalink -}}
+{{- end -}}
+{{- $webURL = replace $webURL "gemini://" "https://" -}}
+=> {{ $webURL }} Web version
+
