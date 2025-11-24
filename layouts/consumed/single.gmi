@@ -1,21 +1,42 @@
-{{- /* Get metadata from page params */ -}}
+{{- /* Get English version for metadata (if viewing translation) */ -}}
+{{- $englishPage := . -}}
+{{- if ne .Language.Lang "en" -}}
+  {{- /* Try to find English version through translations */ -}}
+  {{- range .Translations -}}
+    {{- if eq .Language.Lang "en" -}}
+      {{- $englishPage = . -}}
+      {{- break -}}
+    {{- end -}}
+  {{- end -}}
+  {{- /* If not found in translations, try to get by path */ -}}
+  {{- if eq $englishPage.Language.Lang .Language.Lang -}}
+    {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
+    {{- $enPage := .Site.GetPage $enPath -}}
+    {{- if $enPage -}}
+      {{- $englishPage = $enPage -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Get metadata from English page params, but title/content/review/songs from current page (for translation) */ -}}
 {{- $mediaData := dict
     "title" (.Params.title | default .Title)
-    "year" (.Params.year | default "")
-    "director" (.Params.director | default "")
-    "author" (.Params.author | default "")
-    "artist" (.Params.artist | default "")
-    "publisher" (.Params.publisher | default "")
-    "label" (.Params.label | default "")
-    "rating" (.Params.rating | default 0)
+    "year" ($englishPage.Params.year | default "")
+    "director" ($englishPage.Params.director | default "")
+    "author" ($englishPage.Params.author | default "")
+    "artist" ($englishPage.Params.artist | default "")
+    "publisher" ($englishPage.Params.publisher | default "")
+    "label" ($englishPage.Params.label | default "")
+    "rating" ($englishPage.Params.rating | default 0)
     "content" (.Params.content | default "")
     "review" (.Params.review | default "")
-    "footer" (.Params.footer | default "")
-    "genre" (.Params.genre | default "")
-    "genres" (.Params.genres | default slice)
-    "style" (.Params.style | default "")
-    "category" (.Params.category | default "")
-    "date_read" (.Params.date_read | default "")
+    "footer" ($englishPage.Params.footer | default "")
+    "genre" ($englishPage.Params.genre | default "")
+    "genres" ($englishPage.Params.genres | default slice)
+    "style" ($englishPage.Params.style | default "")
+    "songs" (.Params.songs | default slice)
+    "category" ($englishPage.Params.category | default "")
+    "date_read" ($englishPage.Params.date_read | default "")
 -}}
 {{- $isMovie := eq $mediaData.category "movie" -}}
 {{- $isBook := eq $mediaData.category "book" -}}
@@ -41,18 +62,18 @@
 {{- /* Subtitle */ -}}
 {{- if $isBook -}}
   {{- with $mediaData.author -}}
-    {{- printf "by %s\n\n" (. | plainify) -}}
+    {{- printf "%s %s\n\n" (i18n "by" | default "by") (. | plainify) -}}
   {{- end -}}
 {{- else if $isMovie -}}
   {{- with $mediaData.director -}}
-    {{- printf "Directed by %s\n\n" (. | plainify) -}}
+    {{- printf "%s %s\n\n" (i18n "directedBy" | default "Directed by") (. | plainify) -}}
   {{- end -}}
 {{- end -}}
 
 {{- /* Metadata */ -}}
 {{- if not $isMovie -}}
   {{- with $mediaData.year -}}
-    {{- printf "* Year: %s\n" . -}}
+    {{- printf "* %s: %s\n" (i18n "year" | default "Year") . -}}
   {{- end -}}
 {{- end -}}
 
@@ -74,31 +95,31 @@
     {{- range seq $emptyStars -}}
       {{- $stars = printf "%s☆" $stars -}}
     {{- end -}}
-    {{- printf "* Rating: %s\n" $stars -}}
+    {{- printf "* %s: %s\n" (i18n "rating" | default "Rating") $stars -}}
   {{- end -}}
 {{- end -}}
 
 {{- if $isBook -}}
   {{- with $mediaData.publisher -}}
-    {{- printf "* Publisher: %s\n" (. | plainify) -}}
+    {{- printf "* %s: %s\n" (i18n "publisher" | default "Publisher") (. | plainify) -}}
   {{- end -}}
   {{- $genresToShow := $mediaData.genres -}}
   {{- if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") -}}
     {{- $genresToShow = slice $mediaData.genre -}}
   {{- end -}}
   {{- if gt (len $genresToShow) 0 -}}
-    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+    {{- printf "* %s: %s\n" (i18n "genre" | default "Genre") (delimit $genresToShow ", " | plainify) -}}
   {{- end -}}
 {{- else if $isMusic -}}
   {{- with $mediaData.label -}}
-    {{- printf "* Label: %s\n" (. | plainify) -}}
+    {{- printf "* %s: %s\n" (i18n "label" | default "Label") (. | plainify) -}}
   {{- end -}}
   {{- $genresToShow := $mediaData.genres -}}
   {{- if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") -}}
     {{- $genresToShow = slice $mediaData.genre -}}
   {{- end -}}
   {{- if gt (len $genresToShow) 0 -}}
-    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+    {{- printf "* %s: %s\n" (i18n "genre" | default "Genre") (delimit $genresToShow ", " | plainify) -}}
   {{- end -}}
 {{- else if $isMovie -}}
   {{- $genresToShow := $mediaData.genres -}}
@@ -106,21 +127,39 @@
     {{- $genresToShow = slice $mediaData.genre -}}
   {{- end -}}
   {{- if gt (len $genresToShow) 0 -}}
-    {{- printf "* Genre: %s\n" (delimit $genresToShow ", " | plainify) -}}
+    {{- printf "* %s: %s\n" (i18n "genre" | default "Genre") (delimit $genresToShow ", " | plainify) -}}
   {{- end -}}
 {{- end -}}
 
-{{- with $mediaData.footer -}}
-  {{- $footerText := . | plainify -}}
-  {{- $dateOnly := $footerText -}}
+{{- /* Use date_read if available, otherwise extract date from footer */ -}}
+{{- $consumedDate := "" -}}
+{{- if $mediaData.date_read -}}
+  {{- $consumedDate = $mediaData.date_read -}}
+{{- else if $mediaData.footer -}}
+  {{- $footerText := $mediaData.footer | plainify -}}
+  {{- /* Extract date by removing verb prefixes */ -}}
+  {{- $consumedDate = $footerText -}}
+  {{- /* Remove English verbs */ -}}
+  {{- $consumedDate = replace $consumedDate "Read " "" -}}
+  {{- $consumedDate = replace $consumedDate "Watched " "" -}}
+  {{- $consumedDate = replace $consumedDate "Listened " "" -}}
+  {{- /* Remove Spanish verbs */ -}}
+  {{- $consumedDate = replace $consumedDate "Leído " "" -}}
+  {{- $consumedDate = replace $consumedDate "Visto " "" -}}
+  {{- $consumedDate = replace $consumedDate "Escuchado " "" -}}
+  {{- $consumedDate = strings.TrimSpace $consumedDate -}}
+{{- end -}}
+{{- if $consumedDate -}}
+  {{- /* Get translated verb based on category - use as label */ -}}
+  {{- $verbLabel := "" -}}
   {{- if $isBook -}}
-    {{- $dateOnly = replace $footerText "Read " "" -}}
+    {{- $verbLabel = i18n "readLabel" | default "Read" -}}
   {{- else if $isMusic -}}
-    {{- $dateOnly = replace $footerText "Listened " "" -}}
+    {{- $verbLabel = i18n "listenedLabel" | default "Listened" -}}
   {{- else if $isMovie -}}
-    {{- $dateOnly = replace $footerText "Watched " "" -}}
+    {{- $verbLabel = i18n "watchedLabel" | default "Watched" -}}
   {{- end -}}
-  {{- printf "* %s: %s\n" (cond $isBook "Read" (cond $isMusic "Listened" (cond $isMovie "Watched" "Date"))) $dateOnly -}}
+  {{- printf "* %s: %s\n" $verbLabel $consumedDate -}}
 {{- end -}}
 
 {{- printf "\n" -}}
@@ -178,8 +217,12 @@
 {{- with .OutputFormats.Get "HTML" -}}
   {{- $webURL = .Permalink -}}
 {{- else -}}
-  {{- $webURL = printf "%s%s" .Site.BaseURL $.RelPermalink -}}
+  {{- $siteURL := .Site.Params.site_url | default .Site.BaseURL -}}
+  {{- $webURL = printf "%s%s" $siteURL $.RelPermalink -}}
 {{- end -}}
+{{- $geminiURL := .Site.Params.gemini_url | default "gemini://gemini.kopac.ch" -}}
+{{- $siteURL := .Site.Params.site_url | default .Site.BaseURL -}}
+{{- $webURL = replace $webURL $geminiURL $siteURL -}}
+{{- $webURL = replace $webURL (printf "https://%s" (strings.TrimPrefix "gemini://" $geminiURL)) $siteURL -}}
 {{- $webURL = replace $webURL "gemini://" "https://" -}}
 => {{ $webURL }} Web version
-

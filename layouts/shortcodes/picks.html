@@ -1,0 +1,233 @@
+{{/*
+  Picks Shortcode - Show last 6 items with rating >= 4.0
+  Combines movies, music, and books from organized data files
+*/}}
+
+{{ $style := .Get "style" | default "poster-grid" }}
+
+{{/* Get all pages from consumed sections - current language */}}
+{{ $currentLang := .Site.Language.Lang | default "en" }}
+{{ $consumedPages := where .Site.AllPages "Section" "consumed" }}
+{{ $moviePages := slice }}
+{{ $musicPages := slice }}
+{{ $bookPages := slice }}
+{{ range $consumedPages }}
+  {{/* Only include pages in current language */}}
+  {{ $isCurrentLang := or (in .File.Path (printf "content/%s/" $currentLang)) (in .File.Dir (printf "%s/" $currentLang)) (eq .Language.Lang $currentLang) }}
+  {{ if and (not .IsSection) $isCurrentLang }}
+    {{ if (in .File.Dir "movie/") }}
+    {{ $moviePages = $moviePages | append . }}
+    {{ else if (in .File.Dir "music/") }}
+    {{ $musicPages = $musicPages | append . }}
+    {{ else if (in .File.Dir "book/") }}
+    {{ $bookPages = $bookPages | append . }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* Convert pages to items for compatibility */}}
+{{ $movies := slice }}
+{{ $music := slice }}
+{{ $books := slice }}
+{{ range $moviePages }}
+  {{ if not .Draft }}
+    {{/* Get English version for metadata */}}
+    {{ $englishPage := . }}
+    {{ if ne .Language.Lang "en" }}
+      {{ range .Translations }}
+        {{ if eq .Language.Lang "en" }}
+          {{ $englishPage = . }}
+          {{ break }}
+        {{ end }}
+      {{ end }}
+      {{ if eq $englishPage.Language.Lang .Language.Lang }}
+        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+        {{ $enPage := $.Site.GetPage $enPath }}
+        {{ if $enPage }}
+          {{ $englishPage = $enPage }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
+    {{ $movies = $movies | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "movies"
+      "year" ($englishPage.Params.year | default "")
+      "director" ($englishPage.Params.director | default "")
+      "rating" ($englishPage.Params.rating | default 0)
+      "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
+      "tmdb" ($englishPage.Params.tmdb | default "")
+      "content" (.Params.content | default "")
+      "review" (.Params.review | default "")
+      "footer" ($englishPage.Params.footer | default "")
+      "date_read" ($englishPage.Params.date_read | default "")
+      "draft" false
+      "link" (.RelPermalink | default "")
+    ) }}
+  {{ end }}
+{{ end }}
+{{ range $musicPages }}
+  {{ if not .Draft }}
+    {{/* Get English version for metadata */}}
+    {{ $englishPage := . }}
+    {{ if ne .Language.Lang "en" }}
+      {{ range .Translations }}
+        {{ if eq .Language.Lang "en" }}
+          {{ $englishPage = . }}
+          {{ break }}
+        {{ end }}
+      {{ end }}
+      {{ if eq $englishPage.Language.Lang .Language.Lang }}
+        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+        {{ $enPage := $.Site.GetPage $enPath }}
+        {{ if $enPage }}
+          {{ $englishPage = $enPage }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
+    {{ $music = $music | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "music"
+      "year" ($englishPage.Params.year | default "")
+      "artist" ($englishPage.Params.artist | default "")
+      "label" ($englishPage.Params.label | default "")
+      "discogs" ($englishPage.Params.discogs | default "")
+      "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
+      "footer" ($englishPage.Params.footer | default "")
+      "date_read" ($englishPage.Params.date_read | default "")
+      "draft" false
+      "link" (.RelPermalink | default "")
+      "rating" ($englishPage.Params.rating | default 0)
+    ) }}
+  {{ end }}
+{{ end }}
+{{ range $bookPages }}
+  {{ if not .Draft }}
+    {{/* Get English version for metadata */}}
+    {{ $englishPage := . }}
+    {{ if ne .Language.Lang "en" }}
+      {{ range .Translations }}
+        {{ if eq .Language.Lang "en" }}
+          {{ $englishPage = . }}
+          {{ break }}
+        {{ end }}
+      {{ end }}
+      {{ if eq $englishPage.Language.Lang .Language.Lang }}
+        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+        {{ $enPage := $.Site.GetPage $enPath }}
+        {{ if $enPage }}
+          {{ $englishPage = $enPage }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
+    {{ $books = $books | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "books"
+      "year" ($englishPage.Params.year | default "")
+      "author" ($englishPage.Params.author | default "")
+      "publisher" ($englishPage.Params.publisher | default "")
+      "openlibrary" ($englishPage.Params.openlibrary | default "")
+      "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
+      "footer" ($englishPage.Params.footer | default "")
+      "date_read" ($englishPage.Params.date_read | default "")
+      "draft" false
+      "link" (.RelPermalink | default "")
+      "rating" ($englishPage.Params.rating | default 0)
+    ) }}
+  {{ end }}
+{{ end }}
+
+{{/* Combine and filter by rating >= 4.0 */}}
+{{ $picks := slice }}
+{{ range $movies }}
+  {{ $ratingValue := float (.rating | default 0) }}
+  {{ if and (not .draft) (ge $ratingValue 4.0) }}
+    {{ $sortDate := "" }}
+    {{ if .date_read }}
+      {{ $sortDate = .date_read }}
+    {{ else if .footer }}
+      {{/* Try to extract date from footer for sorting */}}
+      {{ $sortDate = .footer }}
+    {{ end }}
+    {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
+  {{ end }}
+{{ end }}
+
+{{ range $music }}
+  {{ $ratingValue := float (.rating | default 0) }}
+  {{ if and (not .draft) (ge $ratingValue 4.0) }}
+    {{ $sortDate := "" }}
+    {{ if .date_read }}
+      {{ $sortDate = .date_read }}
+    {{ else if .footer }}
+      {{ $sortDate = .footer }}
+    {{ end }}
+    {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
+  {{ end }}
+{{ end }}
+
+{{ range $books }}
+  {{ $ratingValue := float (.rating | default 0) }}
+  {{ if and (not .draft) (ge $ratingValue 4.0) }}
+    {{ $sortDate := "" }}
+    {{ if .date_read }}
+      {{ $sortDate = .date_read }}
+    {{ else if .footer }}
+      {{ $sortDate = .footer }}
+    {{ end }}
+    {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
+  {{ end }}
+{{ end }}
+
+{{/* Sort by date (most recent first) and take last 6 */}}
+{{ $sortedPicks := slice }}
+{{ range $picks }}
+  {{ $sortedPicks = $sortedPicks | append . }}
+{{ end }}
+{{ $sortedPicks = sort $sortedPicks "sortDate" "desc" }}
+{{ $recentPicks := first 6 $sortedPicks }}
+
+{{ if gt (len $recentPicks) 0 }}
+  {{ $isPosterGrid := eq $style "poster-grid" }}
+  <div class="collection collection-{{ if $isPosterGrid }}poster{{ else }}card{{ end }}{{ if $isPosterGrid }} poster-grid picks-grid{{ end }}">
+    {{ range $recentPicks }}
+      {{ $item := .item }}
+      {{/* Use the actual page link if available, preserving language */}}
+      {{ $consumedLink := $item.link }}
+      <article class="collection-item"{{ if $item.category }} data-category="{{ $item.category }}"{{ end }}{{ if $item.year }} data-year="{{ $item.year }}"{{ end }}{{ if $item.date_read }} data-date="{{ $item.date_read }}"{{ end }}{{ if $item.title }} data-title="{{ $item.title | safeHTML }}"{{ end }}{{ if $item.director }} data-director="{{ $item.director }}"{{ end }}{{ if $item.author }} data-author="{{ $item.author }}"{{ end }}{{ if $item.artist }} data-artist="{{ $item.artist }}"{{ end }}{{ if $item.label }} data-label="{{ $item.label }}"{{ end }}{{ if $item.publisher }} data-publisher="{{ $item.publisher }}"{{ end }}{{ if $item.rating }} data-rating="{{ $item.rating }}"{{ end }}{{ if $item.review }} data-review="{{ $item.review | safeHTML }}"{{ end }}{{ if $item.content }} data-content="{{ $item.content | safeHTML }}"{{ end }}{{ if $item.footer }} data-footer="{{ $item.footer | safeHTML }}"{{ end }}{{ if $item.tmdb }} data-tmdb="{{ $item.tmdb }}"{{ end }}{{ if $item.discogs }} data-discogs="{{ $item.discogs }}"{{ end }}{{ if $item.discogsArtist }} data-discogs-artist="{{ $item.discogsArtist }}"{{ end }}{{ if $item.discogsLabel }} data-discogs-label="{{ $item.discogsLabel }}"{{ end }}{{ if $item.genre }} data-genre="{{ $item.genre }}"{{ end }}{{ if $item.style }} data-style="{{ $item.style }}"{{ end }}{{ if $item.openlibrary }} data-openlibrary="{{ $item.openlibrary }}"{{ end }}{{ if $item.songs }} data-songs="{{ $item.songs | jsonify }}"{{ end }}{{ if $consumedLink }} data-link="{{ $consumedLink }}"{{ end }}>
+        {{ if $isPosterGrid }}
+          {{ $itemImg := $item.image | default ($item.img | default "") }}
+          {{ if $itemImg }}
+            {{ if $consumedLink }}
+              <a href="{{ $consumedLink }}">
+                <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
+              </a>
+            {{ else }}
+              <a href="/consumed/" title="{{ $item.title | safeHTML }}">
+                <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
+              </a>
+            {{ end }}
+          {{ end }}
+        {{ else }}
+          <div class="item-content">
+            <h3 class="item-title">
+              {{ if $consumedLink }}
+                <a href="{{ $consumedLink }}">
+                  {{ $item.title | safeHTML }}
+                </a>
+              {{ else }}
+                {{ $item.title | safeHTML }}
+              {{ end }}
+            </h3>
+            {{ with $item.content }}
+              <p class="item-description">{{ . | safeHTML }}</p>
+            {{ end }}
+          </div>
+        {{ end }}
+      </article>
+    {{ end }}
+  </div>
+{{ else }}
+  <p><em>{{ i18n "noPicksYet" | default "No picks yet." }}</em></p>
+{{ end }}
+
+

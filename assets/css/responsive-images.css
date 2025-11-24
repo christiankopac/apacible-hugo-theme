@@ -43,6 +43,19 @@ figure.responsive-image .image-container .original-img {
   height: auto;
 }
 
+/* Dithered image styles */
+figure.responsive-image .image-container .dithered-img,
+.dithered-img {
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  figure.responsive-image .image-container .dithered-img,
+  .dithered-img {
+    mix-blend-mode: screen; /* Better for dark backgrounds */
+  }
+}
+
 figure.responsive-image .image-container .original-img img {
   mix-blend-mode: normal; /* Don't blend the original */
 }

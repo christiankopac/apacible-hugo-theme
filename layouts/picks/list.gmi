@@ -4,7 +4,130 @@
 {{- with .Description }}
 {{ printf "%s\n\n" (. | plainify) }}
 {{- end }}
-{{- $items := .Site.Data.consumed.collection | default (slice) -}}
+{{- /* Get picks from pages in current language */ -}}
+{{- $currentLang := .Language.Lang | default "en" -}}
+{{- $consumedPages := where .Site.AllPages "Section" "consumed" -}}
+{{- $moviePages := slice -}}
+{{- $musicPages := slice -}}
+{{- $bookPages := slice -}}
+{{- range $consumedPages -}}
+  {{- $isCurrentLang := or (in .File.Path (printf "content/%s/" $currentLang)) (in .File.Dir (printf "%s/" $currentLang)) (eq .Language.Lang $currentLang) -}}
+  {{- if and (not .IsSection) $isCurrentLang -}}
+    {{- if (in .File.Dir "movie/") -}}
+      {{- $moviePages = $moviePages | append . -}}
+    {{- else if (in .File.Dir "music/") -}}
+      {{- $musicPages = $musicPages | append . -}}
+    {{- else if (in .File.Dir "book/") -}}
+      {{- $bookPages = $bookPages | append . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $items := slice -}}
+{{- range $moviePages -}}
+  {{- if not .Draft -}}
+    {{- /* Get English version for metadata */ -}}
+    {{- $englishPage := . -}}
+    {{- if ne .Language.Lang "en" -}}
+      {{- range .Translations -}}
+        {{- if eq .Language.Lang "en" -}}
+          {{- $englishPage = . -}}
+          {{- break -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
+        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
+        {{- $enPage := $.Site.GetPage $enPath -}}
+        {{- if $enPage -}}
+          {{- $englishPage = $enPage -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
+    {{- if ge $ratingValue 4.0 -}}
+      {{- $items = $items | append (dict
+        "title" (.Params.title | default .Title)
+        "category" "movies"
+        "year" ($englishPage.Params.year | default "")
+        "director" ($englishPage.Params.director | default "")
+        "rating" $ratingValue
+        "content" (.Params.content | default "")
+        "date_read" ($englishPage.Params.date_read | default "")
+        "footer" ($englishPage.Params.footer | default "")
+        "link" (.RelPermalink | default "")
+      ) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range $musicPages -}}
+  {{- if not .Draft -}}
+    {{- /* Get English version for metadata */ -}}
+    {{- $englishPage := . -}}
+    {{- if ne .Language.Lang "en" -}}
+      {{- range .Translations -}}
+        {{- if eq .Language.Lang "en" -}}
+          {{- $englishPage = . -}}
+          {{- break -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
+        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
+        {{- $enPage := $.Site.GetPage $enPath -}}
+        {{- if $enPage -}}
+          {{- $englishPage = $enPage -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
+    {{- if ge $ratingValue 4.0 -}}
+      {{- $items = $items | append (dict
+        "title" (.Params.title | default .Title)
+        "category" "music"
+        "year" ($englishPage.Params.year | default "")
+        "artist" ($englishPage.Params.artist | default "")
+        "rating" $ratingValue
+        "content" (.Params.content | default "")
+        "date_read" ($englishPage.Params.date_read | default "")
+        "footer" ($englishPage.Params.footer | default "")
+        "link" (.RelPermalink | default "")
+      ) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range $bookPages -}}
+  {{- if not .Draft -}}
+    {{- /* Get English version for metadata */ -}}
+    {{- $englishPage := . -}}
+    {{- if ne .Language.Lang "en" -}}
+      {{- range .Translations -}}
+        {{- if eq .Language.Lang "en" -}}
+          {{- $englishPage = . -}}
+          {{- break -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
+        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
+        {{- $enPage := $.Site.GetPage $enPath -}}
+        {{- if $enPage -}}
+          {{- $englishPage = $enPage -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
+    {{- if ge $ratingValue 4.0 -}}
+      {{- $items = $items | append (dict
+        "title" (.Params.title | default .Title)
+        "category" "books"
+        "year" ($englishPage.Params.year | default "")
+        "author" ($englishPage.Params.author | default "")
+        "rating" $ratingValue
+        "content" (.Params.content | default "")
+        "date_read" ($englishPage.Params.date_read | default "")
+        "footer" ($englishPage.Params.footer | default "")
+        "link" (.RelPermalink | default "")
+      ) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- $groups := dict -}}
 {{- range $items }}
   {{- if not .draft }}
@@ -94,12 +217,24 @@
 {{- end }}
 
 {{- end }}
+
+{{- /* Link to consumed section */ -}}
+{{- $consumedPage := .Site.GetPage "/consumed" -}}
+{{- if $consumedPage -}}
+  {{- $consumedLink := $consumedPage.RelPermalink -}}
+  {{- with $consumedPage.OutputFormats.Get "Gemini" -}}
+    {{- $consumedLink = .RelPermalink -}}
+  {{- end -}}
+{{ printf "\n=> %s View all consumed content\n" $consumedLink }}
+{{- end -}}
 {{- $webURL := "" -}}
 {{- with .OutputFormats.Get "HTML" -}}
   {{- $webURL = .Permalink -}}
 {{- else -}}
   {{- $webURL = printf "%s%s" .Site.BaseURL .RelPermalink -}}
 {{- end -}}
+{{- $webURL = replace $webURL "gemini://gemini.kopac.ch" "https://kopac.ch" -}}
+{{- $webURL = replace $webURL "https://gemini.kopac.ch" "https://kopac.ch" -}}
 {{- $webURL = replace $webURL "gemini://" "https://" -}}
 => {{ $webURL }} Web version
 

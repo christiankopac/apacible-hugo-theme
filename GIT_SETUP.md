@@ -97,34 +97,34 @@ You can create release notes by:
 3. Create a post or update README with release information
 
 Release notes template:
-```markdown
-# Apacible Hugo Theme v1.0.0
-
-First public release of the Apacible Hugo theme - a calm, accessible theme for the smolweb.
-
-## ✨ Features
-
-- **Accessibility First**: WCAG compliant, semantic HTML
-- **Smolweb Philosophy**: Minimal JavaScript, small file sizes
-- **Hugo-Native**: Uses Hugo's built-in image processing
-- **Dark/Light Mode**: Theme persistence with localStorage
-- **Rich Shortcodes**: Callouts, galleries, collections, and more
-- **Mermaid & Math**: Built-in diagram and equation support
-- **Responsive**: Mobile-first design
-
-## 📦 Installation
-
-```bash
-cd your-hugo-site
+   ```markdown
+   # Apacible Hugo Theme v1.0.0
+   
+   First public release of the Apacible Hugo theme - a calm, accessible theme for the smolweb.
+   
+   ## ✨ Features
+   
+   - **Accessibility First**: WCAG compliant, semantic HTML
+   - **Smolweb Philosophy**: Minimal JavaScript, small file sizes
+   - **Hugo-Native**: Uses Hugo's built-in image processing
+   - **Dark/Light Mode**: Theme persistence with localStorage
+   - **Rich Shortcodes**: Callouts, galleries, collections, and more
+   - **Mermaid & Math**: Built-in diagram and equation support
+   - **Responsive**: Mobile-first design
+   
+   ## 📦 Installation
+   
+   ```bash
+   cd your-hugo-site
 git submodule add https://git.sr.ht/~ckopac/apacible themes/apacible
-```
-
-See [README.md](README.md) for full documentation.
-
-## 🎨 Demo
-
-Check out the `exampleSite/` directory for a working demo.
-```
+   ```
+   
+   See [README.md](README.md) for full documentation.
+   
+   ## 🎨 Demo
+   
+   Check out the `exampleSite/` directory for a working demo.
+   ```
 
 ## Future Updates
 

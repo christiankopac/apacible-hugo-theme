@@ -1,0 +1,388 @@
+{{ define "content" }}
+{{/* Get English version for metadata (if viewing translation) */}}
+{{ $englishPage := . }}
+{{ if ne .Language.Lang "en" }}
+    {{/* Try to find English version through translations */}}
+    {{ range .Translations }}
+        {{ if eq .Language.Lang "en" }}
+            {{ $englishPage = . }}
+            {{ break }}
+        {{ end }}
+    {{ end }}
+    {{/* If not found in translations, try to get by path */}}
+    {{ if eq $englishPage.Language.Lang .Language.Lang }}
+        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+        {{ $enPage := .Site.GetPage $enPath }}
+        {{ if $enPage }}
+            {{ $englishPage = $enPage }}
+        {{ else }}
+            {{/* Fallback: try to find by matching title in English section */}}
+            {{ $enPages := where (where .Site.AllPages "Section" "consumed") "Language.Lang" "en" }}
+            {{ range $enPages }}
+                {{ if and (not .IsSection) (eq (.Params.title | default .Title) ($.Params.title | default $.Title)) }}
+                    {{ $englishPage = . }}
+                    {{ break }}
+                {{ end }}
+            {{ end }}
+        {{ end }}
+    {{ end }}
+{{ end }}
+
+{{/* Get metadata from English page params, but title/content/review from current page (for translation) */}}
+{{ $mediaData := dict
+    "title" (.Params.title | default .Title)
+    "year" ($englishPage.Params.year | default "")
+    "director" ($englishPage.Params.director | default "")
+    "author" ($englishPage.Params.author | default "")
+    "artist" ($englishPage.Params.artist | default "")
+    "publisher" ($englishPage.Params.publisher | default "")
+    "label" ($englishPage.Params.label | default "")
+    "rating" ($englishPage.Params.rating | default 0)
+    "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
+    "tmdb" ($englishPage.Params.tmdb | default "")
+    "discogs" ($englishPage.Params.discogs | default "")
+    "discogsArtist" ($englishPage.Params.discogsArtist | default "")
+    "discogsLabel" ($englishPage.Params.discogsLabel | default "")
+    "openlibrary" ($englishPage.Params.openlibrary | default "")
+    "content" (.Params.content | default "")
+    "review" (.Params.review | default "")
+    "trailer" ($englishPage.Params.trailer | default "")
+    "footer" ($englishPage.Params.footer | default "")
+    "genre" ($englishPage.Params.genre | default "")
+    "genres" ($englishPage.Params.genres | default slice)
+    "style" ($englishPage.Params.style | default "")
+    "songs" (.Params.songs | default slice)
+    "screenshots" ($englishPage.Params.screenshots | default slice)
+    "category" ($englishPage.Params.category | default "")
+}}
+
+{{ $isMovie := eq $mediaData.category "movie" }}
+{{ $isBook := eq $mediaData.category "book" }}
+{{ $isMusic := eq $mediaData.category "music" }}
+
+<article class="consumed-single {{ $mediaData.category }}">
+    <div class="consumed-hero">
+        <div class="consumed-poster">
+            {{ with $mediaData.img }}
+                <img src="{{ . }}" alt="{{ $mediaData.title }}" loading="eager">
+            {{ else }}
+                <div class="consumed-poster-placeholder">
+                    <span>{{ substr $mediaData.title 0 1 }}</span>
+                </div>
+            {{ end }}
+        </div>
+
+        <div class="consumed-info">
+            <div class="consumed-info-top">
+            <header class="consumed-header">
+                {{ if $isMusic }}
+                    {{/* Music: Artist - Album */}}
+                    {{ if and $mediaData.artist $mediaData.title }}
+                        <p class="consumed-artist">{{ $mediaData.artist }}</p>
+                        <h1 class="consumed-title">{{ $mediaData.title }}</h1>
+                    {{ else }}
+                        <h1 class="consumed-title">{{ $mediaData.title }}</h1>
+                    {{ end }}
+                {{ else if $isMovie }}
+                    {{/* Movie: Title (Year) */}}
+                    <h1 class="consumed-title">
+                        {{ $mediaData.title }}{{ with $mediaData.year }} <span class="title-year">({{ . }})</span>{{ end }}
+                    </h1>
+                {{ else }}
+                    <h1 class="consumed-title">{{ $mediaData.title }}</h1>
+                {{ end }}
+
+                {{ if $isBook }}
+                    {{ with $mediaData.author }}
+                        <p class="consumed-subtitle">{{ i18n "by" | default "by" }} {{ . }}</p>
+                    {{ end }}
+                {{ else if $isMovie }}
+                    {{ with $mediaData.director }}
+                        <p class="consumed-subtitle">{{ i18n "directedBy" | default "Directed by" }} {{ . }}</p>
+                    {{ end }}
+                {{ end }}
+            </header>
+
+            <div class="consumed-metadata">
+                {{ if not $isMovie }}
+                    {{ with $mediaData.year }}
+                        <div class="metadata-badge" data-label="{{ i18n "year" | default "Year" }}">
+                            <span>{{ . }}</span>
+                        </div>
+                    {{ end }}
+                {{ end }}
+
+                {{ with $mediaData.rating }}
+                    {{ $rating := float . }}
+                    {{ if gt $rating 0 }}
+                        {{ $fullStars := int (math.Floor $rating) }}
+                        {{ $ratingTimes2 := mul $rating 2.0 }}
+                        {{ $ratingTimes2Int := int $ratingTimes2 }}
+                        {{ $hasHalf := ne (mod $ratingTimes2Int 2) 0 }}
+                        {{ $emptyStars := sub 5 (add $fullStars (cond $hasHalf 1 0)) }}
+                        <div class="metadata-badge rating-badge" data-label="{{ i18n "rating" | default "Rating" }}">
+                            <span class="rating-stars">
+                                {{ range seq $fullStars }}★{{ end }}{{ if $hasHalf }}⯪{{ end }}{{ range seq $emptyStars }}☆{{ end }}
+                            </span>
+                        </div>
+                    {{ end }}
+                {{ end }}
+
+                {{ if $isBook }}
+                    {{ with $mediaData.publisher }}
+                        <div class="metadata-badge" data-label="{{ i18n "publisher" | default "Publisher" }}">
+                            <span>{{ . }}</span>
+                        </div>
+                    {{ end }}
+                    {{ $genresToShow := $mediaData.genres }}
+                    {{ if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") }}
+                        {{ $genresToShow = slice $mediaData.genre }}
+                    {{ end }}
+                    {{ if gt (len $genresToShow) 0 }}
+                        <div class="metadata-badge" data-label="{{ i18n "genre" | default "Genre" }}">
+                            <span>{{ delimit $genresToShow ", " }}</span>
+                        </div>
+                    {{ end }}
+                {{ else if $isMusic }}
+                    {{ with $mediaData.label }}
+                        <div class="metadata-badge" data-label="{{ i18n "label" | default "Label" }}">
+                            {{ if $mediaData.discogsLabel }}
+                                <a href="{{ $mediaData.discogsLabel }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">{{ . }}</a>
+                            {{ else }}
+                                <span>{{ . }}</span>
+                            {{ end }}
+                        </div>
+                    {{ end }}
+                    {{ $genresToShow := $mediaData.genres }}
+                    {{ if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") }}
+                        {{ $genresToShow = slice $mediaData.genre }}
+                    {{ end }}
+                    {{ if gt (len $genresToShow) 0 }}
+                        <div class="metadata-badge" data-label="{{ i18n "genre" | default "Genre" }}">
+                            <span>{{ delimit $genresToShow ", " }}</span>
+                        </div>
+                    {{ end }}
+                {{ else if $isMovie }}
+                    {{ $genresToShow := $mediaData.genres }}
+                    {{ if and (eq (len $genresToShow) 0) (ne $mediaData.genre "") }}
+                        {{ $genresToShow = slice $mediaData.genre }}
+                    {{ end }}
+                    {{ if gt (len $genresToShow) 0 }}
+                        <div class="metadata-badge" data-label="{{ i18n "genre" | default "Genre" }}">
+                            <span>{{ delimit $genresToShow ", " }}</span>
+                        </div>
+                    {{ end }}
+                {{ end }}
+
+                {{/* Use date_read if available, otherwise extract date from footer */}}
+                {{ $consumedDate := "" }}
+                {{ if $mediaData.date_read }}
+                    {{ $consumedDate = $mediaData.date_read }}
+                {{ else if $mediaData.footer }}
+                    {{ $footerText := $mediaData.footer }}
+                    {{/* Extract date by removing verb prefixes */}}
+                    {{ $consumedDate = $footerText }}
+                    {{/* Remove English verbs */}}
+                    {{ $consumedDate = replace $consumedDate "Read " "" }}
+                    {{ $consumedDate = replace $consumedDate "Watched " "" }}
+                    {{ $consumedDate = replace $consumedDate "Listened " "" }}
+                    {{/* Remove Spanish verbs */}}
+                    {{ $consumedDate = replace $consumedDate "Leído " "" }}
+                    {{ $consumedDate = replace $consumedDate "Visto " "" }}
+                    {{ $consumedDate = replace $consumedDate "Escuchado " "" }}
+                    {{ $consumedDate = strings.TrimSpace $consumedDate }}
+                {{ end }}
+                {{ if $consumedDate }}
+                    {{/* Get translated verb based on category - use as label */}}
+                    {{ $verbLabel := "" }}
+                    {{ if $isBook }}
+                        {{ $verbLabel = i18n "readLabel" | default "Read" }}
+                    {{ else if $isMusic }}
+                        {{ $verbLabel = i18n "listenedLabel" | default "Listened" }}
+                    {{ else if $isMovie }}
+                        {{ $verbLabel = i18n "watchedLabel" | default "Watched" }}
+                    {{ end }}
+                    <div class="metadata-badge consumed-date" data-label="{{ $verbLabel }}">
+                        <span>{{ $consumedDate }}</span>
+                    </div>
+                {{ end }}
+            </div>
+            </div>
+
+            <div class="consumed-links">
+                {{ if $isMovie }}
+                    {{ with $mediaData.tmdb }}
+                        <a href="{{ . }}" class="external-link" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            {{ i18n "viewOnTMDB" | default "View on TMDB" }}
+                        </a>
+                    {{ end }}
+                {{ else if $isMusic }}
+                    {{ with $mediaData.discogs }}
+                        <a href="{{ . }}" class="external-link" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            {{ i18n "viewOnDiscogs" | default "View on Discogs" }}
+                        </a>
+                    {{ end }}
+                    {{ with $mediaData.discogsArtist }}
+                        <a href="{{ . }}" class="external-link" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            {{ i18n "artistProfile" | default "Artist Profile" }}
+                        </a>
+                    {{ end }}
+                {{ else if $isBook }}
+                    {{ with $mediaData.openlibrary }}
+                        <a href="{{ . }}" class="external-link" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            </svg>
+                            {{ i18n "viewOnOpenLibrary" | default "View on Open Library" }}
+                        </a>
+                    {{ end }}
+                {{ end }}
+            </div>
+        </div>
+    </div>
+
+    {{ if or $mediaData.content $mediaData.review .Content }}
+        <div class="consumed-content-section">
+            {{ with $mediaData.content }}
+                <div class="consumed-description">
+                    {{ . | markdownify }}
+                </div>
+            {{ end }}
+
+            {{ with $mediaData.review }}
+                <div class="consumed-review">
+                    <h2>{{ i18n "review" | default "Review" }}</h2>
+                    {{ . | markdownify }}
+                </div>
+            {{ end }}
+
+            {{ if .Content }}
+                <div class="consumed-page-content">
+                    {{ .Content }}
+                    {{/* Movie-specific: Show screenshots/gallery - after text, before footnotes */}}
+                    {{ if $isMovie }}
+                        {{ $screenshots := $mediaData.screenshots }}
+                        {{ if $screenshots }}
+                            <div class="consumed-gallery-before-footnotes">
+                                {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" .) }}
+                            </div>
+                        {{ end }}
+                    {{ end }}
+                </div>
+            {{ else }}
+                {{/* Movie-specific: Show screenshots/gallery - if no content */}}
+                {{ if $isMovie }}
+                    {{ $screenshots := $mediaData.screenshots }}
+                    {{ if $screenshots }}
+                        <div class="consumed-content-section">
+                            {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" .) }}
+                        </div>
+                    {{ end }}
+                {{ end }}
+            {{ end }}
+        </div>
+    {{ end }}
+
+    {{/* Music-specific: Show songs - use current page's songs only */}}
+    {{ if and $isMusic $mediaData.songs }}
+        {{ $songs := .Params.songs | default slice }}
+        <div class="consumed-content-section">
+            <h2>{{ i18n "songs" | default "Songs" }}</h2>
+            <div class="music-songs-embeds">
+                {{ range $songs }}
+                    {{ $songUrl := "" }}
+                    {{ $songTitle := "" }}
+                    {{ $songType := printf "%T" . }}
+                    {{ if eq $songType "string" }}
+                        {{ $songUrl = . }}
+                    {{ else }}
+                        {{ if .url }}
+                            {{ $songUrl = .url }}
+                            {{ $songTitle = .title | default .url }}
+                        {{ else if .title }}
+                            {{ $songTitle = .title }}
+                        {{ end }}
+                    {{ end }}
+                    {{ if $songUrl }}
+                        {{ if or (in $songUrl "youtube.com") (in $songUrl "youtu.be") }}
+                            {{ $videoId := "" }}
+                            {{ if in $songUrl "youtube.com/watch?v=" }}
+                                {{ $videoId = index (split $songUrl "v=") 1 }}
+                                {{ $videoId = index (split $videoId "&") 0 }}
+                            {{ else if in $songUrl "youtu.be/" }}
+                                {{ $videoId = index (split $songUrl "youtu.be/") 1 }}
+                                {{ $videoId = index (split $videoId "?") 0 }}
+                            {{ end }}
+                            {{ if $videoId }}
+                                <div class="song-embed">
+                                    <iframe
+                                        width="560"
+                                        height="315"
+                                        src="https://www.youtube.com/embed/{{ $videoId }}"
+                                        frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen
+                                        loading="lazy">
+                                    </iframe>
+                                    {{ if and $songTitle (ne $songTitle $songUrl) }}
+                                        <p class="song-title">{{ $songTitle }}</p>
+                                    {{ end }}
+                                </div>
+                            {{ end }}
+                        {{ end }}
+                    {{ end }}
+                {{ end }}
+            </div>
+        </div>
+    {{ end }}
+
+    {{/* Movie-specific: Show trailer */}}
+    {{ if and $isMovie $mediaData.trailer }}
+        <div class="consumed-content-section">
+            <h2>{{ i18n "trailer" | default "Trailer" }}</h2>
+            <div class="movie-trailer">
+                {{ $trailerUrl := $mediaData.trailer }}
+                {{ $videoId := "" }}
+                {{ if in $trailerUrl "youtube.com/watch?v=" }}
+                    {{ $videoId = index (split $trailerUrl "v=") 1 }}
+                    {{ $videoId = index (split $videoId "&") 0 }}
+                {{ else if in $trailerUrl "youtu.be/" }}
+                    {{ $videoId = index (split $trailerUrl "youtu.be/") 1 }}
+                    {{ $videoId = index (split $videoId "?") 0 }}
+                {{ else if in $trailerUrl "youtube.com/embed/" }}
+                    {{ $videoId = index (split $trailerUrl "embed/") 1 }}
+                    {{ $videoId = index (split $videoId "?") 0 }}
+                {{ end }}
+                {{ if $videoId }}
+                    <div class="trailer-embed">
+                        <iframe
+                            width="560"
+                            height="315"
+                            src="https://www.youtube.com/embed/{{ $videoId }}"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                {{ end }}
+            </div>
+        </div>
+    {{ end }}
+</article>
+{{ end }}
+
