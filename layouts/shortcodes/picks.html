@@ -1,5 +1,5 @@
 {{/*
-  Picks Shortcode - Show last 6 items with rating >= 4.0
+  Picks Shortcode - Show last 8 items with rating >= 4.0
   Combines movies, music, and books from organized data files
 */}}
 
@@ -178,13 +178,13 @@
   {{ end }}
 {{ end }}
 
-{{/* Sort by date (most recent first) and take last 6 */}}
+{{/* Sort by date (most recent first) and take last 8 */}}
 {{ $sortedPicks := slice }}
 {{ range $picks }}
   {{ $sortedPicks = $sortedPicks | append . }}
 {{ end }}
 {{ $sortedPicks = sort $sortedPicks "sortDate" "desc" }}
-{{ $recentPicks := first 6 $sortedPicks }}
+{{ $recentPicks := first 8 $sortedPicks }}
 
 {{ if gt (len $recentPicks) 0 }}
   {{ $isPosterGrid := eq $style "poster-grid" }}

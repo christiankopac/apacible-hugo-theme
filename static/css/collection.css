@@ -220,7 +220,22 @@
   height: 100%;
 }
 
-/* Picks page - images fill container */
+/* Picks page - 2 items per row on mobile */
+.collection.picks-grid.poster-grid,
+.collection.picks-grid.collection-poster.poster-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-block-end: var(--space-2xl);
+  margin-inline: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  padding: 0;
+  box-sizing: border-box;
+  justify-items: center;
+}
+
+/* Picks page - images use cover (cropped) */
 .collection.picks-grid.poster-grid .collection-item img {
   width: 100%;
   height: 100%;
@@ -234,7 +249,7 @@
   mix-blend-mode: none;
 }
 
-/* Music items in picks - keep square sizes with contain */
+/* Music items in picks - use contain (not cropped, square sizes) */
 .collection.picks-grid.poster-grid .collection-item[data-category="music"] img {
   object-fit: contain;
 }
@@ -391,11 +406,32 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: var(--space-md);
   }
+  
+  /* Picks page - 4 items per row on tablet */
+  .collection.picks-grid.poster-grid,
+  .collection.picks-grid.collection-poster.poster-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    width: 100%;
+    overflow: visible;
+    padding: 0 0.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .collection-poster.poster-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  /* Picks page - 4 items per row on desktop (max) */
+  .collection.picks-grid.poster-grid,
+  .collection.picks-grid.collection-poster.poster-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
