@@ -311,6 +311,16 @@
                 {{ end }}
             {{ end }}
         </div>
+    {{ else }}
+        {{/* Movie-specific: Show screenshots/gallery - if no content, review, or description */}}
+        {{ if $isMovie }}
+            {{ $screenshots := $mediaData.screenshots }}
+            {{ if $screenshots }}
+                <div class="consumed-content-section">
+                    {{ partial "spoiler-gallery" (dict "images" $screenshots "columns" "3" "label" (printf "%s ⚠ %s" (i18n "showGallery" | default "Show Gallery") (i18n "spoilerAlert" | default "Spoiler Alert")) "hide_label" (i18n "hideGallery" | default "Hide Gallery") "context" . "title" $mediaData.title) }}
+                </div>
+            {{ end }}
+        {{ end }}
     {{ end }}
 
     {{/* Music-specific: Show songs - use current page's songs only */}}
@@ -398,6 +408,203 @@
                 {{ end }}
             </div>
         </div>
+    {{ end }}
+
+    {{/* Movie-specific: Show related movies by genre */}}
+    {{ if and $isMovie $mediaData.genres }}
+        {{ $currentGenres := $mediaData.genres }}
+        {{ if and (eq (len $currentGenres) 0) (ne $mediaData.genre "") }}
+            {{ $currentGenres = slice $mediaData.genre }}
+        {{ end }}
+        {{ if gt (len $currentGenres) 0 }}
+            {{/* Get all movie pages */}}
+            {{ $allMoviePages := slice }}
+            {{ $consumedPages := where .Site.RegularPages "Section" "consumed" }}
+            {{ range $consumedPages }}
+                {{ if and (not .IsSection) (ne .File.Path "consumed/_index.md") }}
+                    {{ $dir := .File.Dir }}
+                    {{ $path := .File.Path }}
+                    {{ $relPath := .RelPermalink }}
+                    {{ if or (in $dir "movie/") (in $path "consumed/movie/") (in $relPath "/consumed/movie/") (eq (.Params.category | default "") "movie") }}
+                        {{/* Exclude current page */}}
+                        {{ if ne .File.Path $englishPage.File.Path }}
+                            {{ $allMoviePages = $allMoviePages | append . }}
+                        {{ end }}
+                    {{ end }}
+                {{ end }}
+            {{ end }}
+
+            {{/* Find movies with matching genres */}}
+            {{ $relatedMovies := slice }}
+            {{ range $allMoviePages }}
+                {{/* Get English version for metadata */}}
+                {{ $relatedEnglishPage := . }}
+                {{ if ne .Language.Lang "en" }}
+                    {{ range .Translations }}
+                        {{ if eq .Language.Lang "en" }}
+                            {{ $relatedEnglishPage = . }}
+                            {{ break }}
+                        {{ end }}
+                    {{ end }}
+                    {{ if eq $relatedEnglishPage.Language.Lang .Language.Lang }}
+                        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+                        {{ $enPage := $.Site.GetPage $enPath }}
+                        {{ if $enPage }}
+                            {{ $relatedEnglishPage = $enPage }}
+                        {{ end }}
+                    {{ end }}
+                {{ end }}
+                {{ $relatedGenres := $relatedEnglishPage.Params.genres | default slice }}
+                {{ if and (eq (len $relatedGenres) 0) (ne ($relatedEnglishPage.Params.genre | default "") "") }}
+                    {{ $relatedGenres = slice ($relatedEnglishPage.Params.genre) }}
+                {{ end }}
+                {{/* Check if any genre matches */}}
+                {{ $hasMatch := false }}
+                {{ range $currentGenres }}
+                    {{ if in $relatedGenres . }}
+                        {{ $hasMatch = true }}
+                    {{ end }}
+                {{ end }}
+                {{ if $hasMatch }}
+                    {{ $relatedMovies = $relatedMovies | append . }}
+                {{ end }}
+            {{ end }}
+
+            {{/* Randomly select up to 6 movies */}}
+            {{ if gt (len $relatedMovies) 0 }}
+                {{ $maxRelated := 6 }}
+                {{ $relatedCount := len $relatedMovies }}
+                {{ if gt $relatedCount $maxRelated }}
+                    {{/* Shuffle and take first 6 - using page modification time as seed for consistency */}}
+                    {{ $relatedMovies = $relatedMovies | shuffle }}
+                    {{ $relatedMovies = first $maxRelated $relatedMovies }}
+                {{ else }}
+                    {{/* Shuffle even if we have fewer than 6 */}}
+                    {{ $relatedMovies = $relatedMovies | shuffle }}
+                {{ end }}
+                <div class="consumed-content-section">
+                    <h2>{{ i18n "relatedMovies" | default "Related Movies" }}</h2>
+                    <div class="collection collection-poster poster-grid related-movies">
+                        {{ range $relatedMovies }}
+                            {{/* Get English version for metadata */}}
+                            {{ $relatedEnglishPage := . }}
+                            {{ if ne .Language.Lang "en" }}
+                                {{ range .Translations }}
+                                    {{ if eq .Language.Lang "en" }}
+                                        {{ $relatedEnglishPage = . }}
+                                        {{ break }}
+                                    {{ end }}
+                                {{ end }}
+                                {{ if eq $relatedEnglishPage.Language.Lang .Language.Lang }}
+                                    {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+                                    {{ $enPage := $.Site.GetPage $enPath }}
+                                    {{ if $enPage }}
+                                        {{ $relatedEnglishPage = $enPage }}
+                                    {{ end }}
+                                {{ end }}
+                            {{ end }}
+                            {{ $relatedTitle := .Params.title | default .Title }}
+                            {{ $relatedImg := $relatedEnglishPage.Params.img | default ($relatedEnglishPage.Params.image | default "") }}
+                            {{ $relatedYear := $relatedEnglishPage.Params.year | default "" }}
+                            {{ $relatedRating := $relatedEnglishPage.Params.rating | default 0 }}
+                            {{ $relatedLink := .RelPermalink }}
+                            {{ $ratingValue := 0.0 }}
+                            {{ if $relatedRating }}
+                                {{ $ratingNum := $relatedRating }}
+                                {{ if eq (printf "%T" $ratingNum) "int" }}
+                                    {{ $ratingValue = float $ratingNum }}
+                                {{ else if eq (printf "%T" $ratingNum) "float64" }}
+                                    {{ $ratingValue = $ratingNum }}
+                                {{ else }}
+                                    {{ $ratingStr := printf "%v" $ratingNum }}
+                                    {{ $ratingValue = float $ratingStr }}
+                                {{ end }}
+                            {{ end }}
+                            {{ $ratingClass := "" }}
+                            {{ if and $ratingValue (ge $ratingValue 5.0) }}
+                                {{ $ratingClass = " five-star-pick" }}
+                            {{ else if and $ratingValue (ge $ratingValue 4.0) }}
+                                {{ $ratingClass = " four-plus-star-pick" }}
+                            {{ end }}
+                            <article class="collection-item{{ $ratingClass }}" data-category="movies"{{ if $relatedYear }} data-year="{{ $relatedYear }}"{{ end }}>
+                                {{ if $relatedImg }}
+                                    {{/* Process image through Hugo */}}
+                                    {{ $imgResource := "" }}
+                                    {{ if hasPrefix $relatedImg "/" }}
+                                        {{ $imgPath := strings.TrimPrefix "/" $relatedImg }}
+                                        {{ $imgResource = resources.Get $imgPath }}
+                                    {{ else }}
+                                        {{ $imgResource = resources.Get $relatedImg }}
+                                    {{ end }}
+                                    {{ if $imgResource }}
+                                        {{/* Resize for related movies - smaller size, maintain 2/3 aspect ratio to prevent cropping */}}
+                                        {{ $resizedImg := $imgResource.Resize "200x300 q90" }}
+                                        {{ $grayscaleImg := $resizedImg.Filter (images.Grayscale) }}
+                                        {{/* Dither options */}}
+                                        {{ $ditherOpts := dict
+                                            "colors" (slice "1a1a1a" "4d4d4d" "808080" "b3b3b3" "e6e6e6")
+                                            "method" "FloydSteinberg"
+                                            "strength" 0.9
+                                            "serpentine" true
+                                        }}
+                                        {{ $ditherFilter := images.Dither $ditherOpts }}
+                                        {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
+                                        {{/* Create WebP and AVIF versions */}}
+                                        {{ $ditheredWebP := $ditheredImg.Resize "200x300 webp q90" }}
+                                        {{ $ditheredAVIF := $ditheredImg.Resize "200x300 avif q90" }}
+                                        {{ $originalWebP := $imgResource.Resize "200x300 webp q90" }}
+                                        {{ $originalAVIF := $imgResource.Resize "200x300 avif q90" }}
+                                        <a href="{{ $relatedLink }}" class="consumed-poster-link">
+                                            <div class="consumed-poster-image-container" data-category="movies">
+                                                <picture class="dithered-poster">
+                                                    {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                                                    <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
+                                                    <img src="{{ $ditheredWebP.RelPermalink }}" 
+                                                         alt="{{ $relatedTitle | safeHTML }}" 
+                                                         class="dithered-img"
+                                                         width="{{ $ditheredWebP.Width }}"
+                                                         height="{{ $ditheredWebP.Height }}"
+                                                         loading="lazy"
+                                                         decoding="async"
+                                                         style="width: 100%; height: 100%; object-fit: cover;">
+                                                </picture>
+                                                <picture class="original-poster">
+                                                    {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                                                    <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
+                                                    <img src="{{ $originalWebP.RelPermalink }}" 
+                                                         alt="{{ $relatedTitle | safeHTML }}" 
+                                                         width="{{ $originalWebP.Width }}"
+                                                         height="{{ $originalWebP.Height }}"
+                                                         loading="lazy"
+                                                         decoding="async"
+                                                         style="width: 100%; height: 100%; object-fit: cover;">
+                                                </picture>
+                                            </div>
+                                        </a>
+                                    {{ else }}
+                                        {{/* Fallback to original path */}}
+                                        <a href="{{ $relatedLink }}" class="consumed-poster-link">
+                                            <div class="consumed-poster-image-container" data-category="movies">
+                                                <img src="{{ $relatedImg }}" alt="{{ $relatedTitle | safeHTML }}" loading="lazy">
+                                            </div>
+                                        </a>
+                                    {{ end }}
+                                {{ else }}
+                                    {{/* No image - show placeholder */}}
+                                    <a href="{{ $relatedLink }}" class="consumed-poster-link">
+                                        <div class="consumed-poster-image-container" data-category="movies">
+                                            <div class="consumed-poster-placeholder">
+                                                <span>{{ substr $relatedTitle 0 1 }}</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {{ end }}
+                            </article>
+                        {{ end }}
+                    </div>
+                </div>
+            {{ end }}
+        {{ end }}
     {{ end }}
 </article>
 {{ end }}
