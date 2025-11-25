@@ -406,24 +406,82 @@ class="collection-wrapper">
               {{ $imgResource = resources.Get $itemImg }}
             {{ end }}
             {{ if $imgResource }}
-              {{/* Create pixelated version: resize to medium size for subtle pixelation, create WebP and AVIF versions */}}
-              {{ $pixelated := $imgResource.Resize "120x q85" }}
-              {{ $pixelatedWebP := $imgResource.Resize "120x webp q85" }}
-              {{ $pixelatedAVIF := $imgResource.Resize "120x avif q85" }}
+              {{/* Resize for poster grid - maintain aspect ratio */}}
+              {{ $resizedImg := $imgResource.Resize "400x q90" }}
+              {{ $grayscaleImg := $resizedImg.Filter (images.Grayscale) }}
+              
+              {{/* Dither options - using grayscale palette with FloydSteinberg */}}
+              {{ $ditherOpts := dict
+                "colors" (slice "1a1a1a" "4d4d4d" "808080" "b3b3b3" "e6e6e6")
+                "method" "FloydSteinberg"
+                "strength" 0.9
+                "serpentine" true
+              }}
+              {{ $ditherFilter := images.Dither $ditherOpts }}
+              {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
+              
+              {{/* Create WebP and AVIF versions of dithered image */}}
+              {{ $ditheredWebP := $ditheredImg.Resize "400x webp q90" }}
+              {{ $ditheredAVIF := $ditheredImg.Resize "400x avif q90" }}
+              
+              {{/* Create WebP and AVIF versions of original for hover */}}
+              {{ $originalWebP := $imgResource.Resize "400x webp q90" }}
+              {{ $originalAVIF := $imgResource.Resize "400x avif q90" }}
+              
               {{ if $consumedLink }}
-                <a href="{{ $consumedLink }}">
-                  <picture>
-                    {{ if $pixelatedAVIF }}<source srcset="{{ $pixelatedAVIF.RelPermalink }}" type="image/avif" width="{{ $pixelatedAVIF.Width }}" height="{{ $pixelatedAVIF.Height }}">{{ end }}
-                    <source srcset="{{ $pixelatedWebP.RelPermalink }}" type="image/webp" width="{{ $pixelatedWebP.Width }}" height="{{ $pixelatedWebP.Height }}">
-                    <img src="{{ $pixelatedWebP.RelPermalink }}" alt="{{ .title | safeHTML }}" width="{{ $pixelatedWebP.Width }}" height="{{ $pixelatedWebP.Height }}" style="image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; width: 100%; height: 100%; object-fit: cover;">
-                  </picture>
+                <a href="{{ $consumedLink }}" class="consumed-poster-link">
+                  <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                    <picture class="dithered-poster">
+                      {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                      <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
+                      <img src="{{ $ditheredWebP.RelPermalink }}" 
+                           alt="{{ .title | safeHTML }}" 
+                           class="dithered-img"
+                           width="{{ $ditheredWebP.Width }}"
+                           height="{{ $ditheredWebP.Height }}"
+                           loading="lazy"
+                           decoding="async"
+                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                    </picture>
+                    <picture class="original-poster">
+                      {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                      <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
+                      <img src="{{ $originalWebP.RelPermalink }}" 
+                           alt="{{ .title | safeHTML }} (original)" 
+                           width="{{ $originalWebP.Width }}"
+                           height="{{ $originalWebP.Height }}"
+                           loading="lazy"
+                           decoding="async"
+                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                    </picture>
+                  </div>
                 </a>
               {{ else }}
-                <picture>
-                  {{ if $pixelatedAVIF }}<source srcset="{{ $pixelatedAVIF.RelPermalink }}" type="image/avif" width="{{ $pixelatedAVIF.Width }}" height="{{ $pixelatedAVIF.Height }}">{{ end }}
-                  <source srcset="{{ $pixelatedWebP.RelPermalink }}" type="image/webp" width="{{ $pixelatedWebP.Width }}" height="{{ $pixelatedWebP.Height }}">
-                  <img src="{{ $pixelatedWebP.RelPermalink }}" alt="{{ .title | safeHTML }}" width="{{ $pixelatedWebP.Width }}" height="{{ $pixelatedWebP.Height }}" style="image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; width: 100%; height: 100%; object-fit: cover;">
-                </picture>
+                <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                  <picture class="dithered-poster">
+                    {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                    <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
+                    <img src="{{ $ditheredWebP.RelPermalink }}" 
+                         alt="{{ .title | safeHTML }}" 
+                         class="dithered-img"
+                         width="{{ $ditheredWebP.Width }}"
+                         height="{{ $ditheredWebP.Height }}"
+                         loading="lazy"
+                         decoding="async"
+                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                  </picture>
+                  <picture class="original-poster">
+                    {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
+                    <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
+                    <img src="{{ $originalWebP.RelPermalink }}" 
+                         alt="{{ .title | safeHTML }} (original)" 
+                         width="{{ $originalWebP.Width }}"
+                         height="{{ $originalWebP.Height }}"
+                         loading="lazy"
+                         decoding="async"
+                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                  </picture>
+                </div>
               {{ end }}
             {{ else }}
               {{/* Fallback to original image if resource not found */}}
