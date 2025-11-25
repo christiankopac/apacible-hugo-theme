@@ -26,8 +26,10 @@
     const wrappers = document.querySelectorAll('.collection-wrapper');
 
     wrappers.forEach(function(wrapper) {
-      let selectedCategory = 'all';
-      let selectedYear = 'all';
+      // Read filter state from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      let selectedCategory = urlParams.get('category') || 'all';
+      let selectedYear = urlParams.get('year') || 'all';
 
       // Get filter buttons - support both "year" and "date" filter types
       const categoryButtons = wrapper.querySelectorAll('[data-filter-type="category"] button');
@@ -35,6 +37,21 @@
       // Find items within the collection div (which should be inside the wrapper)
       const collection = wrapper.querySelector('.collection[data-filterable]');
       const items = collection ? collection.querySelectorAll('.collection-item') : wrapper.querySelectorAll('.collection-item');
+
+      // Update URL parameters without page reload
+      function updateURL() {
+        const params = new URLSearchParams();
+        if (selectedCategory !== 'all') {
+          params.set('category', selectedCategory);
+        }
+        if (selectedYear !== 'all') {
+          params.set('year', selectedYear);
+        }
+        const newURL = params.toString() 
+          ? window.location.pathname + '?' + params.toString()
+          : window.location.pathname;
+        window.history.replaceState({}, '', newURL);
+      }
 
       function updateUI() {
         // Update category buttons
@@ -117,6 +134,7 @@
             selectedYear = 'all'; // Reset year when changing category
           }
           updateUI();
+          updateURL();
         });
       });
 
@@ -126,6 +144,7 @@
           // Support both data-year and data-date attributes - convert to string for consistency
           selectedYear = String(this.dataset.year || this.dataset.date || 'all');
           updateUI();
+          updateURL();
         });
       });
 
@@ -194,4 +213,3 @@
 
   // Spoiler toggles and collection filters are now handled by Alpine.js
 })();
-

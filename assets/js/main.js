@@ -367,6 +367,50 @@
   });
 })();
 
+// Preserve filter parameters when navigating back from consumed single pages
+(function() {
+  // Check if we're on a consumed single page
+  const isConsumedSingle = document.querySelector('.consumed-single') && 
+                           !document.querySelector('.consumed-single').classList.contains('consumed');
+  if (!isConsumedSingle) return;
+
+  // Find the back button link to consumed listing
+  const backLink = document.querySelector('.back-nav a.back-link[href*="/consumed/"]');
+  if (!backLink) return;
+
+  // Get referrer URL
+  const referrer = document.referrer;
+  if (!referrer) return;
+
+  try {
+    const referrerUrl = new URL(referrer);
+    const referrerPath = referrerUrl.pathname;
+    
+    // Check if referrer is the consumed listing page
+    if (referrerPath.includes('/consumed/') && !referrerPath.match(/\/consumed\/[^\/]+\//)) {
+      // Extract filter parameters from referrer
+      const category = referrerUrl.searchParams.get('category');
+      const year = referrerUrl.searchParams.get('year');
+      
+      // If filters exist, append them to the back link
+      if (category || year) {
+        const params = new URLSearchParams();
+        if (category) params.set('category', category);
+        if (year) params.set('year', year);
+        
+        const currentUrl = new URL(backLink.href, window.location.origin);
+        params.forEach((value, key) => {
+          currentUrl.searchParams.set(key, value);
+        });
+        
+        backLink.href = currentUrl.pathname + (currentUrl.search ? currentUrl.search : '');
+      }
+    }
+  } catch (e) {
+    // Invalid referrer URL, ignore
+  }
+})();
+
 // Table of Contents is handled by toc.js
 
 // Prefetch recent post links on hover for faster navigation
