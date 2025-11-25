@@ -68,9 +68,15 @@
                 {{ $imgPath := strings.TrimPrefix "/" . }}
                 {{ $imgResource := resources.Get $imgPath }}
                 {{ if $imgResource }}
-                    {{/* Process image - resize to reasonable size */}}
+                    {{/* Process image - resize to reasonable size, create WebP and AVIF versions */}}
                     {{ $processedImg := $imgResource.Resize "800x q90" }}
-                    <img src="{{ $processedImg.RelPermalink }}" alt="{{ $mediaData.title }}" loading="eager">
+                    {{ $processedWebP := $imgResource.Resize "800x webp q90" }}
+                    {{ $processedAVIF := $imgResource.Resize "800x avif q90" }}
+                    <picture>
+                        {{ if $processedAVIF }}<source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">{{ end }}
+                        <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
+                        <img src="{{ $processedWebP.RelPermalink }}" alt="{{ $mediaData.title }}" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}" loading="eager">
+                    </picture>
                 {{ else }}
                     {{/* Fallback to original path if not found in assets */}}
                     <img src="{{ . }}" alt="{{ $mediaData.title }}" loading="eager">

@@ -197,14 +197,47 @@
         {{ if $isPosterGrid }}
           {{ $itemImg := $item.image | default ($item.img | default "") }}
           {{ if $itemImg }}
-            {{ if $consumedLink }}
-              <a href="{{ $consumedLink }}">
-                <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
-              </a>
+            {{/* Process image through Hugo */}}
+            {{ $imgResource := "" }}
+            {{ if hasPrefix $itemImg "/" }}
+              {{ $imgPath := strings.TrimPrefix "/" $itemImg }}
+              {{ $imgResource = resources.Get $imgPath }}
             {{ else }}
-              <a href="/consumed/" title="{{ $item.title | safeHTML }}">
-                <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
-              </a>
+              {{ $imgResource = resources.Get $itemImg }}
+            {{ end }}
+            {{ if $imgResource }}
+              {{/* Resize for picks grid - create WebP and AVIF versions */}}
+              {{ $resizedImg := $imgResource.Resize "400x q90" }}
+              {{ $resizedWebP := $imgResource.Resize "400x webp q90" }}
+              {{ $resizedAVIF := $imgResource.Resize "400x avif q90" }}
+              {{ if $consumedLink }}
+                <a href="{{ $consumedLink }}">
+                  <picture>
+                    {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
+                    <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
+                    <img src="{{ $resizedWebP.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}" loading="lazy" decoding="async">
+                  </picture>
+                </a>
+              {{ else }}
+                <a href="/consumed/" title="{{ $item.title | safeHTML }}">
+                  <picture>
+                    {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
+                    <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
+                    <img src="{{ $resizedWebP.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}" loading="lazy" decoding="async">
+                  </picture>
+                </a>
+              {{ end }}
+            {{ else }}
+              {{/* Fallback to original image if resource not found */}}
+              {{ if $consumedLink }}
+                <a href="{{ $consumedLink }}">
+                  <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
+                </a>
+              {{ else }}
+                <a href="/consumed/" title="{{ $item.title | safeHTML }}">
+                  <img src="{{ $itemImg }}" alt="{{ $item.title | safeHTML }}">
+                </a>
+              {{ end }}
             {{ end }}
           {{ end }}
         {{ else }}

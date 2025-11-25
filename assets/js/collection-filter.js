@@ -91,8 +91,8 @@
         // Update items visibility
         items.forEach(function(item) {
           const itemCategory = String(item.dataset.category || '');
-          // Check for consumed-year first (for date filtering), then year (for release year)
-          const itemYear = String(item.dataset.consumedYear || item.dataset.year || '');
+          // Use release year (data-year) for filtering
+          const itemYear = String(item.dataset.year || item.dataset.consumedYear || '');
 
           const categoryMatch = selectedCategory === 'all' || itemCategory === selectedCategory;
           const yearMatch = selectedYear === 'all' || itemYear === String(selectedYear);
