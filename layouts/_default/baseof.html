@@ -29,6 +29,67 @@
       {{ end }}
     {{ end }}
     <title>{{ block "title" . }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    
+    {{/* Open Graph / Social Media Meta Tags */}}
+    {{ $title := .Title | default .Site.Title }}
+    {{ $description := .Description | default .Site.Params.description | default .Site.Params.bio | default "" }}
+    {{ $siteName := .Site.Title }}
+    {{ $url := .Permalink | absURL }}
+    {{ $type := cond .IsPage "article" "website" }}
+    
+    {{/* Get image - for single pages, always use featured image/poster if available */}}
+    {{ $ogImage := "" }}
+    {{ if .IsPage }}
+      {{/* Single pages: prioritize img (poster/featured image) */}}
+      {{ if .Params.img }}
+        {{ $ogImage = .Params.img }}
+      {{ else if .Params.image }}
+        {{ $ogImage = .Params.image }}
+      {{ else if .Params.featured_image }}
+        {{ $ogImage = .Params.featured_image }}
+      {{ else if .Params.poster }}
+        {{ $ogImage = .Params.poster }}
+      {{ else if .Site.Params.og_image }}
+        {{ $ogImage = .Site.Params.og_image }}
+      {{ end }}
+    {{ else }}
+      {{/* Non-page content: use site default */}}
+      {{ if .Site.Params.og_image }}
+        {{ $ogImage = .Site.Params.og_image }}
+      {{ end }}
+    {{ end }}
+    
+    {{/* Build absolute image URL */}}
+    {{ if $ogImage }}
+      {{ $ogImageURL := $ogImage | relURL }}
+      {{ if not (hasPrefix $ogImageURL "http") }}
+        {{ $ogImageURL = printf "%s%s" (.Site.BaseURL | strings.TrimSuffix "/") $ogImageURL }}
+      {{ end }}
+      {{ $ogImage = $ogImageURL }}
+    {{ end }}
+    
+    <meta property="og:title" content="{{ $title }}" />
+    {{ if $description }}
+    <meta property="og:description" content="{{ $description }}" />
+    {{ end }}
+    <meta property="og:type" content="{{ $type }}" />
+    <meta property="og:url" content="{{ $url }}" />
+    <meta property="og:site_name" content="{{ $siteName }}" />
+    {{ if $ogImage }}
+    <meta property="og:image" content="{{ $ogImage }}" />
+    <meta property="og:image:alt" content="{{ $title }}" />
+    {{ end }}
+    
+    {{/* Twitter Card tags for better compatibility */}}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ $title }}" />
+    {{ if $description }}
+    <meta name="twitter:description" content="{{ $description }}" />
+    {{ end }}
+    {{ if $ogImage }}
+    <meta name="twitter:image" content="{{ $ogImage }}" />
+    <meta name="twitter:image:alt" content="{{ $title }}" />
+    {{ end }}
     <link rel="icon" type="image/svg+xml" href="{{ "img/favicon.svg" | relURL }}" />
     <link rel="icon" type="image/png" sizes="32x32" href="{{ "img/favicon-32x32.png" | relURL }}" />
     <link rel="icon" type="image/png" sizes="16x16" href="{{ "img/favicon-16x16.png" | relURL }}" />
