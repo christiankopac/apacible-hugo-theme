@@ -2,15 +2,15 @@
   Spoiler Gallery Shortcode - Gallery with spoiler toggle
   
   Usage:
-  {{< spoiler-gallery file="movie-screenshots.toml" columns="3" label="Show Screenshots (Spoilers)" >}}
+  {{< spoiler-gallery file="movie-screenshots.toml" columns="3" label="Show Images (Spoiler Alert)" >}}
   
   Shows a button that reveals the gallery when clicked
 */}}
 
 {{ $file := .Get "file" }}
 {{ $columns := .Get "columns" | default "3" }}
-{{ $label := .Get "label" | default "Show Screenshots (Spoilers)" }}
-{{ $hideLabel := .Get "hide_label" | default "Hide Screenshots" }}
+{{ $label := .Get "label" | default "Show Images (Spoiler Alert)" }}
+{{ $hideLabel := .Get "hide_label" | default "Hide Images" }}
 {{ $thumbWidth := .Get "thumb_width" | default "300" }}
 {{ $thumbHeight := .Get "thumb_height" | default "200" }}
 {{ $fullWidth := .Get "full_width" | default "2400" }}
@@ -29,13 +29,15 @@
 {{ end }}
 
 <div class="spoiler-gallery-container">
-  <button class="spoiler-toggle" 
+  <button class="spoiler-toggle"
           aria-expanded="false"
-          data-show-text="{{ $label }}" 
-          data-hide-text="{{ $hideLabel }}">
-    {{ $label }}
+          type="button">
+    <span>{{ $label }}</span>
+    <span style="display: none;">{{ $hideLabel }}</span>
   </button>
-  <div class="spoiler-content" hidden aria-live="polite">
+  <div class="spoiler-content"
+       aria-live="polite"
+       style="display: none;">
     {{ if $images }}
     <div class="spoiler-screenshots">
       {{ range $images }}
@@ -43,12 +45,35 @@
         {{ $imgAlt := .alt | default "Screenshot" }}
         {{ $imgCaption := .caption | default "" }}
         
-        {{/* Get image resource */}}
-        {{ $img := resources.Get (strings.TrimPrefix "/" $imgSrc) }}
+        {{/* Get image resource from assets directory (for optimization) */}}
+        {{ $imgPath := strings.TrimPrefix "/" $imgSrc }}
+        {{ $img := resources.Get $imgPath }}
         
         {{ if $img }}
+          {{/* Optimize image - resize to max width while preserving aspect ratio */}}
+          {{ $optimizedImg := $img.Resize (printf "%sx q%s" $fullWidth $fullQuality) }}
+          {{ $optimizedWebP := $img.Resize (printf "%sx webp q%s" $fullWidth $fullQuality) }}
+          {{ $optimizedAVIF := $img.Resize (printf "%sx avif q%s" $fullWidth $fullQuality) }}
+          
           <figure class="screenshot-item">
-            <img src="{{ $img.RelPermalink }}" 
+            <picture>
+              <source srcset="{{ $optimizedAVIF.RelPermalink }}" type="image/avif" width="{{ $optimizedAVIF.Width }}" height="{{ $optimizedAVIF.Height }}">
+              <source srcset="{{ $optimizedWebP.RelPermalink }}" type="image/webp" width="{{ $optimizedWebP.Width }}" height="{{ $optimizedWebP.Height }}">
+              <img src="{{ $optimizedImg.RelPermalink }}" 
+                   alt="{{ $imgAlt }}" 
+                   width="{{ $optimizedImg.Width }}"
+                   height="{{ $optimizedImg.Height }}"
+                   loading="lazy"
+                   decoding="async">
+            </picture>
+            {{ if $imgCaption }}
+            <figcaption>{{ $imgCaption }}</figcaption>
+            {{ end }}
+          </figure>
+        {{ else }}
+          {{/* Fallback: try static directory (no optimization) */}}
+          <figure class="screenshot-item">
+            <img src="{{ $imgSrc }}" 
                  alt="{{ $imgAlt }}" 
                  loading="lazy"
                  decoding="async">

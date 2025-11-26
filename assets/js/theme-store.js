@@ -82,11 +82,13 @@
       }
     });
 
-    // Color scheme button
-    const colorSchemeBtn = document.getElementById('color-scheme-toggle');
-    if (colorSchemeBtn) {
-      colorSchemeBtn.addEventListener('click', cycleColorScheme);
-    }
+    // Color scheme buttons (homepage and non-home pages)
+    const colorSchemeBtns = document.querySelectorAll('#color-scheme-toggle, #color-scheme-toggle-top');
+    colorSchemeBtns.forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', cycleColorScheme);
+      }
+    });
   }
 
   // Initialize when DOM is ready
@@ -104,4 +106,3 @@
     }
   });
 })();
-

@@ -1,6 +1,6 @@
 <footer class="site-footer">
   {{/* Newsletter subscription form - hidden on consumed single pages */}}
-  {{ if and .Site.Params.newsletter_enabled (not (hasPrefix .RelPermalink "/consumed/")) }}
+  {{ if and .Site.Params.newsletter_enabled (not (in .RelPermalink "/consumed/")) }}
   <div class="footer-newsletter">
     <form name="newsletter" netlify data-netlify="true" netlify-honeypot="bot-field">
       <input type="hidden" name="form-name" value="contact" />
@@ -94,7 +94,7 @@
           {{- end }}
         {{ end }}
       {{ end }}
-      
+
       <button id="color-scheme-toggle" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="footer-icon">
         ⚄
       </button>

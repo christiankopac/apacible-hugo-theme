@@ -110,9 +110,10 @@
     {{ if $showOriginal }}
     <button class="toggle-original"
             type="button"
+            aria-label="{{ i18n "toggleOriginalImage" | default "Toggle original image" }}"
             aria-pressed="false">
-      <span>→ show original</span>
-      <span style="display: none;">← dither</span>
+      <span>→ {{ i18n "showOriginal" | default "show original" }}</span>
+      <span style="display: none;">← {{ i18n "dither" | default "dither" }}</span>
     </button>
     {{ end }}
   </figcaption>
@@ -130,4 +131,3 @@
 {{ else }}
   <p><em>Image not found: {{ $src }}</em></p>
 {{ end }}
-

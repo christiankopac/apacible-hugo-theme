@@ -43,16 +43,18 @@ figure.responsive-image .image-container .original-img {
   height: auto;
 }
 
-/* Dithered image styles */
 figure.responsive-image .image-container .dithered-img,
 .dithered-img {
-  mix-blend-mode: multiply;
+  mix-blend-mode: color-burn;
+  opacity: 0.85;
+  /* Alternative blend modes to try: soft-light, color-burn, darken */
 }
 
 @media (prefers-color-scheme: dark) {
   figure.responsive-image .image-container .dithered-img,
   .dithered-img {
-    mix-blend-mode: screen; /* Better for dark backgrounds */
+    mix-blend-mode: luminosity; /* Better for dark backgrounds */
+    opacity: 0.9;
   }
 }
 
@@ -80,18 +82,29 @@ figure.responsive-image figcaption {
 figure.responsive-image figcaption .toggle-original {
   display: inline-block;
   margin-left: 0.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
   font-size: 0.875rem;
   font-weight: 500;
+  font-family: inherit;
   color: var(--color-accent);
   cursor: pointer;
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 2px;
   opacity: 0.8;
+  transition: opacity var(--transition-base);
 }
 
 figure.responsive-image figcaption .toggle-original:hover {
   text-decoration-style: solid;
+  opacity: 1;
+}
+
+figure.responsive-image figcaption .toggle-original:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
   opacity: 1;
 }
 
@@ -216,16 +229,6 @@ picture.responsive-image img {
 img[loading="lazy"] {
   /* Prevent layout shift during lazy loading */
   min-height: 200px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@media (prefers-color-scheme: dark) {
-  img[loading="lazy"] {
-    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
-    background-size: 200% 100%;
-  }
 }
 
 img[loading="lazy"]:not([src]) {
@@ -259,13 +262,50 @@ img[loading="lazy"]:not([src]) {
 img[src*="_dithered"],
 img[src*="dithered"] {
   mix-blend-mode: multiply;
+  opacity: 0.85;
 }
 
 @media (prefers-color-scheme: dark) {
   img[src*="_dithered"],
   img[src*="dithered"] {
-    mix-blend-mode: screen; /* Better for dark backgrounds */
+    mix-blend-mode: luminosity; /* Better for dark backgrounds */
+    opacity: 0.9;
   }
+}
+
+/* Image Gallery Grid */
+.img-gallery {
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-columns, 3), 1fr);
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 1024px) {
+  .img-gallery {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .img-gallery {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.img-gallery .responsive-image {
+  margin: 0;
+}
+
+.img-gallery figure.responsive-image {
+  margin: 0;
+}
+
+.img-gallery figure.responsive-image figcaption {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
 }
 
 /* Print styles */
@@ -285,6 +325,10 @@ img[src*="dithered"] {
   img[src*="_dithered"],
   img[src*="dithered"] {
     mix-blend-mode: normal;
+  }
+  
+  .img-gallery {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 

@@ -43,17 +43,18 @@
 }
 
 /* Fixed back to top button - aligned with TOC */
+/* Hidden on small screens, only show on tablets and above */
 .back-to-top-footer {
-  display: none;
+  display: none !important;
 }
 
-@media (min-width: 940px) {
+@media (min-width: 1024px) {
   .back-to-top-footer {
     position: fixed;
     /* Align with theme toggle and TOC */
     bottom: clamp(1rem, 5vw, 3rem);
     right: clamp(1rem, 5vw, 3rem);
-    display: inline-flex;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
     width: 32px;

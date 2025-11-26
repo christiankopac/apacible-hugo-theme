@@ -213,3 +213,4 @@
 
   // Spoiler toggles and collection filters are now handled by Alpine.js
 })();
+

@@ -226,7 +226,7 @@
     {{/* Add year to map if found */}}
     {{ if and $releaseYear (ne $releaseYear "") }}
       {{ $yearsMap = merge $yearsMap (dict $releaseYear true) }}
-      {{/* Track which categories have this year */}}
+      {{/* Track which categories have this year - ensure category is set */}}
       {{ if .category }}
         {{ $categoryYearsKey := printf "%s_years" .category }}
         {{ $categoryYears := index $yearsByCategory $categoryYearsKey | default (dict) }}
@@ -253,22 +253,9 @@
   {{ $years = $years | append (printf "%d" (index $sortedYears $idx)) }}
 {{ end }}
 
-{{/* Render filters with Alpine.js - show if we have items */}}
+{{/* Render filters - show if we have items */}}
 {{ if gt (len $allItems) 0 }}
-<div x-data="{ 
-  selectedCategory: 'all', 
-  selectedYear: 'all',
-  checkYearAvailability() {
-    if (this.selectedCategory !== 'all' && this.selectedYear !== 'all') {
-      const yearBtn = document.querySelector(`button[data-year='${this.selectedYear}']`);
-      if (yearBtn && yearBtn.style.display === 'none') {
-        this.selectedYear = 'all';
-      }
-    }
-  }
-}" 
-x-effect="checkYearAvailability()"
-class="collection-wrapper">
+<div class="collection-wrapper">
   {{/* Show filters - always show if we have categories or years */}}
   {{ if or (gt (len $categories) 0) (gt (len $years) 0) }}
 <div class="collection-filters">
@@ -276,10 +263,9 @@ class="collection-wrapper">
   <div class="collection-filter" data-filter-type="category">
     <div class="filter-buttons">
         <button
-          class="filter-btn"
-          :class="{ active: selectedCategory === 'all' }"
-          @click="selectedCategory = 'all'; selectedYear = 'all'"
-          x-bind:aria-pressed="selectedCategory === 'all'"
+          class="filter-btn active"
+          data-category="all"
+          aria-pressed="true"
           type="button"
         >
           {{ i18n "all" | default "All" }}
@@ -287,9 +273,8 @@ class="collection-wrapper">
       {{ range $categories }}
           <button
             class="filter-btn"
-            :class="{ active: selectedCategory === '{{ . }}' }"
-            @click="selectedCategory = '{{ . }}'"
-            x-bind:aria-pressed="selectedCategory === '{{ . }}'"
+            data-category="{{ . }}"
+            aria-pressed="false"
             type="button"
           >
             {{ i18n . | default (title .) }}
@@ -299,13 +284,12 @@ class="collection-wrapper">
   </div>
   {{ end }}
     {{ if gt (len $years) 0 }}
-  <div class="collection-filter" data-filter-type="date">
+  <div class="collection-filter" data-filter-type="year">
     <div class="filter-buttons">
         <button
-          class="filter-btn"
-          :class="{ active: selectedYear === 'all' }"
-          @click="selectedYear = 'all'"
-          x-bind:aria-pressed="selectedYear === 'all'"
+          class="filter-btn active"
+          data-year="all"
+          aria-pressed="true"
           type="button"
         >
           {{ i18n "allYears" | default "All Years" }}
@@ -323,13 +307,10 @@ class="collection-wrapper">
         {{ $yearCategoriesStr := delimit $yearCategories "," }}
         <button
           class="filter-btn"
-          :class="{ active: selectedYear === '{{ $year }}' }"
-          x-show="selectedCategory === 'all' || '{{ $yearCategoriesStr }}'.split(',').includes(selectedCategory)"
-          @click="selectedYear = '{{ $year }}'"
-          x-bind:aria-pressed="selectedYear === '{{ $year }}'"
-          type="button"
           data-year="{{ $year }}"
           data-categories="{{ $yearCategoriesStr }}"
+          aria-pressed="false"
+          type="button"
         >
           {{ $year }}
         </button>
@@ -386,18 +367,11 @@ class="collection-wrapper">
       {{ end }}
       <article
         class="collection-item{{ $ratingClass }}"
-        x-show="(selectedCategory === 'all' || selectedCategory === '{{ .category }}') && (selectedYear === 'all'{{ if $consumedYear }} || selectedYear === '{{ $consumedYear }}'{{ end }})"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-95"
         {{ if .category }} data-category="{{ .category }}"{{ end }}{{ if $releaseYear }} data-year="{{ $releaseYear }}"{{ end }}{{ if .title }} data-title="{{ .title | safeHTML }}"{{ end }}{{ if .director }} data-director="{{ .director }}"{{ end }}{{ if .author }} data-author="{{ .author }}"{{ end }}{{ if .artist }} data-artist="{{ .artist }}"{{ end }}{{ if .label }} data-label="{{ .label }}"{{ end }}{{ if .publisher }} data-publisher="{{ .publisher }}"{{ end }}{{ if .rating }} data-rating="{{ .rating }}"{{ end }}{{ if .review }} data-review="{{ .review | safeHTML }}"{{ end }}{{ if .content }} data-content="{{ .content | safeHTML }}"{{ end }}{{ if .footer }} data-footer="{{ .footer | safeHTML }}"{{ end }}{{ if .tmdb }} data-tmdb="{{ .tmdb }}"{{ end }}{{ if .discogs }} data-discogs="{{ .discogs }}"{{ end }}{{ if .discogsArtist }} data-discogs-artist="{{ .discogsArtist }}"{{ end }}{{ if .discogsLabel }} data-discogs-label="{{ .discogsLabel }}"{{ end }}{{ if .genre }} data-genre="{{ .genre }}"{{ end }}{{ if .style }} data-style="{{ .style }}"{{ end }}{{ if .openlibrary }} data-openlibrary="{{ .openlibrary }}"{{ end }}{{ if .songs }} data-songs="{{ .songs | jsonify }}"{{ end }}{{ if $consumedLink }} data-link="{{ $consumedLink }}"{{ end }}>
         {{ if $isPosterGrid }}
           {{ $itemImg := .img | default "" }}
           {{ if $itemImg }}
-            {{/* Process image through Hugo for dithering effect - resize small then scale up for pixelation */}}
+            {{/* Process image through Hugo for dithering effect - WebP/AVIF only */}}
             {{ $imgResource := "" }}
             {{ if hasPrefix $itemImg "/" }}
               {{ $imgPath := strings.TrimPrefix "/" $itemImg }}
@@ -529,5 +503,4 @@ class="collection-wrapper">
 </div>
 </div>
 {{ end }}
-
 

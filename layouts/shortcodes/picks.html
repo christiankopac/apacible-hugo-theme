@@ -215,7 +215,7 @@
                   <picture>
                     {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
                     <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
-                    <img src="{{ $resizedWebP.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}" loading="lazy" decoding="async">
+                    <img src="{{ $resizedImg.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedImg.Width }}" height="{{ $resizedImg.Height }}" loading="lazy" decoding="async">
                   </picture>
                 </a>
               {{ else }}
@@ -223,7 +223,7 @@
                   <picture>
                     {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
                     <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
-                    <img src="{{ $resizedWebP.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}" loading="lazy" decoding="async">
+                    <img src="{{ $resizedImg.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedImg.Width }}" height="{{ $resizedImg.Height }}" loading="lazy" decoding="async">
                   </picture>
                 </a>
               {{ end }}

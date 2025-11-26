@@ -64,23 +64,28 @@
   {{/* Use Hugo's native image processing */}}
   {{ $processedImg := "" }}
   {{ $processedWebP := "" }}
+  {{ $processedAVIF := "" }}
   {{ $processedDithered := "" }}
   {{ $processedOrigWebP := "" }}
+  {{ $processedOrigAVIF := "" }}
   {{ $processedOrig := "" }}
-  
+
   {{/* Build the process spec - use only width to preserve aspect ratio */}}
   {{ $spec := printf "%sx q%s" $width $quality }}
   {{ $webpSpec := printf "%sx webp q%s" $width $quality }}
-  
+  {{ $avifSpec := printf "%sx avif q%s" $width $quality }}
+
   {{/* Always use Resize with width only to preserve aspect ratio and prevent rotation */}}
   {{ $processedImg = $img.Resize $spec }}
   {{ $processedWebP = $img.Resize $webpSpec }}
+  {{ $processedAVIF = $img.Resize $avifSpec }}
   {{ if $ditheredImg }}
     {{ $processedDithered = $ditheredImg.Resize $spec }}
   {{ end }}
   {{ if $showOriginal }}
     {{ $processedOrig = $img.Resize $spec }}
     {{ $processedOrigWebP = $img.Resize $webpSpec }}
+    {{ $processedOrigAVIF = $img.Resize $avifSpec }}
   {{ end }}
 
   {{/* Wrap in figure if caption is provided */}}
@@ -89,19 +94,20 @@
   <div class="image-container">
     {{ if and $dithered $ditheredImg }}
       {{/* Dithered images with toggle */}}
-      <img class="dithered-img active" 
-           src="{{ $processedDithered.RelPermalink }}" 
-           alt="{{ $alt }}" 
-           width="{{ $processedDithered.Width }}" 
+      <img class="dithered-img"
+           src="{{ $processedDithered.RelPermalink }}"
+           alt="{{ $alt }}"
+           width="{{ $processedDithered.Width }}"
            height="{{ $processedDithered.Height }}"
            loading="lazy"
            decoding="async">
       {{ if $showOriginal }}
       <picture class="original-img" style="display: none;">
+        <source srcset="{{ $processedOrigAVIF.RelPermalink }}" type="image/avif">
         <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
-        <img src="{{ $processedOrig.RelPermalink }}" 
-             alt="{{ $alt }} (original)" 
-             width="{{ $processedOrig.Width }}" 
+        <img src="{{ $processedOrig.RelPermalink }}"
+             alt="{{ $alt }} (original)"
+             width="{{ $processedOrig.Width }}"
              height="{{ $processedOrig.Height }}"
              loading="lazy"
              decoding="async">
@@ -109,10 +115,11 @@
       {{ end }}
     {{ else }}
       <picture>
+        <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
         <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
-        <img src="{{ $processedImg.RelPermalink }}" 
-             alt="{{ $alt }}" 
-             width="{{ $processedImg.Width }}" 
+        <img src="{{ $processedImg.RelPermalink }}"
+             alt="{{ $alt }}"
+             width="{{ $processedImg.Width }}"
              height="{{ $processedImg.Height }}"
              loading="lazy"
              decoding="async">
@@ -122,10 +129,12 @@
   <figcaption>
     {{ $caption | markdownify }}
     {{ if and $dithered $ditheredImg $showOriginal }}
-    <span class="toggle-original" onclick="toggleOriginal(this)">
-      <span class="show-text">→ show original</span>
-      <span class="hide-text" style="display: none;">← dither</span>
-    </span>
+    <button class="toggle-original"
+            type="button"
+            aria-pressed="false">
+      <span>→ show original</span>
+      <span style="display: none;">← dither</span>
+    </button>
     {{ end }}
   </figcaption>
 </figure>
@@ -141,42 +150,17 @@
          decoding="async">
     {{ else }}
     <picture class="responsive-image">
+      <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
       <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
-      <img src="{{ $processedImg.RelPermalink }}" 
-           alt="{{ $alt }}" 
-           width="{{ $processedImg.Width }}" 
+      <img src="{{ $processedImg.RelPermalink }}"
+           alt="{{ $alt }}"
+           width="{{ $processedImg.Width }}"
            height="{{ $processedImg.Height }}"
            loading="lazy"
            decoding="async">
     </picture>
     {{ end }}
   {{ end }}
-
-<script>
-function toggleOriginal(button) {
-  const figure = button.closest('figure');
-  const dithered = figure.querySelector('.dithered-img');
-  const original = figure.querySelector('.original-img');
-  const showText = button.querySelector('.show-text');
-  const hideText = button.querySelector('.hide-text');
-  
-  if (dithered.style.display === 'none') {
-    dithered.style.display = 'block';
-    original.style.display = 'none';
-    showText.style.display = 'inline';
-    hideText.style.display = 'none';
-    dithered.classList.add('active');
-    original.classList.remove('active');
-  } else {
-    dithered.style.display = 'none';
-    original.style.display = 'block';
-    showText.style.display = 'none';
-    hideText.style.display = 'inline';
-    dithered.classList.remove('active');
-    original.classList.add('active');
-  }
-}
-</script>
 {{ else }}
   <p><em>Image not found: {{ $src }}</em></p>
 {{ end }}

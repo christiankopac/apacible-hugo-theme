@@ -5,42 +5,61 @@
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
     const isDark = theme === 'dark';
     
+    // Get CSS variables from computed styles
+    const styles = getComputedStyle(document.documentElement);
+    const bgColor = styles.getPropertyValue('--color-bg').trim();
+    const bgSecondary = styles.getPropertyValue('--color-bg-secondary').trim();
+    const textColor = styles.getPropertyValue('--color-text').trim();
+    const borderColor = styles.getPropertyValue('--color-border').trim();
+    
     if (isDark) {
       return {
         theme: 'dark',
         themeVariables: {
-          primaryColor: '#f0a090',
-          primaryTextColor: '#ebe5e7',
-          primaryBorderColor: '#f0a090',
+          primaryColor: '#e8a89a',
+          primaryTextColor: textColor,
+          primaryBorderColor: '#f5c8ba',
           lineColor: '#c5b5ba',
-          secondaryColor: '#a0c8b0',
-          tertiaryColor: '#b0b8e0',
-          background: 'transparent',
-          mainBkg: '#2a1f23',
-          secondBkg: '#27191e',
-          textColor: '#ebe5e7',
-          border1: '#3d2f35',
-          border2: '#4d3d45',
-          fontFamily: 'inherit'
+          secondaryColor: '#a5c9b5',
+          tertiaryColor: '#b5bdd9',
+          background: bgColor,
+          mainBkg: bgColor,
+          secondBkg: bgColor,
+          textColor: textColor,
+          border1: borderColor,
+          border2: borderColor,
+          nodeBorder: borderColor,
+          clusterBkg: bgSecondary,
+          clusterBorder: borderColor,
+          defaultLinkColor: textColor,
+          titleColor: textColor,
+          edgeLabelBackground: bgColor,
+          nodeTextColor: textColor
         }
       };
     } else {
       return {
         theme: 'base',
         themeVariables: {
-          primaryColor: '#c75b4a',
-          primaryTextColor: '#1a1a1a',
-          primaryBorderColor: '#c75b4a',
+          primaryColor: '#d98a7a',
+          primaryTextColor: textColor,
+          primaryBorderColor: '#b87a6a',
           lineColor: '#4a524a',
-          secondaryColor: '#6a9474',
-          tertiaryColor: '#7282a8',
-          background: 'transparent',
-          mainBkg: '#d2d9cd',
-          secondBkg: '#d0d8ca',
-          textColor: '#1a1a1a',
-          border1: '#c8d0c2',
-          border2: '#b8c2b0',
-          fontFamily: 'inherit'
+          secondaryColor: '#7aa88a',
+          tertiaryColor: '#8a9ab8',
+          background: bgColor,
+          mainBkg: bgColor,
+          secondBkg: bgColor,
+          textColor: textColor,
+          border1: borderColor,
+          border2: borderColor,
+          nodeBorder: borderColor,
+          clusterBkg: bgSecondary,
+          clusterBorder: borderColor,
+          defaultLinkColor: textColor,
+          titleColor: textColor,
+          edgeLabelBackground: bgColor,
+          nodeTextColor: textColor
         }
       };
     }
@@ -52,7 +71,23 @@
       startOnLoad: true, 
       theme: config.theme,
       themeVariables: config.themeVariables,
-      securityLevel: 'loose'
+      securityLevel: 'loose',
+      fontFamily: 'inherit',
+      fontSize: 18,
+      htmlLabels: true,
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      sequence: {
+        useMaxWidth: true,
+        diagramMarginX: 50,
+        diagramMarginY: 10,
+        boxTextMargin: 5,
+        noteMargin: 10,
+        messageMargin: 35
+      }
     });
   }
   
@@ -72,7 +107,23 @@
       startOnLoad: false,
       theme: config.theme,
       themeVariables: config.themeVariables,
-      securityLevel: 'loose'
+      securityLevel: 'loose',
+      fontFamily: 'inherit',
+      fontSize: 18,
+      htmlLabels: true,
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      sequence: {
+        useMaxWidth: true,
+        diagramMarginX: 50,
+        diagramMarginY: 10,
+        boxTextMargin: 5,
+        noteMargin: 10,
+        messageMargin: 35
+      }
     });
     
     // Re-render all mermaid diagrams
