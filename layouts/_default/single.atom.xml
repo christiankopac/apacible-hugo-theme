@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  {{- $self := .OutputFormats.Get "Atom" -}}
+  {{- $html := .OutputFormats.Get "HTML" -}}
+  <title>{{ .Title | htmlEscape }}</title>
+  <id>{{ with $html }}{{ .Permalink }}{{ else }}{{ .Permalink }}{{ end }}</id>
+  <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+  {{- with $self }}
+  <link rel="self" type="application/atom+xml" href="{{ .Permalink }}" />
+  {{- end }}
+  {{- with $html }}
+  <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
+  {{- end }}
+  {{- if .Description }}
+  <subtitle>{{ .Description | plainify | htmlEscape }}</subtitle>
+  {{- else if .Site.Params.description }}
+  <subtitle>{{ .Site.Params.description | plainify | htmlEscape }}</subtitle>
+  {{- end }}
+  <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
+  <entry>
+    <title>{{ .Title | htmlEscape }}</title>
+    <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
+    <id>{{ .Permalink }}</id>
+    <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+    {{- with .Date }}
+    <published>{{ .Format "2006-01-02T15:04:05Z07:00" }}</published>
+    {{- end }}
+    <author>
+      <name>{{ with .Params.author }}{{ . | htmlEscape }}{{ else }}{{ $.Site.Title | htmlEscape }}{{ end }}</name>
+    </author>
+    {{- with .Params.description }}
+    <summary>{{ . | plainify | htmlEscape }}</summary>
+    {{- else }}{{ with .Summary }}
+    <summary>{{ . | plainify | htmlEscape }}</summary>
+    {{- end }}{{ end }}
+    {{- $img := .Params.img | default .Params.image }}
+    {{- if $img }}
+      {{- $imgURL := $img | relURL }}
+      {{- if not (hasPrefix $imgURL "http") }}
+        {{- $imgURL = printf "%s%s" $.Site.BaseURL (strings.TrimPrefix "/" $imgURL) }}
+      {{- end }}
+      {{- /* Detect image type from extension */}}
+      {{- $imgType := "image/jpeg" }}
+      {{- if strings.HasSuffix $img ".png" }}
+        {{- $imgType = "image/png" }}
+      {{- else if strings.HasSuffix $img ".webp" }}
+        {{- $imgType = "image/webp" }}
+      {{- else if strings.HasSuffix $img ".gif" }}
+        {{- $imgType = "image/gif" }}
+      {{- end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ .Content | safeHTML }}]]></content>
+  </entry>
+</feed>
+

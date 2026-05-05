@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  {{- $pages := first 20 (.Pages.ByLastmod.Reverse) -}}
+  {{- /* For consumed section, include all items; for others, limit to 20 */}}
+  {{- $pages := .Pages.ByLastmod.Reverse -}}
+  {{- if ne .Section "consumed" }}
+    {{- $pages = first 20 $pages -}}
+  {{- end }}
   {{- $self := .OutputFormats.Get "Atom" -}}
   {{- $html := .OutputFormats.Get "HTML" -}}
-  <title>{{ .Title }}</title>
+  {{- $feedTitle := .Title -}}
+  <title>{{ $feedTitle | htmlEscape }}</title>
   <id>{{ with $html }}{{ .Permalink }}{{ else }}{{ .Permalink }}{{ end }}</id>
   <updated>{{ with index $pages 0 }}{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}{{ else }}{{ now.UTC.Format "2006-01-02T15:04:05Z07:00" }}{{ end }}</updated>
   {{- with $self }}
@@ -13,14 +18,14 @@
   <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
   {{- end }}
   {{- if .Description }}
-  <subtitle>{{ .Description | plainify }}</subtitle>
+  <subtitle>{{ .Description | plainify | htmlEscape }}</subtitle>
   {{- else if .Site.Params.description }}
-  <subtitle>{{ .Site.Params.description | plainify }}</subtitle>
+  <subtitle>{{ .Site.Params.description | plainify | htmlEscape }}</subtitle>
   {{- end }}
   <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
   {{- range $pages }}
   <entry>
-    <title>{{ .Title }}</title>
+    <title>{{ .Title | htmlEscape }}</title>
     <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
     <id>{{ .Permalink }}</id>
     <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
@@ -28,15 +33,32 @@
     <published>{{ .Format "2006-01-02T15:04:05Z07:00" }}</published>
     {{- end }}
     <author>
-      <name>{{ with .Params.author }}{{ . }}{{ else }}{{ $.Site.Title }}{{ end }}</name>
+      <name>{{ with .Params.author }}{{ . | htmlEscape }}{{ else }}{{ $.Site.Title | htmlEscape }}{{ end }}</name>
     </author>
     {{- with .Params.description }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlEscape }}</summary>
     {{- else }}{{ with .Summary }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlEscape }}</summary>
     {{- end }}{{ end }}
-    <content type="html"><![CDATA[{{ .Content | safeHTML }}]]></content>
+    {{- /* Add thumbnail image for feed readers if available */}}
+    {{- $img := .Params.img | default .Params.image }}
+    {{- $imgURL := "" }}
+    {{- $imgType := "image/jpeg" }}
+    {{- if $img }}
+      {{- $imgURL = $img | absURL }}
+      {{- if hasPrefix $img "http" }}
+        {{- $imgURL = $img }}
+      {{- end }}
+      {{- if strings.HasSuffix $img ".png" }}
+        {{- $imgType = "image/png" }}
+      {{- else if strings.HasSuffix $img ".webp" }}
+        {{- $imgType = "image/webp" }}
+      {{- else if strings.HasSuffix $img ".gif" }}
+        {{- $imgType = "image/gif" }}
+      {{- end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ if $imgURL }}<p><img src="{{ $imgURL }}" alt="{{ .Title | htmlEscape }}" /></p>{{ end }}{{ .Content | safeHTML }}]]></content>
   </entry>
   {{- end }}
 </feed>
-

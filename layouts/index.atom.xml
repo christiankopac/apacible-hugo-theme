@@ -34,8 +34,18 @@
     {{- else }}{{ with .Summary }}
     <summary>{{ . | plainify }}</summary>
     {{- end }}{{ end }}
-    <content type="html"><![CDATA[{{ .Content | safeHTML }}]]></content>
+    {{- $img := .Params.img | default .Params.image }}
+    {{- $imgURL := "" }}
+    {{- $imgType := "image/jpeg" }}
+    {{- if $img }}
+      {{- $imgURL = $img | absURL }}
+      {{- if hasPrefix $img "http" }}
+        {{- $imgURL = $img }}
+      {{- end }}
+      {{- if strings.HasSuffix $img ".png" }}{{ $imgType = "image/png" }}{{ else if strings.HasSuffix $img ".webp" }}{{ $imgType = "image/webp" }}{{ else if strings.HasSuffix $img ".gif" }}{{ $imgType = "image/gif" }}{{ end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ if $imgURL }}<p><img src="{{ $imgURL }}" alt="{{ .Title }}" /></p>{{ end }}{{ .Content | safeHTML }}]]></content>
   </entry>
   {{- end }}
 </feed>
-
