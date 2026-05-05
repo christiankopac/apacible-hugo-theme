@@ -16,7 +16,7 @@
     {{ if .IsTranslated }}
     <nav class="language-switcher">
       {{ range .Translations }}
-        <a href="{{ .Permalink }}" title="{{ .Language.LanguageName }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.LanguageName }}">
+        <a href="{{ .Permalink }}" title="{{ .Language.Label }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.Label }}">
           {{ if eq .Language.Lang "es" }}ES{{ else if eq .Language.Lang "en" }}EN{{ else }}{{ .Language.Lang | upper }}{{ end }}
         </a>
       {{ end }}
@@ -60,9 +60,7 @@
           {{/* Original avatar - hidden by default, shown on hover */}}
           <picture class="intro-avatar-picture">
             {{ if $avatarResource }}
-              {{ $avatarAVIF := $avatarResource.Resize (printf "%dx avif q85" $avatarResource.Width) }}
               {{ $avatarWebP := $avatarResource.Resize (printf "%dx webp q85" $avatarResource.Width) }}
-              <source srcset="{{ $avatarAVIF.RelPermalink }}" type="image/avif">
               <source srcset="{{ $avatarWebP.RelPermalink }}" type="image/webp">
               <img src="{{ $avatarWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-original" width="{{ $avatarWebP.Width }}" height="{{ $avatarWebP.Height }}">
             {{ else }}
@@ -71,10 +69,8 @@
           </picture>
           {{/* Dithered avatar - visible by default with blend mode */}}
           {{ if $ditheredAvatar }}
-            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
             {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
             <picture class="intro-avatar-picture-dithered">
-              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
               <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
               <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
             </picture>
@@ -97,12 +93,10 @@
             <source srcset="{{ "img/avatar.webp" | relURL }}" type="image/webp">
             <img src="{{ "img/avatar.webp" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
           </picture>
-          {{/* Dithered avatar - process through Hugo for AVIF/WebP */}}
+          {{/* Dithered avatar - process through Hugo for WebP */}}
           {{ if $ditheredAvatar }}
-            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
             {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
             <picture class="intro-avatar-picture-dithered">
-              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
               <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
               <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
             </picture>
