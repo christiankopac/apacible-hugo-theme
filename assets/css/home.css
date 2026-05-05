@@ -497,6 +497,14 @@ body:has(.home) {
   justify-self: center;
 }
 
+/* Tablet: Enable wrapping and full width for better alignment */
+@media (max-width: 1023px) {
+  .home-explore {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .home-explore {
     font-size: 0.875rem;
