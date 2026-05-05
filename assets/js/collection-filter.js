@@ -19,6 +19,12 @@
 
     // Initialize collection filters
     initCollectionFilters();
+
+    // Initialize view switcher
+    initViewSwitcher();
+
+    // Initialize table sorting
+    initTableSorting();
   }
 
   // Collection filters - vanilla JS implementation
@@ -34,9 +40,6 @@
       // Get filter buttons - support both "year" and "date" filter types
       const categoryButtons = wrapper.querySelectorAll('[data-filter-type="category"] button');
       const yearButtons = wrapper.querySelectorAll('[data-filter-type="year"] button, [data-filter-type="date"] button');
-      // Find items within the collection div (which should be inside the wrapper)
-      const collection = wrapper.querySelector('.collection[data-filterable]');
-      const items = collection ? collection.querySelectorAll('.collection-item') : wrapper.querySelectorAll('.collection-item');
 
       // Update URL parameters without page reload
       function updateURL() {
@@ -105,7 +108,10 @@
           }
         }
 
-        // Update items visibility
+        // Update items visibility - find items in currently visible view
+        // Support both poster grid (.collection-item) and table rows (.consumed-row)
+        const items = wrapper.querySelectorAll('.collection-item, .consumed-row');
+
         items.forEach(function(item) {
           const itemCategory = String(item.dataset.category || '');
           // Use release year (data-year) for filtering
@@ -150,6 +156,11 @@
 
       // Initialize
       updateUI();
+
+      // Listen for view changes to reapply filters
+      wrapper.addEventListener('viewChanged', function() {
+        updateUI();
+      });
     });
   }
 
@@ -207,6 +218,148 @@
             img.setAttribute('title', tooltipText);
           }
         }
+      });
+    });
+  }
+
+  // View Switcher - switch between poster-grid, list, and table views
+  function initViewSwitcher() {
+    const viewSwitchers = document.querySelectorAll('.view-switcher');
+
+    viewSwitchers.forEach(function(switcher) {
+      const viewButtons = switcher.querySelectorAll('.view-btn');
+      const viewsContainer = switcher.closest('.collection-wrapper')?.querySelector('.consumed-views-container');
+
+      if (!viewsContainer) return;
+
+      const views = viewsContainer.querySelectorAll('.consumed-view');
+
+      // Load saved view preference from localStorage
+      const savedView = localStorage.getItem('consumed-view-preference') || 'poster-grid';
+
+      // Apply saved view on load
+      switchToView(savedView);
+
+      // Add click handlers to view buttons
+      viewButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+          const viewType = button.getAttribute('data-view');
+          switchToView(viewType);
+
+          // Save preference
+          localStorage.setItem('consumed-view-preference', viewType);
+        });
+      });
+
+      function switchToView(viewType) {
+        // Update button states
+        viewButtons.forEach(function(btn) {
+          if (btn.getAttribute('data-view') === viewType) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+          } else {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+          }
+        });
+
+        // Show/hide views
+        views.forEach(function(view) {
+          if (view.getAttribute('data-view') === viewType) {
+            view.style.display = '';
+          } else {
+            view.style.display = 'none';
+          }
+        });
+
+        // Trigger filter update to apply filters to the newly visible view
+        const wrapper = switcher.closest('.collection-wrapper');
+        if (wrapper) {
+          // Dispatch a custom event that filters can listen to
+          const event = new CustomEvent('viewChanged', { bubbles: true });
+          wrapper.dispatchEvent(event);
+        }
+      }
+    });
+  }
+
+  // Table Sorting - minimal implementation for title and rating columns
+  function initTableSorting() {
+    const tables = document.querySelectorAll('.consumed-table');
+
+    tables.forEach(function(table) {
+      const sortButtons = table.querySelectorAll('.sort-btn');
+      const tbody = table.querySelector('tbody');
+
+      sortButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const th = this.closest('th');
+          const sortKey = th.getAttribute('data-sort');
+          const currentSort = th.classList.contains('sorted-asc') ? 'asc' :
+                             th.classList.contains('sorted-desc') ? 'desc' : 'none';
+
+          // Determine new sort direction
+          let newSort;
+          if (currentSort === 'none' || currentSort === 'desc') {
+            newSort = 'asc';
+          } else {
+            newSort = 'desc';
+          }
+
+          // Remove sorting from all headers
+          table.querySelectorAll('th.sortable').forEach(function(header) {
+            header.classList.remove('sorted-asc', 'sorted-desc');
+          });
+
+          // Add sorting class to current header
+          th.classList.add('sorted-' + newSort);
+
+          // Get all rows
+          const rows = Array.from(tbody.querySelectorAll('tr.consumed-row'));
+
+          // Sort rows
+          rows.sort(function(a, b) {
+            let aVal, bVal;
+
+            if (sortKey === 'title') {
+              aVal = a.getAttribute('data-title') || '';
+              bVal = b.getAttribute('data-title') || '';
+              return newSort === 'asc'
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
+            } else if (sortKey === 'rating') {
+              aVal = parseFloat(a.getAttribute('data-rating')) || 0;
+              bVal = parseFloat(b.getAttribute('data-rating')) || 0;
+              return newSort === 'asc'
+                ? aVal - bVal
+                : bVal - aVal;
+            } else if (sortKey === 'year') {
+              aVal = a.getAttribute('data-year') || '';
+              bVal = b.getAttribute('data-year') || '';
+              // Treat '-' as empty for sorting
+              if (aVal === '-') aVal = '';
+              if (bVal === '-') bVal = '';
+              return newSort === 'asc'
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
+            } else if (sortKey === 'creator') {
+              aVal = a.getAttribute('data-creator') || '';
+              bVal = b.getAttribute('data-creator') || '';
+              // Treat '-' as empty for sorting
+              if (aVal === '-') aVal = '';
+              if (bVal === '-') bVal = '';
+              return newSort === 'asc'
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
+            }
+            return 0;
+          });
+
+          // Reorder rows in DOM
+          rows.forEach(function(row) {
+            tbody.appendChild(row);
+          });
+        });
       });
     });
   }

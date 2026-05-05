@@ -259,27 +259,50 @@
   {{/* Show filters - always show if we have categories or years */}}
   {{ if or (gt (len $categories) 0) (gt (len $years) 0) }}
 <div class="collection-filters">
-    {{ if gt (len $categories) 0 }}
-  <div class="collection-filter" data-filter-type="category">
-    <div class="filter-buttons">
-        <button
-          class="filter-btn active"
-          data-category="all"
-          aria-pressed="true"
-          type="button"
-        >
-          {{ i18n "all" | default "All" }}
-        </button>
-      {{ range $categories }}
+  {{/* Top row: Category filters (left) and View switcher (right) */}}
+  {{ if gt (len $categories) 0 }}
+  <div class="collection-controls-row">
+    <div class="collection-filter" data-filter-type="category">
+      <div class="filter-buttons">
           <button
-            class="filter-btn"
-            data-category="{{ . }}"
-            aria-pressed="false"
+            class="filter-btn active"
+            data-category="all"
+            aria-pressed="true"
             type="button"
           >
-            {{ i18n . | default (title .) }}
+            {{ i18n "all" | default "All" }}
           </button>
-      {{ end }}
+        {{ range $categories }}
+            <button
+              class="filter-btn"
+              data-category="{{ . }}"
+              aria-pressed="false"
+              type="button"
+            >
+              {{ i18n . | default (title .) }}
+            </button>
+        {{ end }}
+      </div>
+    </div>
+
+    {{/* View switcher on the right */}}
+    <div class="view-switcher">
+      <button class="view-btn active" data-view="poster-grid" title="Grid View" aria-label="Grid View">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="1" width="5" height="5" />
+          <rect x="10" y="1" width="5" height="5" />
+          <rect x="1" y="10" width="5" height="5" />
+          <rect x="10" y="10" width="5" height="5" />
+        </svg>
+      </button>
+      <button class="view-btn" data-view="table" title="Table View" aria-label="Table View">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="1" width="14" height="14" />
+          <line x1="1" y1="5" x2="15" y2="5" />
+          <line x1="1" y1="9" x2="15" y2="9" />
+          <line x1="6" y1="5" x2="6" y2="15" />
+        </svg>
+      </button>
     </div>
   </div>
   {{ end }}
@@ -322,7 +345,97 @@
 {{ end }}
 
   {{ $isPosterGrid := eq $style "poster-grid" }}
-  <div class="collection{{ if $isPosterGrid }} collection-poster poster-grid{{ else }} collection-card{{ end }}" data-filterable="category date">
+  {{ $isTable := eq $style "table" }}
+
+  {{/* Container for all views */}}
+  <div class="consumed-views-container">
+
+  {{/* Table View */}}
+  <div class="consumed-view consumed-table-wrapper" data-view="table" data-filterable="category date" style="{{ if not $isTable }}display: none;{{ end }}">
+    <table class="consumed-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort="title">
+            <button class="sort-btn" type="button">
+              Title <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="sortable col-year" data-sort="year">
+            <button class="sort-btn" type="button">
+              Year <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="sortable col-creator" data-sort="creator" data-movies="Director" data-music="Artist" data-books="Author">
+            <button class="sort-btn" type="button">
+              Creator <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="sortable col-rating" data-sort="rating">
+            <button class="sort-btn" type="button">
+              Rating <span class="sort-icon"></span>
+            </button>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range $allItems }}
+        {{ if ne .draft "true" }}
+        {{ $consumedLink := .link | default "" }}
+        {{ $releaseYear := .year | default "-" }}
+        {{ $creator := "" }}
+        {{ $extra := "" }}
+        {{ $dateWatched := .footer | default "-" }}
+
+        {{ if eq .category "movies" }}
+          {{ $creator = .director | default "-" }}
+          {{ $genres := slice }}
+          {{ with .page }}
+            {{ with .Params.genres }}
+              {{ $genres = . }}
+            {{ end }}
+          {{ end }}
+          {{ $extra = delimit $genres ", " }}
+          {{ if not $extra }}{{ $extra = "-" }}{{ end }}
+        {{ else if eq .category "music" }}
+          {{ $creator = .artist | default "-" }}
+          {{ $extra = .label | default "-" }}
+        {{ else if eq .category "books" }}
+          {{ $creator = .author | default "-" }}
+          {{ $extra = .publisher | default "-" }}
+        {{ end }}
+
+        <tr class="consumed-row" data-category="{{ .category }}" data-year="{{ $releaseYear }}" data-title="{{ .title | lower }}" data-rating="{{ .rating | default 0 }}" data-creator="{{ $creator | lower }}">
+          <td class="col-title">
+            {{ if $consumedLink }}
+              <a href="{{ $consumedLink }}">{{ .title }}</a>
+            {{ else }}
+              {{ .title }}
+            {{ end }}
+          </td>
+          <td class="col-year">{{ $releaseYear }}</td>
+          <td class="col-creator">{{ $creator }}</td>
+          <td class="col-rating">
+            {{ if .rating }}
+              {{ $ratingFloat := float .rating }}
+              {{ $ratingInt := int $ratingFloat }}
+              {{ if eq $ratingFloat (float $ratingInt) }}
+                <span class="rating-stars">{{ $ratingInt }} ★</span>
+              {{ else }}
+                <span class="rating-stars">{{ printf "%.1f" $ratingFloat }} ★</span>
+              {{ end }}
+            {{ else }}
+              -
+            {{ end }}
+          </td>
+        </tr>
+        {{ end }}
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+
+  {{/* Poster/Card Grid View */}}
+  <div class="consumed-view collection{{ if $isPosterGrid }} collection-poster poster-grid{{ else }} collection-card{{ end }}" data-view="poster-grid" data-filterable="category date" style="{{ if not $isPosterGrid }}display: none;{{ end }}">
     {{ if gt (len $allItems) 0 }}
       {{ range $allItems }}
       {{/* Use link from item if available, otherwise generate from title */}}
@@ -371,18 +484,28 @@
         {{ if $isPosterGrid }}
           {{ $itemImg := .img | default "" }}
           {{ if $itemImg }}
-            {{/* Process image through Hugo for dithering effect - WebP/AVIF only */}}
+            {{/* Process image through Hugo for dithering effect - WebP only */}}
             {{ $imgResource := "" }}
             {{ if hasPrefix $itemImg "/" }}
               {{ $imgPath := strings.TrimPrefix "/" $itemImg }}
+              {{/* Try to get from assets first */}}
               {{ $imgResource = resources.Get $imgPath }}
+              {{/* If not found, try without images/ prefix (in case path is wrong) */}}
+              {{ if not $imgResource }}
+                {{ $imgPathAlt := strings.TrimPrefix "images/" $imgPath }}
+                {{ if ne $imgPathAlt $imgPath }}
+                  {{ $imgResource = resources.Get $imgPathAlt }}
+                {{ end }}
+              {{ end }}
             {{ else }}
               {{ $imgResource = resources.Get $itemImg }}
             {{ end }}
             {{ if $imgResource }}
               {{/* Resize for poster grid - maintain aspect ratio */}}
               {{ $resizedImg := $imgResource.Resize "400x q90" }}
-              {{ $grayscaleImg := $resizedImg.Filter (images.Grayscale) }}
+              {{/* Adjust contrast to normalize brightness for better blend mode behavior */}}
+              {{ $contrastImg := $resizedImg.Filter (images.Contrast -5) }}
+              {{ $grayscaleImg := $contrastImg.Filter (images.Grayscale) }}
               
               {{/* Dither options - using grayscale palette with FloydSteinberg */}}
               {{ $ditherOpts := dict
@@ -394,19 +517,16 @@
               {{ $ditherFilter := images.Dither $ditherOpts }}
               {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
               
-              {{/* Create WebP and AVIF versions of dithered image */}}
+              {{/* Create WebP version of dithered image */}}
               {{ $ditheredWebP := $ditheredImg.Resize "400x webp q90" }}
-              {{ $ditheredAVIF := $ditheredImg.Resize "400x avif q90" }}
-              
-              {{/* Create WebP and AVIF versions of original for hover */}}
+
+              {{/* Create WebP version of original for hover */}}
               {{ $originalWebP := $imgResource.Resize "400x webp q90" }}
-              {{ $originalAVIF := $imgResource.Resize "400x avif q90" }}
               
               {{ if $consumedLink }}
                 <a href="{{ $consumedLink }}" class="consumed-poster-link">
                   <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
                     <picture class="dithered-poster">
-                      {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
                       <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
                       <img src="{{ $ditheredWebP.RelPermalink }}" 
                            alt="{{ .title | safeHTML }}" 
@@ -415,10 +535,9 @@
                            height="{{ $ditheredWebP.Height }}"
                            loading="lazy"
                            decoding="async"
-                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                           {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
                     </picture>
                     <picture class="original-poster">
-                      {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
                       <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
                       <img src="{{ $originalWebP.RelPermalink }}" 
                            alt="{{ .title | safeHTML }} (original)" 
@@ -426,14 +545,13 @@
                            height="{{ $originalWebP.Height }}"
                            loading="lazy"
                            decoding="async"
-                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                           {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
                     </picture>
                   </div>
                 </a>
               {{ else }}
                 <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
                   <picture class="dithered-poster">
-                    {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
                     <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
                     <img src="{{ $ditheredWebP.RelPermalink }}" 
                          alt="{{ .title | safeHTML }}" 
@@ -442,10 +560,9 @@
                          height="{{ $ditheredWebP.Height }}"
                          loading="lazy"
                          decoding="async"
-                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                         {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
                   </picture>
                   <picture class="original-poster">
-                    {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
                     <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
                     <img src="{{ $originalWebP.RelPermalink }}" 
                          alt="{{ .title | safeHTML }} (original)" 
@@ -453,18 +570,32 @@
                          height="{{ $originalWebP.Height }}"
                          loading="lazy"
                          decoding="async"
-                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                         {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
                   </picture>
                 </div>
               {{ end }}
             {{ else }}
-              {{/* Fallback to original image if resource not found */}}
+              {{/* Fallback to original image if resource not found - wrap in container for consistency */}}
               {{ if $consumedLink }}
-                <a href="{{ $consumedLink }}">
-                  <img src="{{ $itemImg }}" alt="{{ .title | safeHTML }}">
+                <a href="{{ $consumedLink }}" class="consumed-poster-link">
+                  <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                    <img src="{{ $itemImg }}" 
+                         alt="{{ .title | safeHTML }}" 
+                         class="dithered-img"
+                         loading="lazy"
+                         decoding="async"
+                         {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                  </div>
                 </a>
               {{ else }}
-                <img src="{{ $itemImg }}" alt="{{ .title | safeHTML }}">
+                <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                  <img src="{{ $itemImg }}" 
+                       alt="{{ .title | safeHTML }}" 
+                       class="dithered-img"
+                       loading="lazy"
+                       decoding="async"
+                       {{ if eq .category "music" }}style="object-fit: contain; width: auto; height: auto; max-width: 100%; max-height: 100%;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                </div>
               {{ end }}
             {{ end }}
           {{ else }}
@@ -500,7 +631,11 @@
   {{ else }}
     <p><em>No items to display.</em></p>
   {{ end }}
-</div>
+  </div>
+
+  {{/* Close views container */}}
+  </div>
+
 </div>
 {{ end }}
 
