@@ -12,12 +12,13 @@
           const colorScheme = localStorage.getItem('colorScheme') || 'default';
           document.documentElement.setAttribute('data-theme', theme);
           document.documentElement.style.colorScheme = theme;
-          // Only set data-color-scheme if not default
           if (colorScheme && colorScheme !== 'default') {
             document.documentElement.setAttribute('data-color-scheme', colorScheme);
           }
+          if (localStorage.getItem('naked') === '1') {
+            document.documentElement.setAttribute('data-naked', '1');
+          }
         } catch (e) {
-          // Fallback to light theme and default color scheme if localStorage fails
           document.documentElement.setAttribute('data-theme', 'light');
           document.documentElement.style.colorScheme = 'light';
         }
@@ -325,7 +326,7 @@
       {{ if .IsTranslated }}
       <nav class="global-language-switcher">
         {{ range .Translations }}
-          <a href="{{ .Permalink }}" title="{{ .Language.LanguageName }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.LanguageName }}">
+          <a href="{{ .Permalink }}" title="{{ .Language.Label }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.Label }}">
             {{ if eq .Language.Lang "es" }}ES{{ else if eq .Language.Lang "en" }}EN{{ else }}{{ .Language.Lang | upper }}{{ end }}
           </a>
         {{ end }}

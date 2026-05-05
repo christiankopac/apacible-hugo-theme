@@ -688,3 +688,31 @@
   setTimeout(hideGiscusCommentForm, 3000);
   setTimeout(hideGiscusCommentForm, 5000);
 })();
+
+// Naked CSS Day toggle — strips all stylesheets
+(function() {
+  const root = document.documentElement;
+
+  function applyNaked(enabled) {
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach(el => {
+      el.disabled = enabled;
+    });
+    if (enabled) {
+      root.setAttribute('data-naked', '1');
+    } else {
+      root.removeAttribute('data-naked');
+    }
+  }
+
+  if (root.getAttribute('data-naked') === '1') {
+    applyNaked(true);
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('#naked-css-toggle');
+    if (!btn) return;
+    const next = root.getAttribute('data-naked') !== '1';
+    try { localStorage.setItem('naked', next ? '1' : ''); } catch (_) {}
+    applyNaked(next);
+  });
+})();

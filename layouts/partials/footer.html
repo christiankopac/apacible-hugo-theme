@@ -2,8 +2,8 @@
   {{/* Newsletter subscription form - hidden on consumed single pages */}}
   {{ if and .Site.Params.newsletter_enabled (not (in .RelPermalink "/consumed/")) }}
   <div class="footer-newsletter">
-    <form name="newsletter" netlify data-netlify="true" netlify-honeypot="bot-field">
-      <input type="hidden" name="form-name" value="contact" />
+    <form name="newsletter" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="newsletter" />
       <p style="display: none;">
         <label>{{ i18n "doNotFill" | default "Don't fill this out if you're human:" }} <input name="bot-field" autocomplete="off" /></label>
       </p>
@@ -93,6 +93,19 @@
       </a>
           {{- end }}
         {{ end }}
+      {{ end }}
+
+      {{/* Naked CSS Day broom — only shown on April 9, the unofficial CSS Naked Day. */}}
+      {{ if eq (now.Format "01-02") "04-09" }}
+      <button id="naked-css-toggle" aria-label="{{ i18n "toggleNakedCSS" | default "Toggle Naked CSS Day" }}" title="{{ i18n "toggleNakedCSS" | default "Toggle Naked CSS Day" }}" class="footer-icon">
+        <!-- Tiny broom icon -->
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 4l-9 9"></path>
+          <path d="M14 9l-7 7-3 4 4-3 7-7"></path>
+          <path d="M9 16l-2 2"></path>
+          <path d="M16 7l3 3"></path>
+        </svg>
+      </button>
       {{ end }}
 
       <button id="color-scheme-toggle" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="footer-icon">
