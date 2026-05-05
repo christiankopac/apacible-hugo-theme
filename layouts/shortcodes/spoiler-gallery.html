@@ -53,11 +53,9 @@
           {{/* Optimize image - resize to max width while preserving aspect ratio */}}
           {{ $optimizedImg := $img.Resize (printf "%sx q%s" $fullWidth $fullQuality) }}
           {{ $optimizedWebP := $img.Resize (printf "%sx webp q%s" $fullWidth $fullQuality) }}
-          {{ $optimizedAVIF := $img.Resize (printf "%sx avif q%s" $fullWidth $fullQuality) }}
-          
+
           <figure class="screenshot-item">
             <picture>
-              <source srcset="{{ $optimizedAVIF.RelPermalink }}" type="image/avif" width="{{ $optimizedAVIF.Width }}" height="{{ $optimizedAVIF.Height }}">
               <source srcset="{{ $optimizedWebP.RelPermalink }}" type="image/webp" width="{{ $optimizedWebP.Width }}" height="{{ $optimizedWebP.Height }}">
               <img src="{{ $optimizedImg.RelPermalink }}" 
                    alt="{{ $imgAlt }}" 

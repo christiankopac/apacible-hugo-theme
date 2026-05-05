@@ -64,28 +64,23 @@
   {{/* Use Hugo's native image processing */}}
   {{ $processedImg := "" }}
   {{ $processedWebP := "" }}
-  {{ $processedAVIF := "" }}
   {{ $processedDithered := "" }}
   {{ $processedOrigWebP := "" }}
-  {{ $processedOrigAVIF := "" }}
   {{ $processedOrig := "" }}
 
   {{/* Build the process spec - use only width to preserve aspect ratio */}}
   {{ $spec := printf "%sx q%s" $width $quality }}
   {{ $webpSpec := printf "%sx webp q%s" $width $quality }}
-  {{ $avifSpec := printf "%sx avif q%s" $width $quality }}
 
   {{/* Always use Resize with width only to preserve aspect ratio and prevent rotation */}}
   {{ $processedImg = $img.Resize $spec }}
   {{ $processedWebP = $img.Resize $webpSpec }}
-  {{ $processedAVIF = $img.Resize $avifSpec }}
   {{ if $ditheredImg }}
     {{ $processedDithered = $ditheredImg.Resize $spec }}
   {{ end }}
   {{ if $showOriginal }}
     {{ $processedOrig = $img.Resize $spec }}
     {{ $processedOrigWebP = $img.Resize $webpSpec }}
-    {{ $processedOrigAVIF = $img.Resize $avifSpec }}
   {{ end }}
 
   {{/* Wrap in figure if caption is provided */}}
@@ -103,7 +98,6 @@
            decoding="async">
       {{ if $showOriginal }}
       <picture class="original-img" style="display: none;">
-        <source srcset="{{ $processedOrigAVIF.RelPermalink }}" type="image/avif">
         <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
         <img src="{{ $processedOrig.RelPermalink }}"
              alt="{{ $alt }} (original)"
@@ -115,7 +109,6 @@
       {{ end }}
     {{ else }}
       <picture>
-        <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
         <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
         <img src="{{ $processedImg.RelPermalink }}"
              alt="{{ $alt }}"
@@ -150,7 +143,6 @@
          decoding="async">
     {{ else }}
     <picture class="responsive-image">
-      <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
       <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
       <img src="{{ $processedImg.RelPermalink }}"
            alt="{{ $alt }}"

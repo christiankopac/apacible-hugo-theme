@@ -42,7 +42,6 @@
   {{/* Use Hugo's native image processing with built-in dithering */}}
   {{ $spec := printf "%sx q%s" $width $quality }}
   {{ $webpSpec := printf "%sx webp q%s" $width $quality }}
-  {{ $avifSpec := printf "%sx avif q%s" $width $quality }}
   
   {{/* Create dithered version using Hugo's images.Dither filter */}}
   {{/* Recommended: resize first, then grayscale, then dither, convert to PNG for best results */}}
@@ -64,11 +63,9 @@
   {{/* Process original for toggle */}}
   {{ $processedOrig := "" }}
   {{ $processedOrigWebP := "" }}
-  {{ $processedOrigAVIF := "" }}
   {{ if $showOriginal }}
     {{ $processedOrig = $img.Resize $spec }}
     {{ $processedOrigWebP = $img.Resize $webpSpec }}
-    {{ $processedOrigAVIF = $img.Resize $avifSpec }}
   {{ end }}
 
   {{/* Always wrap in figure if caption exists or showOriginal is true */}}
@@ -85,7 +82,6 @@
            loading="lazy"
            decoding="async">
       <picture class="original-img" style="display: none;">
-        <source srcset="{{ $processedOrigAVIF.RelPermalink }}" type="image/avif">
         <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
         <img src="{{ $processedOrig.RelPermalink }}"
              alt="{{ $alt }} (original)"
