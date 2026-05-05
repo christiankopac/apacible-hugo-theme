@@ -12,7 +12,10 @@
 
 {{- /* Get all consumed pages and organize by category - current language */ -}}
 {{- $currentLang := .Language.Lang | default "en" -}}
-{{- $consumedPages := where .Site.AllPages "Section" "consumed" -}}
+{{- $consumedPages := slice -}}
+{{- range hugo.Sites -}}
+  {{- $consumedPages = $consumedPages | append (where .RegularPages "Section" "consumed") -}}
+{{- end -}}
 {{- $moviePages := slice -}}
 {{- $musicPages := slice -}}
 {{- $bookPages := slice -}}

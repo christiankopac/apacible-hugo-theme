@@ -4,218 +4,180 @@
 {{- with .Description }}
 {{ printf "%s\n\n" (. | plainify) }}
 {{- end }}
-{{- /* Get picks from pages in current language */ -}}
+{{- /* Get picks (top 6 items with rating >= 4.0) - current language */ -}}
 {{- $currentLang := .Language.Lang | default "en" -}}
-{{- $consumedPages := where .Site.AllPages "Section" "consumed" -}}
+{{- $consumedPages := slice -}}
+{{- range hugo.Sites -}}
+  {{- $consumedPages = $consumedPages | append (where .RegularPages "Section" "consumed") -}}
+{{- end -}}
 {{- $moviePages := slice -}}
 {{- $musicPages := slice -}}
 {{- $bookPages := slice -}}
 {{- range $consumedPages -}}
+  {{- /* Only include pages in current language */ -}}
   {{- $isCurrentLang := or (in .File.Path (printf "content/%s/" $currentLang)) (in .File.Dir (printf "%s/" $currentLang)) (eq .Language.Lang $currentLang) -}}
   {{- if and (not .IsSection) $isCurrentLang -}}
     {{- if (in .File.Dir "movie/") -}}
-      {{- $moviePages = $moviePages | append . -}}
+    {{- $moviePages = $moviePages | append . -}}
     {{- else if (in .File.Dir "music/") -}}
-      {{- $musicPages = $musicPages | append . -}}
+    {{- $musicPages = $musicPages | append . -}}
     {{- else if (in .File.Dir "book/") -}}
-      {{- $bookPages = $bookPages | append . -}}
+    {{- $bookPages = $bookPages | append . -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- $items := slice -}}
+{{- $movies := slice -}}
+{{- $music := slice -}}
+{{- $books := slice -}}
 {{- range $moviePages -}}
   {{- if not .Draft -}}
-    {{- /* Get English version for metadata */ -}}
-    {{- $englishPage := . -}}
-    {{- if ne .Language.Lang "en" -}}
-      {{- range .Translations -}}
-        {{- if eq .Language.Lang "en" -}}
-          {{- $englishPage = . -}}
-          {{- break -}}
-        {{- end -}}
-      {{- end -}}
-      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
-        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
-        {{- $enPage := $.Site.GetPage $enPath -}}
-        {{- if $enPage -}}
-          {{- $englishPage = $enPage -}}
-        {{- end -}}
-      {{- end -}}
-    {{- end -}}
-    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
-    {{- if ge $ratingValue 4.0 -}}
-      {{- $items = $items | append (dict
-        "title" (.Params.title | default .Title)
-        "category" "movies"
-        "year" ($englishPage.Params.year | default "")
-        "director" ($englishPage.Params.director | default "")
-        "rating" $ratingValue
-        "content" (.Params.content | default "")
-        "date_read" ($englishPage.Params.date_read | default "")
-        "footer" ($englishPage.Params.footer | default "")
-        "link" (.RelPermalink | default "")
-      ) -}}
-    {{- end -}}
+    {{- $movies = $movies | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "movies"
+      "year" (.Params.year | default "")
+      "director" (.Params.director | default "")
+      "rating" (.Params.rating | default 0)
+      "content" (.Params.content | default "")
+      "date_read" (.Params.date_read | default "")
+      "footer" (.Params.footer | default "")
+      "link" (.RelPermalink | default "")
+      "page" .
+    ) -}}
   {{- end -}}
 {{- end -}}
 {{- range $musicPages -}}
   {{- if not .Draft -}}
-    {{- /* Get English version for metadata */ -}}
-    {{- $englishPage := . -}}
-    {{- if ne .Language.Lang "en" -}}
-      {{- range .Translations -}}
-        {{- if eq .Language.Lang "en" -}}
-          {{- $englishPage = . -}}
-          {{- break -}}
-        {{- end -}}
-      {{- end -}}
-      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
-        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
-        {{- $enPage := $.Site.GetPage $enPath -}}
-        {{- if $enPage -}}
-          {{- $englishPage = $enPage -}}
-        {{- end -}}
-      {{- end -}}
-    {{- end -}}
-    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
-    {{- if ge $ratingValue 4.0 -}}
-      {{- $items = $items | append (dict
-        "title" (.Params.title | default .Title)
-        "category" "music"
-        "year" ($englishPage.Params.year | default "")
-        "artist" ($englishPage.Params.artist | default "")
-        "rating" $ratingValue
-        "content" (.Params.content | default "")
-        "date_read" ($englishPage.Params.date_read | default "")
-        "footer" ($englishPage.Params.footer | default "")
-        "link" (.RelPermalink | default "")
-      ) -}}
-    {{- end -}}
+    {{- $music = $music | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "music"
+      "year" (.Params.year | default "")
+      "artist" (.Params.artist | default "")
+      "rating" (.Params.rating | default 0)
+      "content" (.Params.content | default "")
+      "date_read" (.Params.date_read | default "")
+      "footer" (.Params.footer | default "")
+      "link" (.RelPermalink | default "")
+      "page" .
+    ) -}}
   {{- end -}}
 {{- end -}}
 {{- range $bookPages -}}
   {{- if not .Draft -}}
-    {{- /* Get English version for metadata */ -}}
-    {{- $englishPage := . -}}
-    {{- if ne .Language.Lang "en" -}}
-      {{- range .Translations -}}
-        {{- if eq .Language.Lang "en" -}}
-          {{- $englishPage = . -}}
-          {{- break -}}
-        {{- end -}}
-      {{- end -}}
-      {{- if eq $englishPage.Language.Lang .Language.Lang -}}
-        {{- $enPath := replace .File.Path "content/es/" "content/en/" -}}
-        {{- $enPage := $.Site.GetPage $enPath -}}
-        {{- if $enPage -}}
-          {{- $englishPage = $enPage -}}
-        {{- end -}}
-      {{- end -}}
-    {{- end -}}
-    {{- $ratingValue := float ($englishPage.Params.rating | default 0) -}}
-    {{- if ge $ratingValue 4.0 -}}
-      {{- $items = $items | append (dict
-        "title" (.Params.title | default .Title)
-        "category" "books"
-        "year" ($englishPage.Params.year | default "")
-        "author" ($englishPage.Params.author | default "")
-        "rating" $ratingValue
-        "content" (.Params.content | default "")
-        "date_read" ($englishPage.Params.date_read | default "")
-        "footer" ($englishPage.Params.footer | default "")
-        "link" (.RelPermalink | default "")
-      ) -}}
-    {{- end -}}
+    {{- $books = $books | append (dict 
+      "title" (.Params.title | default .Title)
+      "category" "books"
+      "year" (.Params.year | default "")
+      "author" (.Params.author | default "")
+      "rating" (.Params.rating | default 0)
+      "content" (.Params.content | default "")
+      "date_read" (.Params.date_read | default "")
+      "footer" (.Params.footer | default "")
+      "link" (.RelPermalink | default "")
+      "page" .
+    ) -}}
   {{- end -}}
 {{- end -}}
-{{- $groups := dict -}}
-{{- range $items }}
-  {{- if not .draft }}
-    {{- $category := lower (.category | default "other") -}}
-    {{- $existing := index $groups $category | default (slice) -}}
-    {{- $groups = merge $groups (dict $category ($existing | append .)) -}}
+{{- $picks := slice -}}
+{{- range $movies -}}
+  {{- $ratingValue := float (.rating | default 0) -}}
+  {{- if ge $ratingValue 4.0 -}}
+    {{- $sortDate := "" -}}
+    {{- if .date_read -}}
+      {{- $sortDate = .date_read -}}
+    {{- else if .footer -}}
+      {{- $sortDate = .footer -}}
+    {{- end -}}
+    {{- $picks = $picks | append (dict "item" . "sortDate" $sortDate) -}}
+  {{- end -}}
+{{- end -}}
+{{- range $music -}}
+  {{- $ratingValue := float (.rating | default 0) -}}
+  {{- if ge $ratingValue 4.0 -}}
+    {{- $sortDate := "" -}}
+    {{- if .date_read -}}
+      {{- $sortDate = .date_read -}}
+    {{- else if .footer -}}
+      {{- $sortDate = .footer -}}
+    {{- end -}}
+    {{- $picks = $picks | append (dict "item" . "sortDate" $sortDate) -}}
+  {{- end -}}
+{{- end -}}
+{{- range $books -}}
+  {{- $ratingValue := float (.rating | default 0) -}}
+  {{- if ge $ratingValue 4.0 -}}
+    {{- $sortDate := "" -}}
+    {{- if .date_read -}}
+      {{- $sortDate = .date_read -}}
+    {{- else if .footer -}}
+      {{- $sortDate = .footer -}}
+    {{- end -}}
+    {{- $picks = $picks | append (dict "item" . "sortDate" $sortDate) -}}
+  {{- end -}}
+{{- end -}}
+{{- $sortedPicks := sort $picks "sortDate" "desc" -}}
+{{- $recentPicks := first 6 $sortedPicks -}}
+{{- if gt (len $recentPicks) 0 }}
+{{- range $recentPicks }}
+{{- $item := .item }}
+{{- $title := $item.title | default "Untitled" }}
+{{- $link := $item.link }}
+{{- $page := $item.page }}
+{{- if $page }}
+  {{- $geminiLink := $page.RelPermalink }}
+  {{- with $page.OutputFormats.Get "Gemini" }}
+    {{- $geminiLink = .RelPermalink }}
+  {{- end }}
+  {{- $link = $geminiLink }}
+{{- end }}
+{{- $details := slice }}
+{{- if eq $item.category "movies" }}
+  {{- with $item.director }}
+    {{- $details = $details | append (printf "Director: %s" .) }}
+  {{- end }}
+{{- else if eq $item.category "music" }}
+  {{- with $item.artist }}
+    {{- $details = $details | append (printf "Artist: %s" .) }}
+  {{- end }}
+{{- else if eq $item.category "books" }}
+  {{- with $item.author }}
+    {{- $details = $details | append (printf "Author: %s" .) }}
   {{- end }}
 {{- end }}
-{{- $keys := slice -}}
-{{- range $k, $_ := $groups }}
-  {{- $keys = $keys | append $k -}}
+{{- with $item.year }}
+  {{- $details = $details | append (printf "Year: %s" .) }}
 {{- end }}
-{{- $preferredOrder := slice "books" "movies" "music" -}}
-{{- $orderedKeys := slice -}}
-{{- range $preferredOrder }}
-  {{- if index $groups . }}
-    {{- $orderedKeys = $orderedKeys | append . -}}
-  {{- end }}
+{{- with $item.rating }}
+  {{- $details = $details | append (printf "Rating: %v/5" .) }}
 {{- end }}
-{{- range sort $keys }}
-  {{- if not (in $orderedKeys .) }}
-    {{- $orderedKeys = $orderedKeys | append . -}}
-  {{- end }}
-{{- end }}
-{{- range $orderedKeys }}
-  {{- $entries := index $groups . -}}
-  {{- $categoryTitle := cond (ne . "other") (. | title) "Selections" -}}
-
-## {{ $categoryTitle | humanize }}
-
-{{ range $entries }}
-{{- $categoryLabel := lower (.category | default "") -}}
-{{- $title := .title | default "Untitled" -}}
-{{- $heading := $title -}}
-{{- if eq $categoryLabel "music" }}
-  {{- with .artist }}
-    {{- $heading = printf "%s (%s)" $title . -}}
-  {{- end }}
-{{- end }}
-{{- printf "### %s\n" $heading -}}
-{{- $details := slice -}}
-{{- with .year }}
-  {{- $details = $details | append (printf "Year: %s" .) -}}
-{{- end }}
-{{- if eq $categoryLabel "books" }}
-  {{- with .author }}
-    {{- $details = $details | append (printf "Author: %s" .) -}}
-  {{- end }}
-{{- else if eq $categoryLabel "movies" }}
-  {{- with .director }}
-    {{- $details = $details | append (printf "Director: %s" .) -}}
-  {{- end }}
-{{- else if eq $categoryLabel "music" }}
-  {{- with .artist }}
-    {{- $details = $details | append (printf "Artist: %s" .) -}}
-  {{- end }}
-  {{- with .label }}
-    {{- $details = $details | append (printf "Label: %s" .) -}}
-  {{- end }}
+{{- if $link }}
+=> {{ $link }} {{ $title | plainify }}
 {{- else }}
-  {{- with .author }}
-    {{- $details = $details | append (printf "Author: %s" .) -}}
-  {{- end }}
-  {{- with .director }}
-    {{- $details = $details | append (printf "Director: %s" .) -}}
-  {{- end }}
-  {{- with .artist }}
-    {{- $details = $details | append (printf "Artist: %s" .) -}}
-  {{- end }}
-{{- end }}
-{{- with .rating }}
-  {{- $details = $details | append (printf "Rating: %v/5" .) -}}
-{{- end }}
-{{- with .footer }}
-  {{- $details = $details | append (. | plainify) -}}
-{{- end }}
-{{- with .content }}
-  {{- $summary := strings.TrimSpace (. | plainify) -}}
-  {{- if ne $summary "" }}
-    {{- $details = $details | append (printf "Summary: %s" $summary) -}}
-  {{- end }}
+### {{ $title | plainify }}
 {{- end }}
 {{- range $details }}
 * {{ . }}
 {{- end }}
-{{ printf "\n" }}
+{{- with $item.content }}
+{{- $summary := strings.TrimSpace (. | plainify) }}
+{{- /* Remove markdown formatting */ -}}
+{{- $summary = replaceRE `\*\*([^*]+)\*\*` "$1" $summary -}}
+{{- $summary = replaceRE `\*([^*]+)\*` "$1" $summary -}}
+{{- $summary = replaceRE `__([^_]+)__` "$1" $summary -}}
+{{- $summary = replaceRE `_([^_]+)_` "$1" $summary -}}
+{{- $summary = replaceRE `~~([^~]+)~~` "$1" $summary -}}
+{{- $summary = replaceRE `\*\*` "" $summary -}}
+{{- $summary = replaceRE `__` "" $summary -}}
+{{- $summary = replaceRE `\*` "" $summary -}}
+{{- $summary = replaceRE `_` "" $summary -}}
+{{- $summary = replaceRE `~~` "" $summary -}}
+{{- if ne $summary "" }}
+{{ $summary }}
+{{- end }}
 {{- end }}
 
+{{- end }}
+{{- else }}
+No picks yet.
 {{- end }}
 
 {{- /* Link to consumed section */ -}}
@@ -231,11 +193,13 @@
 {{- with .OutputFormats.Get "HTML" -}}
   {{- $webURL = .Permalink -}}
 {{- else -}}
-  {{- $webURL = printf "%s%s" .Site.BaseURL .RelPermalink -}}
+  {{- $siteURL := .Site.Params.site_url | default .Site.BaseURL -}}
+  {{- $webURL = printf "%s%s" $siteURL .RelPermalink -}}
 {{- end -}}
-{{- $webURL = replace $webURL "gemini://gemini.kopac.ch" "https://kopac.ch" -}}
-{{- $webURL = replace $webURL "https://gemini.kopac.ch" "https://kopac.ch" -}}
+{{- $geminiURL := .Site.Params.gemini_url | default "gemini://gemini.kopac.ch" -}}
+{{- $siteURL := .Site.Params.site_url | default .Site.BaseURL -}}
+{{- $webURL = replace $webURL $geminiURL $siteURL -}}
+{{- $webURL = replace $webURL (printf "https://%s" (strings.TrimPrefix "gemini://" $geminiURL)) $siteURL -}}
 {{- $webURL = replace $webURL "gemini://" "https://" -}}
-=> {{ $webURL }} Web version
-
+{{ printf "\n=> %s Web version\n" $webURL }}
 

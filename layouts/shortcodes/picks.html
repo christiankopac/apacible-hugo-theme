@@ -7,7 +7,10 @@
 
 {{/* Get all pages from consumed sections - current language */}}
 {{ $currentLang := .Site.Language.Lang | default "en" }}
-{{ $consumedPages := where .Site.AllPages "Section" "consumed" }}
+{{ $consumedPages := slice }}
+{{ range hugo.Sites }}
+  {{ $consumedPages = $consumedPages | append (where .RegularPages "Section" "consumed") }}
+{{ end }}
 {{ $moviePages := slice }}
 {{ $musicPages := slice }}
 {{ $bookPages := slice }}
@@ -48,7 +51,7 @@
         {{ end }}
       {{ end }}
     {{ end }}
-    {{ $movies = $movies | append (dict 
+    {{ $movies = $movies | append (dict
       "title" (.Params.title | default .Title)
       "category" "movies"
       "year" ($englishPage.Params.year | default "")
@@ -60,6 +63,7 @@
       "review" (.Params.review | default "")
       "footer" ($englishPage.Params.footer | default "")
       "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01-02")
       "draft" false
       "link" (.RelPermalink | default "")
     ) }}
@@ -84,7 +88,7 @@
         {{ end }}
       {{ end }}
     {{ end }}
-    {{ $music = $music | append (dict 
+    {{ $music = $music | append (dict
       "title" (.Params.title | default .Title)
       "category" "music"
       "year" ($englishPage.Params.year | default "")
@@ -94,6 +98,7 @@
       "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
       "footer" ($englishPage.Params.footer | default "")
       "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01-02")
       "draft" false
       "link" (.RelPermalink | default "")
       "rating" ($englishPage.Params.rating | default 0)
@@ -119,7 +124,7 @@
         {{ end }}
       {{ end }}
     {{ end }}
-    {{ $books = $books | append (dict 
+    {{ $books = $books | append (dict
       "title" (.Params.title | default .Title)
       "category" "books"
       "year" ($englishPage.Params.year | default "")
@@ -129,6 +134,7 @@
       "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
       "footer" ($englishPage.Params.footer | default "")
       "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01-02")
       "draft" false
       "link" (.RelPermalink | default "")
       "rating" ($englishPage.Params.rating | default 0)
@@ -141,13 +147,7 @@
 {{ range $movies }}
   {{ $ratingValue := float (.rating | default 0) }}
   {{ if and (not .draft) (ge $ratingValue 4.0) }}
-    {{ $sortDate := "" }}
-    {{ if .date_read }}
-      {{ $sortDate = .date_read }}
-    {{ else if .footer }}
-      {{/* Try to extract date from footer for sorting */}}
-      {{ $sortDate = .footer }}
-    {{ end }}
+    {{ $sortDate := .date | default (.date_read | default .footer) }}
     {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
   {{ end }}
 {{ end }}
@@ -155,12 +155,7 @@
 {{ range $music }}
   {{ $ratingValue := float (.rating | default 0) }}
   {{ if and (not .draft) (ge $ratingValue 4.0) }}
-    {{ $sortDate := "" }}
-    {{ if .date_read }}
-      {{ $sortDate = .date_read }}
-    {{ else if .footer }}
-      {{ $sortDate = .footer }}
-    {{ end }}
+    {{ $sortDate := .date | default (.date_read | default .footer) }}
     {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
   {{ end }}
 {{ end }}
@@ -168,12 +163,7 @@
 {{ range $books }}
   {{ $ratingValue := float (.rating | default 0) }}
   {{ if and (not .draft) (ge $ratingValue 4.0) }}
-    {{ $sortDate := "" }}
-    {{ if .date_read }}
-      {{ $sortDate = .date_read }}
-    {{ else if .footer }}
-      {{ $sortDate = .footer }}
-    {{ end }}
+    {{ $sortDate := .date | default (.date_read | default .footer) }}
     {{ $picks = $picks | append (dict "item" . "sortDate" $sortDate) }}
   {{ end }}
 {{ end }}
@@ -206,14 +196,12 @@
               {{ $imgResource = resources.Get $itemImg }}
             {{ end }}
             {{ if $imgResource }}
-              {{/* Resize for picks grid - create WebP and AVIF versions */}}
+              {{/* Resize for picks grid - create WebP version */}}
               {{ $resizedImg := $imgResource.Resize "400x q90" }}
               {{ $resizedWebP := $imgResource.Resize "400x webp q90" }}
-              {{ $resizedAVIF := $imgResource.Resize "400x avif q90" }}
               {{ if $consumedLink }}
                 <a href="{{ $consumedLink }}">
                   <picture>
-                    {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
                     <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
                     <img src="{{ $resizedImg.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedImg.Width }}" height="{{ $resizedImg.Height }}" loading="lazy" decoding="async">
                   </picture>
@@ -221,7 +209,6 @@
               {{ else }}
                 <a href="/consumed/" title="{{ $item.title | safeHTML }}">
                   <picture>
-                    {{ if $resizedAVIF }}<source srcset="{{ $resizedAVIF.RelPermalink }}" type="image/avif" width="{{ $resizedAVIF.Width }}" height="{{ $resizedAVIF.Height }}">{{ end }}
                     <source srcset="{{ $resizedWebP.RelPermalink }}" type="image/webp" width="{{ $resizedWebP.Width }}" height="{{ $resizedWebP.Height }}">
                     <img src="{{ $resizedImg.RelPermalink }}" alt="{{ $item.title | safeHTML }}" width="{{ $resizedImg.Width }}" height="{{ $resizedImg.Height }}" loading="lazy" decoding="async">
                   </picture>

@@ -17,7 +17,12 @@
             {{ $englishPage = $enPage }}
         {{ else }}
             {{/* Fallback: try to find by matching title in English section */}}
-            {{ $enPages := where (where .Site.AllPages "Section" "consumed") "Language.Lang" "en" }}
+            {{ $enPages := slice }}
+            {{ range hugo.Sites }}
+              {{ if eq .Language.Lang "en" }}
+                {{ $enPages = where .RegularPages "Section" "consumed" }}
+              {{ end }}
+            {{ end }}
             {{ range $enPages }}
                 {{ if and (not .IsSection) (eq (.Params.title | default .Title) ($.Params.title | default $.Title)) }}
                     {{ $englishPage = . }}
@@ -40,6 +45,7 @@
     "rating" ($englishPage.Params.rating | default 0)
     "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
     "tmdb" ($englishPage.Params.tmdb | default "")
+    "letterboxd" ($englishPage.Params.letterboxd | default "")
     "discogs" ($englishPage.Params.discogs | default "")
     "discogsArtist" ($englishPage.Params.discogsArtist | default "")
     "discogsLabel" ($englishPage.Params.discogsLabel | default "")
@@ -68,12 +74,10 @@
                 {{ $imgPath := strings.TrimPrefix "/" . }}
                 {{ $imgResource := resources.Get $imgPath }}
                 {{ if $imgResource }}
-                    {{/* Process image - resize to reasonable size, create WebP and AVIF versions */}}
+                    {{/* Process image - resize to reasonable size, create WebP version */}}
                     {{ $processedImg := $imgResource.Resize "800x q90" }}
                     {{ $processedWebP := $imgResource.Resize "800x webp q90" }}
-                    {{ $processedAVIF := $imgResource.Resize "800x avif q90" }}
                     <picture>
-                        {{ if $processedAVIF }}<source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">{{ end }}
                         <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
                         <img src="{{ $processedWebP.RelPermalink }}" alt="{{ $mediaData.title }}" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}" loading="eager">
                     </picture>
@@ -235,6 +239,16 @@
                                 <line x1="10" y1="14" x2="21" y2="3"/>
                             </svg>
                             {{ i18n "viewOnTMDB" | default "View on TMDB" }}
+                        </a>
+                    {{ end }}
+                    {{ with $mediaData.letterboxd }}
+                        <a href="{{ . }}" class="external-link" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="6" cy="12" r="3"/>
+                                <circle cx="12" cy="12" r="3"/>
+                                <circle cx="18" cy="12" r="3"/>
+                            </svg>
+                            {{ i18n "viewOnLetterboxd" | default "View on Letterboxd" }}
                         </a>
                     {{ end }}
                 {{ else if $isMusic }}
@@ -549,15 +563,12 @@
                                         }}
                                         {{ $ditherFilter := images.Dither $ditherOpts }}
                                         {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
-                                        {{/* Create WebP and AVIF versions */}}
+                                        {{/* Create WebP versions */}}
                                         {{ $ditheredWebP := $ditheredImg.Resize "200x300 webp q90" }}
-                                        {{ $ditheredAVIF := $ditheredImg.Resize "200x300 avif q90" }}
                                         {{ $originalWebP := $imgResource.Resize "200x300 webp q90" }}
-                                        {{ $originalAVIF := $imgResource.Resize "200x300 avif q90" }}
                                         <a href="{{ $relatedLink }}" class="consumed-poster-link">
                                             <div class="consumed-poster-image-container" data-category="movies">
                                                 <picture class="dithered-poster">
-                                                    {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
                                                     <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
                                                     <img src="{{ $ditheredWebP.RelPermalink }}" 
                                                          alt="{{ $relatedTitle | safeHTML }}" 
@@ -569,7 +580,6 @@
                                                          style="width: 100%; height: 100%; object-fit: cover;">
                                                 </picture>
                                                 <picture class="original-poster">
-                                                    {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
                                                     <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
                                                     <img src="{{ $originalWebP.RelPermalink }}" 
                                                          alt="{{ $relatedTitle | safeHTML }}" 
