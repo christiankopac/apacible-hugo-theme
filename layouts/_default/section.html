@@ -17,7 +17,7 @@
     <div class="section-pages">
         {{ range .Pages }}
             <article class="section-page-link">
-                <h2><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+                <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
                 {{ with .Description }}
                     <p>{{ . }}</p>
                 {{ end }}

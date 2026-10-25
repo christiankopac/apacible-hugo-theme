@@ -1,15 +1,9 @@
-# English translations
-[readMore]
-other = "Read more"
-
-[back]
-other = "Back"
+# English translations for the apacible theme.
+# Nav/footer entries in hugo.toml (params.home_nav, params.footer, params.sections)
+# are looked up here by their `name`, falling back to the name itself.
 
 [allPosts]
 other = "all posts"
-
-[recentPosts]
-other = "Recent posts"
 
 [tags]
 other = "Tags"
@@ -17,20 +11,11 @@ other = "Tags"
 [categories]
 other = "Categories"
 
-[wordCount]
-other = "words"
-
-[readingTime]
-other = "min read"
-
 [explore]
 other = "Explore"
 
-[connect]
-other = "Connect"
-
-[posts]
-other = "posts"
+[made]
+other = "made"
 
 [about]
 other = "about"
@@ -40,6 +25,9 @@ other = "now"
 
 [picks]
 other = "picks"
+
+[playlists]
+other = "playlists"
 
 [all]
 other = "All"
@@ -73,12 +61,6 @@ other = "Email"
 
 [emailAddress]
 other = "Email address"
-
-[emailError]
-other = "Please enter a valid email address"
-
-[consent]
-other = "Consent"
 
 [newsletterConsent]
 other = "I consent to the processing of my name and email address for the purpose of receiving the newsletter."
@@ -134,15 +116,6 @@ other = "Hide Gallery"
 [spoilerAlert]
 other = "Spoiler Alert"
 
-[notFound]
-other = "404 Not Found"
-
-[notFoundMessage]
-other = "The page you're looking for doesn't exist."
-
-[notFoundRecover]
-other = "⇽ back to home"
-
 [noPicksYet]
 other = "No picks yet."
 
@@ -151,12 +124,6 @@ other = "No playlists yet."
 
 [doNotFill]
 other = "Don't fill this out if you're human:"
-
-[footerCredits]
-other = "Built with&nbsp;%s&nbsp;and the&nbsp;%s&nbsp;theme"
-
-[atomFeed]
-other = "Atom Feed"
 
 [toggleTheme]
 other = "Toggle theme"
@@ -167,5 +134,192 @@ other = "Found %d article%s in this tag"
 [foundArticlesInCategory]
 other = "Found %d article%s in this category"
 
+[read]
+other = "Read"
+
+[watched]
+other = "Watched"
+
+[listened]
+other = "Listened"
+
+[year]
+other = "Year"
+
+[released]
+other = "Released"
+
+[published]
+other = "Published"
+
+[rating]
+other = "Rating"
+
+[publisher]
+other = "Publisher"
+
+[label]
+other = "Label"
+
+[genre]
+other = "Genre"
+
+[margins]
+other = "margins"
+
+[loved]
+other = "loved"
+
+[found]
+other = "found"
+
+[backToTop]
+other = "Back to top"
+
+[toggleTableOfContents]
+other = "Toggle table of contents"
+
+[toggleColorScheme]
+other = "Toggle color scheme"
+
+[toggleOriginalImage]
+other = "Toggle original image"
+
+[showOriginal]
+other = "show original"
+
+[dither]
+other = "dither"
+
 [scene]
 other = "Scene"
+
+[lately]
+other = "Lately"
+
+[plays]
+other = "plays"
+
+[visit]
+other = "Visit"
+
+[wayback]
+other = "Snapshot on the Wayback Machine"
+
+[feedTitleAll]
+other = "%s"
+
+[feedTitleMade]
+other = "%s’s Articles"
+
+[feedTitleMargins]
+other = "%s’s Margins"
+
+[feedTitleFound]
+other = "%s’s Found"
+
+[feedTitlePlaylists]
+other = "%s’s Playlists"
+
+[feedTitlePicks]
+other = "%s’s Picks"
+
+[privacy]
+other = "privacy"
+
+[kindWrote]
+other = "wrote"
+
+[kindCurated]
+other = "curated"
+
+[kindFound]
+other = "found"
+
+[kindWatched]
+other = "watched"
+
+[kindHeard]
+other = "heard"
+
+[kindRead]
+other = "read"
+
+[kindListened]
+other = "listened"
+
+[kindWrapped]
+other = "wrapped"
+
+[menu]
+other = "Menu"
+
+[footerWriting]
+other = "Writing"
+
+[footerGarden]
+other = "Garden"
+
+[footerElsewhere]
+other = "Elsewhere"
+
+[footerFeed]
+other = "Feed"
+
+[footerBuiltWith]
+other = "Built with %s"
+
+[homeNowLink]
+other = "What I'm doing now"
+
+[entries]
+other = "entries"
+
+[latest]
+other = "latest"
+
+# Command palette, header
+[home]
+other = "Home"
+
+[more]
+other = "More"
+
+[actions]
+other = "Actions"
+
+[cmdkTitle]
+other = "Command palette"
+
+[cmdkPlaceholder]
+other = "Search the site, jump to a page, or run a command…"
+
+[cmdkPages]
+other = "Pages"
+
+[cmdkToggleTheme]
+other = "Toggle light / dark"
+
+[cmdkCycleScheme]
+other = "Cycle color scheme"
+
+[cmdkSchemeGroup]
+other = "Color scheme"
+
+[cmdkEmpty]
+other = "No matches."
+
+[cmdkNav]
+other = "navigate"
+
+[cmdkSelect]
+other = "open"
+
+[cmdkClose]
+other = "close"
+
+[viewOnLetterboxd]
+other = "View on Letterboxd"
+
+[relatedMovies]
+other = "Related Movies"

@@ -1,9 +1,15 @@
-<footer class="site-footer">
+{{/* Site footer — the index at the bottom of every page, and the target of
+     the header's menu button (#site-footer). Big, plainly clickable rows:
+     writing · garden · elsewhere, then a one-line colophon.
+     Theme/colour controls are NOT here: they live in the utility dock (header
+     on wide screens, floating bottom dock on narrow ones). */}}
+{{ $footer := .Site.Params.footer | default dict }}
+<footer class="site-footer" id="site-footer">
   {{/* Newsletter subscription form - hidden on consumed single pages */}}
-  {{ if and .Site.Params.newsletter_enabled (not (in .RelPermalink "/consumed/")) }}
+  {{ if and .Site.Params.newsletter_enabled (not (in .RelPermalink "/margins/")) }}
   <div class="footer-newsletter">
-    <form name="newsletter" netlify data-netlify="true" netlify-honeypot="bot-field">
-      <input type="hidden" name="form-name" value="contact" />
+    <form name="newsletter" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="newsletter" />
       <p style="display: none;">
         <label>{{ i18n "doNotFill" | default "Don't fill this out if you're human:" }} <input name="bot-field" autocomplete="off" /></label>
       </p>
@@ -32,92 +38,56 @@
   </div>
   {{ end }}
 
-  <div class="footer-content">
-    {{/* Left: License/Copyright + Credits */}}
-    <div class="footer-left">
-      {{ $license := .Site.Params.footer_license | default "cc-by-nc-nd" }}
-      {{ $copyrightYear := .Site.Params.copyright_year | default (now.Year) }}
-      {{ $copyrightHolder := .Site.Params.copyright_holder | default "Your Name" }}
-      
-      {{ if eq $license "cc-by" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution 4.0 International License" class="cc-license-text">
-          CC BY 4.0
-        </a>
-      {{ else if eq $license "cc-by-sa" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-ShareAlike 4.0 International License" class="cc-license-text">
-          CC BY-SA 4.0
-        </a>
-      {{ else if eq $license "cc-by-nc" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial 4.0 International License" class="cc-license-text">
-          CC BY-NC 4.0
-        </a>
-      {{ else if eq $license "cc-by-nc-sa" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License" class="cc-license-text">
-          CC BY-NC-SA 4.0
-        </a>
-      {{ else if eq $license "cc-by-nd" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NoDerivatives 4.0 International License" class="cc-license-text">
-          CC BY-ND 4.0
-        </a>
-      {{ else if eq $license "cc-by-nc-nd" }}
-        <a href="https://github.com/christiankopac/kopac-ch/blob/main/LICENSE" rel="license" aria-label="Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License" class="cc-license-text">
-          CC BY-NC-ND 4.0
-        </a>
-      {{ else if eq $license "copyright" }}
-        <span class="footer-copyright">© {{ $copyrightYear }} {{ $copyrightHolder }}</span>
-      {{ end }}
-      {{ if .Site.Params.footer_credits }}
-        <span class="footer-credits">{{ .Site.Params.footer_credits | safeHTML }}</span>
-      {{ else }}
-        <span class="footer-credits">{{ $hugoLink := "<a href=\"https://gohugo.io/\" target=\"_blank\" rel=\"noopener\">Hugo</a>" }}{{ $themeLink := "<a href=\"https://git.sr.ht/~ckopac/apacible\" target=\"_blank\" rel=\"noopener\">apacible</a>" }}{{ printf (i18n "footerCredits" | default "Built with %s and the %s theme") $hugoLink $themeLink | safeHTML }}</span>
-      {{ end }}
-    </div>
-    
-    {{/* Center: Empty (for spacing) */}}
-    <div class="footer-center">
-    </div>
-    
-    {{/* Right: Icons */}}
-    <div class="footer-right">
-      {{/* Atom feed link on blog listing and consumed pages */}}
-      {{ if .IsSection }}
-        {{ if or (in .RelPermalink "/posts/") (in .RelPermalink "/consumed/") }}
-          {{- $atom := .OutputFormats.Get "Atom" -}}
-          {{- if $atom }}
-      <a href="{{ $atom.RelPermalink }}" aria-label="{{ i18n "atomFeed" | default "Atom Feed" }}" title="{{ i18n "atomFeed" | default "Atom Feed" }}" class="footer-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 11a9 9 0 0 1 9 9"></path>
-          <path d="M4 4a16 16 0 0 1 16 16"></path>
-          <circle cx="5" cy="19" r="1"></circle>
-        </svg>
-      </a>
-          {{- end }}
+  <div class="footer-index">
+    {{ with $footer.writing }}
+    <nav class="footer-col" aria-labelledby="footer-writing">
+      <h2 class="footer-heading" id="footer-writing">{{ i18n "footerWriting" | default "Writing" }}</h2>
+      <ul>
+        {{ range . }}<li><a href="{{ partial "nav-url.html" .path }}">{{ i18n .name | default .name }}</a></li>{{ end }}
+      </ul>
+    </nav>
+    {{ end }}
+
+    {{ with $footer.garden }}
+    <nav class="footer-col" aria-labelledby="footer-garden">
+      <h2 class="footer-heading" id="footer-garden">{{ i18n "footerGarden" | default "Garden" }}</h2>
+      <ul>
+        {{ range . }}<li><a href="{{ partial "nav-url.html" .path }}">{{ i18n .name | default .name }}</a></li>{{ end }}
+      </ul>
+    </nav>
+    {{ end }}
+
+    <nav class="footer-col" aria-labelledby="footer-elsewhere">
+      <h2 class="footer-heading" id="footer-elsewhere">{{ i18n "footerElsewhere" | default "Elsewhere" }}</h2>
+      <ul>
+        {{ range .Site.Params.social }}
+        <li><a href="{{ .url }}" {{ if not (hasPrefix .url "mailto:") }}rel="me noopener noreferrer" target="_blank"{{ end }}>{{ partial "social-icon.html" .icon }}<span>{{ .name }}</span></a></li>
         {{ end }}
-      {{ end }}
+        {{ with .Site.Home.OutputFormats.Get "Atom" }}
+        <li><a href="{{ .RelPermalink }}" type="application/atom+xml">{{ partial "social-icon.html" "rss" }}<span>{{ i18n "footerFeed" | default "Feed" }}</span></a></li>
+        {{ end }}
+      </ul>
+    </nav>
+  </div>
 
-      <button id="color-scheme-toggle" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="footer-icon">
-        ⚄
-      </button>
+  {{/* Plain in-page link to the header anchor: works without JS, scrolls
+       smoothly via scroll-behavior on <html>. */}}
+  <a class="footer-top" href="#top"><span aria-hidden="true">↑</span> {{ i18n "backToTop" | default "Back to top" }}</a>
 
-      <button id="theme-toggle" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="footer-icon">
-        <!-- Sun icon (shown in light theme) -->
-        <svg class="theme-icon theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <!-- Moon icon (shown in dark theme) -->
-        <svg class="theme-icon theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
-    </div>
+  {{/* Colophon: two short lines at most on phones. */}}
+  {{ $license := .Site.Params.footer_license | default "cc-by-nc-nd" }}
+  {{ $licenseLabels := dict "cc-by" "CC BY 4.0" "cc-by-sa" "CC BY-SA 4.0" "cc-by-nc" "CC BY-NC 4.0" "cc-by-nc-sa" "CC BY-NC-SA 4.0" "cc-by-nd" "CC BY-ND 4.0" "cc-by-nc-nd" "CC BY-NC-ND 4.0" }}
+  {{/* params.license_url overrides the licence link; defaults to the Creative Commons deed. */}}
+  {{ $licenseURL := .Site.Params.license_url | default (printf "https://creativecommons.org/licenses/%s/4.0/" (strings.TrimPrefix "cc-" $license)) }}
+  {{ $copyrightYear := os.Getenv "HUGO_COPYRIGHT_YEAR" | default (now.Format "2006") }}
+  <div class="footer-colophon">
+    <p class="footer-copy">
+      <span>© {{ $copyrightYear }} {{ .Site.Params.copyright_holder | default .Site.Title }}</span>
+      {{ with index $licenseLabels $license }}<a href="{{ $licenseURL }}" rel="license">{{ . }}</a>{{ end }}
+    </p>
+    <p class="footer-built">
+      {{ printf (i18n "footerBuiltWith" | default "Built with %s") "<a href=\"https://gohugo.io/\" rel=\"noopener\">Hugo</a>" | safeHTML }}
+      {{ range $footer.legal }}<a href="{{ partial "nav-url.html" .path }}">{{ i18n .name | default .name }}</a>{{ end }}
+    </p>
   </div>
 </footer>
-

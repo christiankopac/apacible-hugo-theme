@@ -4,25 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    {{/* Compute special-day flags once, reused across head + body. */}}
+    {{ $sd := partialCached "special-day.html" . }}
+    {{ if not $sd.jsNaked }}
     <!-- Set theme and color scheme immediately to prevent flash -->
     <script>
       (function() {
         try {
           const theme = localStorage.getItem('theme') || 'light';
-          const colorScheme = localStorage.getItem('colorScheme') || 'default';
+          let colorScheme = localStorage.getItem('colorScheme') || 'default';
+          // The Purple scheme was replaced by Tokyo Night; carry its users over
+          // so a stale stored value doesn't leave the page without a palette.
+          if (colorScheme === 'purple') {
+            colorScheme = 'tokyo';
+            localStorage.setItem('colorScheme', colorScheme);
+          }
+          // Mark that JS is running so progressive-only effects (scroll reveals,
+          // the command palette opener) opt IN. Without this class — no JS, JS
+          // Naked Day, or a script failure — content stays fully visible.
+          document.documentElement.classList.add('js');
           document.documentElement.setAttribute('data-theme', theme);
           document.documentElement.style.colorScheme = theme;
-          // Only set data-color-scheme if not default
-          if (colorScheme && colorScheme !== 'default') {
+          if (colorScheme && colorScheme !== 'default' && colorScheme !== 'everforest') {
             document.documentElement.setAttribute('data-color-scheme', colorScheme);
           }
+          if (localStorage.getItem('naked') === '1') {
+            document.documentElement.setAttribute('data-naked', '1');
+          }
         } catch (e) {
-          // Fallback to light theme and default color scheme if localStorage fails
           document.documentElement.setAttribute('data-theme', 'light');
           document.documentElement.style.colorScheme = 'light';
         }
       })();
     </script>
+    {{ end }}{{/* close: if not $sd.jsNaked (theme init) */}}
     {{ block "desc" . }}
       {{ if .Description }}
         <meta name="description" content="{{ .Description }}" />
@@ -127,14 +142,19 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ "img/favicon-32x32.png" | relURL }}" />
     <link rel="icon" type="image/png" sizes="16x16" href="{{ "img/favicon-16x16.png" | relURL }}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{ "img/apple-touch-icon.png" | relURL }}" />
-    
+
+    {{/* CSS Naked Day server-side participation. During the 50-hour UTC
+         window we emit zero stylesheets and no custom fonts — the page
+         renders with browser default styles only. The runtime toggle is
+         still available for previewing on other days. */}}
+    {{ if not $sd.cssNaked }}
     <!-- NOTE: Optional: add custom fonts -->
     {{ partialCached "custom_font.html" . }}
     <!-- NOTE: Optional: add custom css -->
     {{ partialCached "custom_css.html" . }}
 
     {{/* Base CSS - always needed - bundled with Hugo pipes */}}
-    {{ $baseFiles := slice "css/tokens.css" "css/theme.css" "css/layout.css" "css/typography.css" "css/navigation.css" "css/footer.css" "css/back-to-top.css" "css/cursor.css" }}
+     {{ $baseFiles := slice "css/tokens.css" "css/theme.css" "css/layout.css" "css/typography.css" "css/navigation.css" "css/footer.css" "css/back-to-top.css" "css/liquid-glass.css" "css/command-palette.css" }}
     {{ $baseCSS := slice }}
     {{ range $baseFiles }}
       {{ $css := resources.Get . }}
@@ -143,7 +163,7 @@
       {{ end }}
     {{ end }}
     {{ $baseBundled := $baseCSS | resources.Concat "css/base-bundle.css" | minify | fingerprint }}
-    <link rel="stylesheet" href="{{ $baseBundled.Permalink }}" integrity="{{ $baseBundled.Data.Integrity }}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ $baseBundled.RelPermalink }}" integrity="{{ $baseBundled.Data.Integrity }}" crossorigin="anonymous">
     
     {{/* Template-specific CSS */}}
     {{ if .IsHome }}
@@ -160,69 +180,82 @@
         {{ end }}
       {{ end }}
       {{ $homeBundled := $homeCSS | resources.Concat "css/home-bundle.css" | minify | fingerprint }}
-      <link rel="stylesheet" href="{{ $homeBundled.Permalink }}" integrity="{{ $homeBundled.Data.Integrity }}" crossorigin="anonymous">
+      <link rel="stylesheet" href="{{ $homeBundled.RelPermalink }}" integrity="{{ $homeBundled.Data.Integrity }}" crossorigin="anonymous">
     {{ else if .IsPage }}
-      {{/* Check if this is a post page */}}
-      {{ $isPost := false }}
-      {{ if .Params.tags }}
-        {{ $isPost = true }}
-      {{ else if .Date }}
-        {{ $blogSection := .Site.Params.blog_section_path | default "/posts" }}
-        {{ if or (hasPrefix .RelPermalink $blogSection) (in .RelPermalink "/posts/") (hasPrefix .RelPermalink "/reviews/") }}
-          {{ $isPost = true }}
-        {{ end }}
-      {{ end }}
-      
-      {{ if $isPost }}
-        {{/* Post page */}}
-        {{ $postFiles := slice "css/blog.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
-        {{ $postCSS := slice }}
-        {{ range $postFiles }}
+      {{/* Section-specific single pages are routed by URL prefix first,
+           because /found/ entries have tags and would otherwise be misrouted
+           into the post bundle. */}}
+      {{ if or (hasPrefix .RelPermalink "/margins/") (in .RelPermalink "/margins/") }}
+        {{/* Consumed single page */}}
+        {{ $consumedFiles := slice "css/prose.css" "css/consumed-single.css" "css/collection.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $consumedCSS := slice }}
+        {{ range $consumedFiles }}
           {{ $css := resources.Get . }}
           {{ if $css }}
-            {{ $postCSS = $postCSS | append $css }}
+            {{ $consumedCSS = $consumedCSS | append $css }}
           {{ end }}
         {{ end }}
-        {{ $postBundled := $postCSS | resources.Concat "css/post-bundle.css" | minify | fingerprint }}
-        <link rel="stylesheet" href="{{ $postBundled.Permalink }}" integrity="{{ $postBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ $consumedBundled := $consumedCSS | resources.Concat "css/consumed-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $consumedBundled.RelPermalink }}" integrity="{{ $consumedBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else if or (hasPrefix .RelPermalink "/playlists/") (in .RelPermalink "/playlists/") }}
+        {{/* Playlist single page */}}
+        {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $playlistCSS := slice }}
+        {{ range $playlistFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $playlistCSS = $playlistCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $playlistBundled.RelPermalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else if or (hasPrefix .RelPermalink "/found/") (in .RelPermalink "/found/") }}
+        {{/* Found (linklog) single page */}}
+        {{ $foundFiles := slice "css/prose.css" "css/found.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $foundCSS := slice }}
+        {{ range $foundFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $foundCSS = $foundCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $foundBundled := $foundCSS | resources.Concat "css/found-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $foundBundled.RelPermalink }}" integrity="{{ $foundBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else if or (eq .Layout "password-protected") (eq .Params.layout "password-protected") }}
+        {{/* Password-protected pages */}}
+        {{ $passwordFiles := slice "css/prose.css" "css/password-protected.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $passwordCSS := slice }}
+        {{ range $passwordFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $passwordCSS = $passwordCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $passwordBundled := $passwordCSS | resources.Concat "css/password-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $passwordBundled.RelPermalink }}" integrity="{{ $passwordBundled.Data.Integrity }}" crossorigin="anonymous">
       {{ else }}
-        {{/* Check if this is a consumed single page */}}
-        {{ if or (hasPrefix .RelPermalink "/consumed/") (in .RelPermalink "/consumed/") }}
-          {{/* Consumed single page */}}
-          {{ $consumedFiles := slice "css/prose.css" "css/consumed-single.css" "css/collection.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
-          {{ $consumedCSS := slice }}
-          {{ range $consumedFiles }}
+        {{/* Is this a "made" post? Has tags, or is dated and under /made or /reviews */}}
+        {{ $isPost := false }}
+        {{ if .Params.tags }}
+          {{ $isPost = true }}
+        {{ else if .Date }}
+          {{ $blogSection := .Site.Params.blog_section_path | default "/made" }}
+          {{ if or (hasPrefix .RelPermalink $blogSection) (in .RelPermalink "/made/") (hasPrefix .RelPermalink "/reviews/") }}
+            {{ $isPost = true }}
+          {{ end }}
+        {{ end }}
+        {{ if $isPost }}
+          {{/* Post page */}}
+          {{ $postFiles := slice "css/blog.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
+          {{ $postCSS := slice }}
+          {{ range $postFiles }}
             {{ $css := resources.Get . }}
             {{ if $css }}
-              {{ $consumedCSS = $consumedCSS | append $css }}
+              {{ $postCSS = $postCSS | append $css }}
             {{ end }}
           {{ end }}
-          {{ $consumedBundled := $consumedCSS | resources.Concat "css/consumed-bundle.css" | minify | fingerprint }}
-          <link rel="stylesheet" href="{{ $consumedBundled.Permalink }}" integrity="{{ $consumedBundled.Data.Integrity }}" crossorigin="anonymous">
-        {{ else if or (hasPrefix .RelPermalink "/playlists/") (in .RelPermalink "/playlists/") }}
-          {{/* Playlist single page */}}
-          {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
-          {{ $playlistCSS := slice }}
-          {{ range $playlistFiles }}
-            {{ $css := resources.Get . }}
-            {{ if $css }}
-              {{ $playlistCSS = $playlistCSS | append $css }}
-            {{ end }}
-          {{ end }}
-          {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-bundle.css" | minify | fingerprint }}
-          <link rel="stylesheet" href="{{ $playlistBundled.Permalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
-        {{ else if or (eq .Layout "password-protected") (eq .Params.layout "password-protected") }}
-          {{/* Password-protected pages */}}
-          {{ $passwordFiles := slice "css/prose.css" "css/password-protected.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
-          {{ $passwordCSS := slice }}
-          {{ range $passwordFiles }}
-            {{ $css := resources.Get . }}
-            {{ if $css }}
-              {{ $passwordCSS = $passwordCSS | append $css }}
-            {{ end }}
-          {{ end }}
-          {{ $passwordBundled := $passwordCSS | resources.Concat "css/password-bundle.css" | minify | fingerprint }}
-          <link rel="stylesheet" href="{{ $passwordBundled.Permalink }}" integrity="{{ $passwordBundled.Data.Integrity }}" crossorigin="anonymous">
+          {{ $postBundled := $postCSS | resources.Concat "css/post-bundle.css" | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ $postBundled.RelPermalink }}" integrity="{{ $postBundled.Data.Integrity }}" crossorigin="anonymous">
         {{ else }}
           {{/* Prose/other pages */}}
           {{ $proseFiles := slice "css/prose.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
@@ -234,12 +267,12 @@
             {{ end }}
           {{ end }}
           {{ $proseBundled := $proseCSS | resources.Concat "css/prose-bundle.css" | minify | fingerprint }}
-          <link rel="stylesheet" href="{{ $proseBundled.Permalink }}" integrity="{{ $proseBundled.Data.Integrity }}" crossorigin="anonymous">
+          <link rel="stylesheet" href="{{ $proseBundled.RelPermalink }}" integrity="{{ $proseBundled.Data.Integrity }}" crossorigin="anonymous">
         {{ end }}
       {{ end }}
     {{ else if .IsSection }}
-      {{ $blogPath := .Site.Params.blog_section_path | default "/posts/" }}
-      {{ if or (eq .RelPermalink $blogPath) (hasPrefix .RelPermalink "/posts") (in .RelPermalink "/posts/") }}
+      {{ $blogPath := .Site.Params.blog_section_path | default "/made/" }}
+      {{ if or (eq .RelPermalink $blogPath) (hasPrefix .RelPermalink "/made") (in .RelPermalink "/made/") }}
         {{/* Blog listing page */}}
         {{ $blogListFiles := slice "css/blog.css" "css/collection.css" }}
         {{ $blogListCSS := slice }}
@@ -250,10 +283,10 @@
           {{ end }}
         {{ end }}
         {{ $blogListBundled := $blogListCSS | resources.Concat "css/blog-list-bundle.css" | minify | fingerprint }}
-        <link rel="stylesheet" href="{{ $blogListBundled.Permalink }}" integrity="{{ $blogListBundled.Data.Integrity }}" crossorigin="anonymous">
+        <link rel="stylesheet" href="{{ $blogListBundled.RelPermalink }}" integrity="{{ $blogListBundled.Data.Integrity }}" crossorigin="anonymous">
       {{ else if hasPrefix .RelPermalink "/playlists/" }}
         {{/* Playlist section page */}}
-        {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $playlistFiles := slice "css/prose.css" "css/playlist.css" "css/collection.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
         {{ $playlistCSS := slice }}
         {{ range $playlistFiles }}
           {{ $css := resources.Get . }}
@@ -261,8 +294,20 @@
             {{ $playlistCSS = $playlistCSS | append $css }}
           {{ end }}
         {{ end }}
-        {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-bundle.css" | minify | fingerprint }}
-        <link rel="stylesheet" href="{{ $playlistBundled.Permalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
+        {{ $playlistBundled := $playlistCSS | resources.Concat "css/playlist-list-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $playlistBundled.RelPermalink }}" integrity="{{ $playlistBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else if hasPrefix .RelPermalink "/found/" }}
+        {{/* Found (linklog) section page */}}
+        {{ $foundFiles := slice "css/found.css" "css/collection.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ $foundCSS := slice }}
+        {{ range $foundFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $foundCSS = $foundCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $foundBundled := $foundCSS | resources.Concat "css/found-list-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $foundBundled.RelPermalink }}" integrity="{{ $foundBundled.Data.Integrity }}" crossorigin="anonymous">
       {{ else }}
         {{/* Other section pages */}}
         {{ $sectionFiles := slice "css/prose.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/collection.css" "css/syntax.css" }}
@@ -274,24 +319,39 @@
           {{ end }}
         {{ end }}
         {{ $sectionBundled := $sectionCSS | resources.Concat "css/section-bundle.css" | minify | fingerprint }}
-        <link rel="stylesheet" href="{{ $sectionBundled.Permalink }}" integrity="{{ $sectionBundled.Data.Integrity }}" crossorigin="anonymous">
+        <link rel="stylesheet" href="{{ $sectionBundled.RelPermalink }}" integrity="{{ $sectionBundled.Data.Integrity }}" crossorigin="anonymous">
       {{ end }}
     {{ else if .Data.Plural }}
-      {{/* Taxonomy pages */}}
-      {{ $taxonomyFiles := slice "css/blog.css" "css/collection.css" }}
-      {{ if .Data.Term }}
-        {{ $taxonomyFiles = $taxonomyFiles | append "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
-      {{ end }}
-      {{ $taxonomyFiles = $taxonomyFiles | append "css/taxonomy.css" }}
-      {{ $taxonomyCSS := slice }}
-      {{ range $taxonomyFiles }}
-        {{ $css := resources.Get . }}
-        {{ if $css }}
-          {{ $taxonomyCSS = $taxonomyCSS | append $css }}
+      {{ if eq .Data.Plural "collections" }}
+        {{/* Collections taxonomy — share the /found/ stylesheet so the page
+             matches the linklog visually. */}}
+        {{ $collFiles := slice "css/found.css" "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" "css/taxonomy.css" }}
+        {{ $collCSS := slice }}
+        {{ range $collFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $collCSS = $collCSS | append $css }}
+          {{ end }}
         {{ end }}
+        {{ $collBundled := $collCSS | resources.Concat "css/collections-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $collBundled.RelPermalink }}" integrity="{{ $collBundled.Data.Integrity }}" crossorigin="anonymous">
+      {{ else }}
+        {{/* Taxonomy pages */}}
+        {{ $taxonomyFiles := slice "css/blog.css" "css/collection.css" }}
+        {{ if .Data.Term }}
+          {{ $taxonomyFiles = $taxonomyFiles | append "css/anchors.css" "css/shortcodes.css" "css/responsive-images.css" "css/syntax.css" }}
+        {{ end }}
+        {{ $taxonomyFiles = $taxonomyFiles | append "css/taxonomy.css" }}
+        {{ $taxonomyCSS := slice }}
+        {{ range $taxonomyFiles }}
+          {{ $css := resources.Get . }}
+          {{ if $css }}
+            {{ $taxonomyCSS = $taxonomyCSS | append $css }}
+          {{ end }}
+        {{ end }}
+        {{ $taxonomyBundled := $taxonomyCSS | resources.Concat "css/taxonomy-bundle.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $taxonomyBundled.RelPermalink }}" integrity="{{ $taxonomyBundled.Data.Integrity }}" crossorigin="anonymous">
       {{ end }}
-      {{ $taxonomyBundled := $taxonomyCSS | resources.Concat "css/taxonomy-bundle.css" | minify | fingerprint }}
-      <link rel="stylesheet" href="{{ $taxonomyBundled.Permalink }}" integrity="{{ $taxonomyBundled.Data.Integrity }}" crossorigin="anonymous">
     {{ else if eq .Kind "404" }}
       {{/* 404 error page */}}
       {{ $errorFiles := slice "css/prose.css" }}
@@ -303,9 +363,10 @@
         {{ end }}
       {{ end }}
       {{ $errorBundled := $errorCSS | resources.Concat "css/error-bundle.css" | minify | fingerprint }}
-      <link rel="stylesheet" href="{{ $errorBundled.Permalink }}" integrity="{{ $errorBundled.Data.Integrity }}" crossorigin="anonymous">
+      <link rel="stylesheet" href="{{ $errorBundled.RelPermalink }}" integrity="{{ $errorBundled.Data.Integrity }}" crossorigin="anonymous">
     {{ end }}
-    
+    {{ end }}{{/* close: if not $sd.cssNaked */}}
+
     {{/* Math rendering with KaTeX */}}
     {{ if .Param "math" }}
       {{ partialCached "math.html" . }}
@@ -313,104 +374,161 @@
     
     {{ block "head" . }}{{ end }}
   </head>
-  <body class="{{ block "page" . }}{{ end }}{{ if eq .Site.Params.force_theme "dark" }} dark{{ end }}{{ if .IsSection }}{{ if or (hasPrefix .RelPermalink "/posts") (in .RelPermalink "/posts/") }} section-posts{{ end }}{{ end }}" id="body-element">
+  <body class="{{ block "page" . }}{{ end }}{{ if eq .Site.Params.force_theme "dark" }} dark{{ end }}{{ if .IsSection }}{{ if or (hasPrefix .RelPermalink "/made") (in .RelPermalink "/made/") }} section-made{{ end }}{{ end }}" id="body-element"{{ if .Site.Params.toc_markers }} data-toc-markers="true"{{ end }}{{ if .Site.Params.rune_icons }} data-runes="true"{{ end }}>
     {{ if ne .Site.Params.force_theme "dark" }}{{ end }}
 
     <!-- Skip to main content link for keyboard navigation -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Language switcher, color scheme toggle, and theme toggle (non-home pages only) -->
-    {{ if not .IsHome }}
-    <div class="global-theme-toggle-wrapper">
-      {{ if .IsTranslated }}
-      <nav class="global-language-switcher">
-        {{ range .Translations }}
-          <a href="{{ .Permalink }}" title="{{ .Language.LanguageName }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.LanguageName }}">
-            {{ if eq .Language.Lang "es" }}ES{{ else if eq .Language.Lang "en" }}EN{{ else }}{{ .Language.Lang | upper }}{{ end }}
-          </a>
-        {{ end }}
-      </nav>
-      {{ end }}
-      <button id="color-scheme-toggle-top" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="global-color-scheme-toggle">
-        ⚄
-      </button>
-      <button id="theme-toggle-top" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="global-theme-toggle">
-        <svg class="theme-icon theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg class="theme-icon theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
-    </div>
+    {{/* Scroll-progress hairline. CSS-first (stays at 0 without JS) and gated
+         off on CSS Naked Day; liquid-glass.js feeds it --lg-scroll. */}}
+    {{ if not $sd.cssNaked }}
+    <div class="lg-progress" aria-hidden="true"></div>
     {{ end }}
 
-    <!-- Back button (hidden on homepage) -->
-    {{ if not .IsHome }}
-      <nav class="back-nav">
-        {{ $backUrl := "" }}
-        {{ $backText := i18n "back" | default "Back" }}
-        {{ $blogSection := .Site.Params.blog_section_path | default "/posts" }}
-        
-        {{/* Navigation hierarchy: single page → section listing → home */}}
-        {{ if eq .Section "consumed" }}
-          {{ if .IsSection }}
-            {{/* Consumed listing page → home */}}
-            {{ $backUrl = "/" | relLangURL }}
-            {{ $backText = i18n "backToHome" | default "← Home" }}
-          {{ else }}
-            {{/* Consumed single page → consumed listing - preserve filter parameters via JS */}}
-            {{ $backUrl = "/consumed/" | relLangURL }}
-            {{ $backText = i18n "backToConsumed" | default "← Consumed" }}
-          {{ end }}
-        {{ else if eq .Section "posts" }}
-          {{ if .IsSection }}
-            {{/* Posts listing page → home */}}
-            {{ $backUrl = "/" | relLangURL }}
-            {{ $backText = i18n "backToHome" | default "← Home" }}
-          {{ else }}
-            {{/* Post single page → posts listing */}}
-            {{ $backUrl = $blogSection | relLangURL }}
-            {{ $backText = i18n "backToPosts" | default "← Posts" }}
-          {{ end }}
-        {{ else if or (eq .Section "about") (eq .Section "now") (eq .Section "picks") }}
-          {{/* About, Now, and Picks pages → home */}}
-          {{ $backUrl = "/" | relLangURL }}
-          {{ $backText = i18n "backToHome" | default "← Home" }}
-        {{ end }}
-        
-        {{ if $backUrl }}
-          <a href="{{ $backUrl }}" class="back-link" aria-label="{{ i18n "goBack" | default "Go back" }}">
-            {{ $backText }}
-          </a>
-        {{ else }}
-          <button type="button" class="back-link" aria-label="{{ i18n "goBack" | default "Go back" }}" onclick="history.back()">
-            ← {{ $backText }}
-          </button>
-        {{ end }}
-      </nav>
+    {{/* Special-day banners. Always emitted with class .naked-day-banner
+         (hidden by default in CSS). When today matches a special date,
+         [data-show] forces it visible regardless of toggle state. On
+         non-special days the CSS Naked variant is the default so the
+         toggle preview shows a sensible message. The 50-hour UTC windows
+         match the official rules; see special-day.html. */}}
+    {{ $sd := partialCached "special-day.html" . }}
+    {{ if $sd.cssNaked }}
+    <p class="naked-day-banner" data-show>This site is celebrating <a href="https://css-naked-day.org/">CSS Naked Day</a>.</p>
+    {{ else if $sd.jsNaked }}
+    <p class="naked-day-banner" data-show>This site is celebrating <a href="https://js-naked-day.org/">JS Naked Day</a>.</p>
+    {{ else if $sd.towel }}
+    <p class="naked-day-banner naked-day-banner--towel" data-show>Don’t Panic. Today is <a href="https://towelday.org/">Towel Day</a>.</p>
+    {{ else }}
+    <p class="naked-day-banner">This site is celebrating <a href="https://css-naked-day.org/">CSS Naked Day</a>.</p>
     {{ end }}
+
+    {{ partial "site-header.html" . }}
 
     <!-- NOTE: Main content section -->
-    <main id="main-content" tabindex="-1">
+    {{/* Pagefind (site search) indexes only regular pages — posts, margins,
+         found links, playlists, recaps — never list/home pages, which would
+         just duplicate their entries. The section label is shown on results. */}}
+    {{ $sectionLabel := "" }}
+    {{ if .IsPage }}{{ with .Site.GetPage (printf "/%s" .Section) }}{{ $sectionLabel = .Title }}{{ end }}{{ end }}
+    <main id="main-content" tabindex="-1"{{ if .IsPage }} data-pagefind-body{{ with $sectionLabel }} data-pagefind-meta="section:{{ . }}"{{ end }}{{ end }}>
       {{ block "content" . }}{{ end }}
     </main>
+
+    {{/* Footer index on every page — the header's menu button jumps here. */}}
+    {{ partial "footer.html" . }}
     
-    <!-- NOTE: Footer (hidden on homepage and 404 page) -->
-    {{ if not .IsHome }}
-      {{ if not (eq .Kind "404") }}
-        {{ partial "footer.html" . }}
+    {{/* Command palette (⌘K / "/"). Semantic + progressive: a native <dialog>
+         containing real <a href> links and <button> actions, built from the
+         site's own nav params (so it's i18n-aware and works as a plain list of
+         links even if JS never runs). The opener lives in top-utility and is
+         hidden until JS reveals it, so no-JS users never see a dead control.
+         command-palette.js turns this into a keyboard launcher. */}}
+    {{ if not $sd.cssNaked }}
+      {{ $homeNav := .Site.Params.home_nav | default .Site.Params.sections }}
+      {{/* "More" = the footer's writing + garden links, minus anything the
+           home nav already lists, so the palette has no duplicate rows. */}}
+      {{ $navPaths := slice }}
+      {{ range $homeNav }}{{ if not .is_external }}{{ $navPaths = $navPaths | append .path }}{{ end }}{{ end }}
+      {{ $footerDedup := slice }}
+      {{ with .Site.Params.footer }}
+        {{ range ((.writing | default slice) | append (.garden | default slice)) }}
+          {{ if not (in $navPaths .path) }}{{ $footerDedup = $footerDedup | append . }}{{ $navPaths = $navPaths | append .path }}{{ end }}
+        {{ end }}
       {{ end }}
+      {{ $cmdkSchemes := slice
+        (dict "slug" "default" "label" "Everforest")
+        (dict "slug" "sage" "label" "Sage")
+        (dict "slug" "blue" "label" "Blue")
+        (dict "slug" "tokyo" "label" "Tokyo Night")
+        (dict "slug" "green" "label" "Green")
+        (dict "slug" "orange" "label" "Orange")
+        (dict "slug" "red" "label" "Red")
+        (dict "slug" "ayu" "label" "Ayu")
+        (dict "slug" "modus" "label" "Modus") }}
+      <dialog id="cmdk" class="cmdk" aria-label="{{ i18n "cmdkTitle" | default "Command palette" }}" data-search-base="{{ "pagefind/" | relURL }}">
+        <div class="cmdk__panel lg-glass">
+          <input class="cmdk__input" type="text" role="searchbox" autocomplete="off"
+                 autocapitalize="off" autocorrect="off" spellcheck="false"
+                 placeholder="{{ i18n "cmdkPlaceholder" | default "Search the site, jump to a page, or run a command…" }}"
+                 aria-label="{{ i18n "cmdkPlaceholder" | default "Search the site, jump to a page, or run a command" }}">
+          <ul class="cmdk__list">
+            {{/* Full-text results from the Pagefind index (built after Hugo);
+                 command-palette.js fills this group as you type. */}}
+            <li class="cmdk__group cmdk__group--pages" hidden>{{ i18n "cmdkPages" | default "Pages" }}</li>
+            <li class="cmdk__group">{{ i18n "explore" | default "Explore" }}</li>
+            <li><a class="cmdk__item" href="{{ "/" | relLangURL }}" data-keywords="home start index {{ i18n "home" | default "Home" }}">
+              <span class="cmdk__item-label">{{ i18n "home" | default "Home" }}</span><span class="cmdk__item-hint">/</span></a></li>
+            {{ with $homeNav }}
+              {{ range . }}
+                {{ $label := i18n .name | default .name }}
+                {{ if .is_external }}
+                  <li><a class="cmdk__item" href="{{ .path }}" target="_blank" rel="noopener noreferrer" data-keywords="{{ $label }} external">
+                    <span class="cmdk__item-label">{{ $label }}</span><span class="cmdk__item-hint">↗</span></a></li>
+                {{ else }}
+                  <li><a class="cmdk__item" href="{{ partial "nav-url.html" .path }}" data-keywords="{{ $label }} {{ .path }}">
+                    <span class="cmdk__item-label">{{ $label }}</span><span class="cmdk__item-hint">{{ .path }}</span></a></li>
+                {{ end }}
+              {{ end }}
+            {{ end }}
+            {{ with $footerDedup }}
+              <li class="cmdk__group">{{ i18n "more" | default "More" }}</li>
+              {{ range . }}
+                {{ $label := i18n .name | default .name }}
+                <li><a class="cmdk__item" href="{{ partial "nav-url.html" .path }}" data-keywords="{{ $label }} {{ .path }}">
+                  <span class="cmdk__item-label">{{ $label }}</span><span class="cmdk__item-hint">{{ .path }}</span></a></li>
+              {{ end }}
+            {{ end }}
+            <li class="cmdk__group">{{ i18n "actions" | default "Actions" }}</li>
+            <li><button type="button" class="cmdk__item" data-action="toggle-theme" data-keywords="dark light mode theme appearance">
+              <span class="cmdk__item-label">{{ i18n "cmdkToggleTheme" | default "Toggle light / dark" }}</span><span class="cmdk__item-hint">theme</span></button></li>
+            <li><button type="button" class="cmdk__item" data-action="cycle-scheme" data-keywords="color scheme palette accent everforest next">
+              <span class="cmdk__item-label">{{ i18n "cmdkCycleScheme" | default "Cycle color scheme" }}</span><span class="cmdk__item-hint">colors</span></button></li>
+            <li class="cmdk__group">{{ i18n "cmdkSchemeGroup" | default "Color scheme" }}</li>
+            {{ range $cmdkSchemes }}
+              <li><button type="button" class="cmdk__item" data-action="set-scheme" data-scheme="{{ .slug }}" data-keywords="{{ .label }} color scheme theme">
+                <span class="cmdk__item-icon scheme-chip scheme-swatch__chip--{{ .slug }}" aria-hidden="true"></span>
+                <span class="cmdk__item-label">{{ .label }}</span><span class="cmdk__item-hint">scheme</span></button></li>
+            {{ end }}
+          </ul>
+          <p class="cmdk__empty" hidden>{{ i18n "cmdkEmpty" | default "No matches." }}</p>
+          <footer class="cmdk__hints">
+            <span><kbd>↑ ↓</kbd>{{ i18n "cmdkNav" | default "navigate" }}</span>
+            <span><kbd>↵</kbd>{{ i18n "cmdkSelect" | default "open" }}</span>
+            <span><kbd>esc</kbd>{{ i18n "cmdkClose" | default "close" }}</span>
+          </footer>
+        </div>
+      </dialog>
     {{ end }}
-    
+
+    {{/* Color-scheme picker — a frosted popover of live swatches, built on the
+         native Popover API (declarative open/close/light-dismiss, top layer, no
+         custom JS to toggle). The ⚄ buttons reference it via popovertarget.
+         theme-store.js applies a scheme on swatch click and, on browsers
+         without the Popover API, falls back to the original cycle-on-click. */}}
+    {{ if not (or $sd.cssNaked $sd.jsNaked) }}
+      <div id="scheme-popover" class="scheme-popover lg-glass" popover>
+        <div class="scheme-popover__swatches">
+          {{ $schemes := slice
+            (dict "slug" "default" "label" "Everforest")
+            (dict "slug" "sage" "label" "Sage")
+            (dict "slug" "blue" "label" "Blue")
+            (dict "slug" "tokyo" "label" "Tokyo Night")
+            (dict "slug" "green" "label" "Green")
+            (dict "slug" "orange" "label" "Orange")
+            (dict "slug" "red" "label" "Red")
+            (dict "slug" "ayu" "label" "Ayu")
+            (dict "slug" "modus" "label" "Modus") }}
+          {{ range $schemes }}
+            <button type="button" class="scheme-swatch" data-scheme="{{ .slug }}" aria-label="{{ .label }}" title="{{ .label }}"></button>
+          {{ end }}
+        </div>
+        {{/* Live caption — names the active (or hovered) scheme; updated by
+             theme-store.js. Keeps the swatches clean and label-free. */}}
+        <p class="scheme-popover__current" aria-live="polite"></p>
+      </div>
+    {{ end }}
+
     <!-- Back to top link - fixed position, aligned with footer icons -->
     <button
       class="back-to-top-footer"
@@ -422,42 +540,61 @@
     </button>
     
     <!-- NOTE: Scripts -->
+    {{/* JS Naked Day — emit zero scripts during the 50-hour UTC window.
+         The page still works because everything is progressive enhancement:
+         nav links, theme toggle, the footer index, etc. all degrade to
+         no-JS HTML. */}}
+    {{ if not $sd.jsNaked }}
     {{ block "script" . }}{{ end }}
     {{/* Theme store - vanilla JS for theme/color scheme toggles */}}
     {{ $themeStoreJS := resources.Get "js/theme-store.js" | minify | fingerprint }}
-    <script src="{{ $themeStoreJS.Permalink }}" integrity="{{ $themeStoreJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+    <script src="{{ $themeStoreJS.RelPermalink }}" integrity="{{ $themeStoreJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
 
     {{/* TOC - vanilla JS */}}
     {{ $tocJS := resources.Get "js/toc.js" | minify | fingerprint }}
-    <script src="{{ $tocJS.Permalink }}" integrity="{{ $tocJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+    <script src="{{ $tocJS.RelPermalink }}" integrity="{{ $tocJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
 
     {{/* Main JS - always loaded */}}
     {{ $mainJS := resources.Get "js/main.js" | minify | fingerprint }}
-    <script src="{{ $mainJS.Permalink }}" integrity="{{ $mainJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+    <script src="{{ $mainJS.RelPermalink }}" integrity="{{ $mainJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
 
-    {{/* Alpine.js removed - now using vanilla JS for better performance */}}
+    {{/* Glass/motion helpers - river-row glow, scroll reveals, scroll progress,
+         greeting. Feeds CSS variables only; degrades to a static look without
+         JS. Re-inits on swup swaps via app:reinit. */}}
+    {{ $liquidGlassJS := resources.Get "js/liquid-glass.js" | minify | fingerprint }}
+    <script src="{{ $liquidGlassJS.RelPermalink }}" integrity="{{ $liquidGlassJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+
+    {{/* Command palette - ⌘K / "/" launcher. Pure enhancement: reveals its
+         opener and wires keyboard control only when it runs. */}}
+    {{ $cmdkJS := resources.Get "js/command-palette.js" | minify | fingerprint }}
+    <script src="{{ $cmdkJS.RelPermalink }}" integrity="{{ $cmdkJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+
+    {{/* Swup: progressive-enhancement SPA-style page transitions.
+         Bundled from npm via Hugo's esbuild integration; no runtime CDN. */}}
+    {{ $swupOpts := dict "targetPath" "js/swup-init.bundle.js" "minify" true "format" "iife" }}
+    {{ $swupJS := resources.Get "js/swup-init.js" | js.Build $swupOpts | fingerprint }}
+    <script src="{{ $swupJS.RelPermalink }}" integrity="{{ $swupJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
+
+    {{/* Collection filters (margins, made, picks, taxonomies…). Loaded on every
+         page: swup swaps content without running scripts, so a page-gated
+         include left the filters dead when you arrived via a link. The script
+         is idempotent and no-ops on pages without .collection-wrapper. */}}
+    {{ $collectionJS := resources.Get "js/collection-filter.js" | minify | fingerprint }}
+    <script src="{{ $collectionJS.RelPermalink }}" integrity="{{ $collectionJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
     
-    {{/* Collection filter JS - only load on pages with collections or reviews (for spoiler galleries) */}}
-    {{ $loadCollectionJS := false }}
-    {{ if .Params.collections }}
-      {{ $loadCollectionJS = true }}
-    {{ else if and .IsSection (or (in .RelPermalink "/posts") (in .RelPermalink "/picks") (in .RelPermalink "/consumed")) }}
-      {{ $loadCollectionJS = true }}
-    {{ else if .Data.Term }}
-      {{ $loadCollectionJS = true }}
-    {{ else if or (hasPrefix .RelPermalink "/reviews/") (hasPrefix .RelPermalink "/consumed/") }}
-      {{ $loadCollectionJS = true }}
-    {{ end }}
-    {{ if $loadCollectionJS }}
-      {{ $collectionJS := resources.Get "js/collection-filter.js" | minify | fingerprint }}
-      <script src="{{ $collectionJS.Permalink }}" integrity="{{ $collectionJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
-    {{ end }}
+    {{/* Mermaid diagrams. Emitted on every page because swup swaps content
+         without running scripts; the library itself is only fetched when the
+         page has a mermaid block. Re-renders on swup swaps and theme changes. */}}
+    {{ $mermaidJS := resources.Get "js/mermaid-init.js" | minify | fingerprint }}
+    <script src="{{ $mermaidJS.RelPermalink }}" integrity="{{ $mermaidJS.Data.Integrity }}" crossorigin="anonymous" defer></script>
     
-    {{/* Mermaid for diagrams - auto-loaded when mermaid code blocks are present */}}
-    {{ if .Store.Get "hasMermaid" }}
-      {{ partial "mermaid.html" . }}
-    {{ end }}
-    
+    {{/* GoatCounter — privacy-respecting pageview counter. Disabled on
+         localhost and when params.goatcounter.code is empty. No cookies,
+         no personally identifiable data; see /privacy/. */}}
+    {{ with .Site.Params.goatcounter }}{{ with .code }}{{ if hugo.IsProduction }}
+    <script data-goatcounter="https://{{ . }}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    {{ end }}{{ end }}{{ end }}
+
     {{/* KaTeX auto-render */}}
     {{ if .Params.math }}
       <script>
@@ -487,6 +624,7 @@
         }
       </script>
     {{ end }}
+    {{ end }}{{/* close {{ if not $sd.jsNaked }} */}}
   </body>
 </html>
 

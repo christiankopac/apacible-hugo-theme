@@ -29,6 +29,31 @@ html {
   font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
   /* Smooth scrolling for anchor links */
   scroll-behavior: smooth;
+  /* Reserve the scrollbar's space on every page so centered content (footer
+     nav, rails) doesn't shift sideways between short and long pages. */
+  scrollbar-gutter: stable;
+  /* Paint the theme color on the root element so cross-document navigation
+     and the brief pre-CSS frame don't flash white. */
+  background-color: var(--color-bg);
+}
+
+/* Native cross-document View Transitions: Chrome/Edge/Safari fade between pages
+   automatically; Firefox falls back to instant navigation. No JS required. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }
 
 /* Respect user's motion preferences */
@@ -57,7 +82,34 @@ body {
   display: grid;
   grid-template-rows: auto 1fr auto;
   grid-template-columns: 100%;
-  overflow: auto;
+  /* overflow-x: clip stops full-bleed elements (e.g. the picks-page footer
+     nav at prose.css:154, which uses width:100vw + -50vw margins) from
+     producing a horizontal scrollbar on platforms where the vertical
+     scrollbar takes space out of 100% but not 100vw. */
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
+/* Special-day banner — hidden by default; visible when today is a known
+   special date ([data-show] flipped on server-side) OR when the CSS
+   Naked Day toggle strips all stylesheets and this rule disappears. */
+.naked-day-banner {
+  display: none;
+}
+.naked-day-banner[data-show] {
+  display: block;
+  margin: 0;
+  padding: 0.45rem var(--space-base);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+}
+.naked-day-banner[data-show] a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 /* Skip link for accessibility - hidden until focused */
@@ -89,36 +141,47 @@ body {
   outline-offset: 2px;
 }
 
-/* Content wrapper for all pages - optimal character width for readability */
-/* Use :is() to reduce repetition */
-:is(main, .prose, .blog, .post, .taxonomy, .taxonomy-single) {
-  /* Wider container for better use of screen space */
-  width: min(1200px, 100% - clamp(1rem, 5vw, 3rem) * 2);
+/* Page-level width. Single source of truth: every listing/page wrapper
+   targets 1480px, matching the /playlists/ wall. Single content pages
+   keep this wide outer width; their inner reading column is constrained
+   to 80ch via .prose .content (prose.css). The outer <main> stays
+   unconstrained so children don't get double-clamped. */
+:is(.prose, .blog, .post, .taxonomy, .taxonomy-single, .found-section, .consumed-single) {
+  width: min(1480px, 100% - clamp(1rem, 5vw, 3rem) * 2);
   margin-inline: auto;
   padding-block: var(--container-padding-y-sm);
-  overflow-x: hidden; /* Prevent horizontal overflow */
-  /* Grid positioning handled by body grid */
+  overflow-wrap: break-word;
+}
+
+main#main-content {
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* Belt-and-braces: long titles never punch through their container. */
+:is(.post, .consumed-single, .pl-page) :is(h1, h2) {
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 @media (min-width: 768px) {
-  :is(main, .prose, .blog, .post, .taxonomy, .taxonomy-single) {
+  :is(.prose, .blog, .post, .taxonomy, .taxonomy-single, .found-section, .consumed-section, .pl-page) {
     padding-block: var(--container-padding-y-md);
   }
 }
 
 @media (min-width: 1024px) {
-  :is(main, .prose, .blog, .post, .taxonomy, .taxonomy-single) {
+  :is(.prose, .blog, .post, .taxonomy, .taxonomy-single, .found-section, .consumed-section, .pl-page) {
     padding-block: var(--container-padding-y-lg);
   }
 }
 
-/* Consumed section - wider layout for collections */
-.consumed-section {
-  width: min(1200px, 100% - clamp(1rem, 5vw, 3rem) * 2);
+/* Grid sections fit on the same 1480px rail as the rest. They used to be
+   a special-case wider tier; collapsed into the shared rule above. */
+.consumed-section,
+.pl-page {
+  width: min(1480px, 100% - clamp(1rem, 5vw, 3rem) * 2);
   margin-inline: auto;
-  padding-block: var(--container-padding-y-sm);
-  overflow-x: hidden;
-  /* Grid positioning handled by body grid */
 }
 
 .consumed-section header {
@@ -163,11 +226,6 @@ body {
 
 /* Home page handles its own layout for vertical centering */
 /* (max-width is set responsively in home.css) */
-
-/* Back navigation - positioned in the navigation row */
-.back-nav {
-  /* Grid positioning handled by body grid */
-}
 
 /* Wide container for collections/grids */
 .container-wide {

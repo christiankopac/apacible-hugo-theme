@@ -1,0 +1,535 @@
+/* ============================================================================
+   Glass touches — a light enhancement layer for the apacible theme.
+
+   Frosted glass is used only where a panel genuinely floats over content: the
+   phone utility dock, the ⌘K palette and the colour-scheme popover. Everything
+   else on the page stays flat and typographic. Surfaces are derived from the
+   theme tokens via color-mix(), so every colour scheme × light/dark works.
+   Pure progressive enhancement:
+
+     - No JS?            Panels still render; the river glow rests at the row's
+                         centre (--lg-x defaults to 50%).
+     - Reduced motion?   Reveals are disabled.
+     - No backdrop-filter? Panels fall back to a near-opaque tinted fill.
+     - CSS Naked Day?    This stylesheet is never emitted, so nothing leaks.
+
+   The JS partner (js/liquid-glass.js) only *feeds* this file CSS variables
+   (--lg-x, scroll progress). The look itself lives here.
+   ========================================================================== */
+
+:root {
+  /* Panel fill — the theme background made translucent. Liquid glass reads
+     CLEAR, not milky: keep this light so the blurred backdrop shows through.
+     Content-heavy panels lean on --glass-fill-strong for legibility. */
+  --glass-fill: color-mix(in srgb, var(--color-bg) 38%, transparent);
+  --glass-fill-strong: color-mix(in srgb, var(--color-bg) 58%, transparent);
+
+  /* Edge rim — a bright catch on the light side, a soft shadow on the dark
+     side. Painted as a gradient *border* so the rounded edge reads as a bevel
+     where the slab catches light, not as a flat hairline. */
+  --glass-edge: color-mix(in srgb, var(--color-text) 14%, transparent);
+  --glass-edge-light: color-mix(in srgb, #ffffff 75%, transparent);
+  --glass-edge-dark: color-mix(in srgb, var(--color-text) 20%, transparent);
+
+  /* Backdrop optics: blur softens, and saturate + contrast + brightness make
+     the content behind the glass "pop" the way a real lens does. */
+  --glass-blur: 20px;
+  --glass-saturate: 1.8;
+  --glass-contrast: 1.05;
+  --glass-brightness: 1.08;
+
+  /* Bright top inner line + faint bottom inner line = a sense of thickness,
+     then two soft drop shadows to lift the slab off the page. */
+  --glass-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 55%, transparent) inset,
+    0 -1px 1px color-mix(in srgb, var(--color-text) 12%, transparent) inset,
+    0 20px 50px -24px color-mix(in srgb, var(--color-text) 55%, transparent),
+    0 6px 18px -12px color-mix(in srgb, var(--color-text) 35%, transparent);
+
+  --glass-radius: 22px;
+
+  /* Pointer x-position (0–100%) within a river row, fed by JS; centered when
+     JS is absent. */
+  --lg-x: 50%;
+}
+
+/* Dark themes: pull the panel a touch more opaque and make the sheen read as
+   real light rather than haze. */
+:root[data-theme="dark"] {
+  --glass-fill: color-mix(in srgb, var(--color-bg) 44%, transparent);
+  --glass-fill-strong: color-mix(in srgb, var(--color-bg) 62%, transparent);
+  --glass-edge: color-mix(in srgb, var(--color-text) 18%, transparent);
+  --glass-edge-light: color-mix(in srgb, #ffffff 38%, transparent);
+  --glass-edge-dark: color-mix(in srgb, #000000 35%, transparent);
+  --glass-brightness: 1.12;
+  --glass-contrast: 1.1;
+  --glass-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 20%, transparent) inset,
+    0 -1px 1px rgba(0, 0, 0, 0.4) inset,
+    0 22px 60px -26px rgba(0, 0, 0, 0.7),
+    0 8px 24px -14px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================================
+   Glass surface — the reusable liquid panel.
+   ========================================================================== */
+
+.lg-glass {
+  position: relative;
+  /* Two backgrounds: a translucent fill clipped to the padding box, and a
+     bright→shadow gradient clipped to the border box. The gradient border is
+     what gives the rounded edge its lensed bevel — far more glass-like than a
+     flat 1px hairline. */
+  background:
+    linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+    linear-gradient(135deg,
+      var(--glass-edge-light),
+      transparent 26%,
+      transparent 68%,
+      var(--glass-edge-dark)) border-box;
+  border: 1px solid transparent;
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+      contrast(var(--glass-contrast)) brightness(var(--glass-brightness));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+      contrast(var(--glass-contrast)) brightness(var(--glass-brightness));
+  }
+}
+
+/* No backdrop-filter (older Firefox ESR, some embedded webviews): a 38% fill
+   over unblurred text is unreadable, so lean the panel nearly opaque instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass {
+    --glass-fill: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  }
+}
+
+/* Content-heavy panels lean a touch more opaque than the icon-only dock, so
+   text stays legible over a busy page. */
+.cmdk__panel.lg-glass,
+.scheme-popover.lg-glass {
+  --glass-fill: var(--glass-fill-strong);
+}
+
+/* A second, finer rim-light that gives the top edge of the glass a wet gleam. */
+.lg-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 50%, transparent),
+    transparent 40%);
+  opacity: 0.6;
+}
+
+:root[data-theme="dark"] .lg-glass::after {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 22%, transparent),
+    transparent 36%);
+  opacity: 0.5;
+}
+
+/* ============================================================================
+   Scroll reveal — elements rise + fade in once, staggered via --lg-i.
+
+   Critically: the hidden start state is gated behind html.js (set by the inline
+   head script). Without JS — including JS Naked Day or a script failure — these
+   elements render fully visible. JS opts INTO the animation; it is never
+   required to see the content.
+   ========================================================================== */
+
+html.js .lg-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: calc(var(--lg-i, 0) * 60ms);
+}
+html.js .lg-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================================
+   Scroll progress — a hairline of scheme color across the very top.
+   ========================================================================== */
+
+.lg-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(var(--lg-scroll, 0));
+  transform-origin: 0 50%;
+  z-index: var(--z-tooltip, 70);
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--color-accent),
+    var(--color-accent-secondary),
+    var(--color-accent-tertiary));
+  opacity: 0.85;
+  will-change: transform;
+}
+
+/* ============================================================================
+   River rows — a soft wash of scheme light pools under the pointer. The
+   dotted-leader typography is untouched; only the glow is added.
+
+   The glow is sized to the row itself: an ellipse whose vertical radius is
+   half the row height (so it fades out exactly at the top and bottom edges),
+   and a horizontal mask that feathers it out before either end. Nothing is
+   ever clipped by the box, so there is no hard pill outline at any pointer
+   position — the earlier fixed 12rem×8rem glow was cut off by the rounded
+   corners whenever the pointer neared an end of the row.
+   ========================================================================== */
+
+.river-link {
+  position: relative;
+  padding-inline: 0.6rem;
+  isolation: isolate;
+}
+.river-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    16rem 50% at var(--lg-x, 50%) 50%,
+    color-mix(in srgb, var(--color-accent) 20%, transparent),
+    color-mix(in srgb, var(--color-accent) 8%, transparent) 55%,
+    transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.river-link:focus-visible::before {
+  opacity: 1;
+}
+.river-link:focus-visible .river-title {
+  color: var(--color-text);
+}
+/* Hover only where hover is real — on touch the glow would otherwise stick to
+   the last tapped row after navigating back. */
+@media (hover: hover) {
+  .river-link:hover::before {
+    opacity: 1;
+  }
+  .river-link:hover .river-title {
+    color: var(--color-text);
+  }
+}
+
+/* ============================================================================
+   Footer newsletter — quietly upgraded to a glass tray to match.
+   ========================================================================== */
+.footer-newsletter .newsletter-content {
+  border-radius: var(--glass-radius);
+}
+
+/* ============================================================================
+   Utility dock — search · scheme · theme. On wide screens these are plain
+   icons in the flat header (glass would have nothing to blur there: the header
+   doesn't stick). On phones navigation.css lifts the same element into a
+   floating bottom dock over scrolling content — the one place the frosted
+   capsule earns its keep. The markup always carries .lg-glass; the skin is
+   switched off above the phone breakpoint.
+   ========================================================================== */
+
+@media (min-width: 641px) {
+  .top-utility.lg-glass {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .top-utility.lg-glass::after {
+    content: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-utility.lg-glass {
+    --glass-radius: 999px;
+    --glass-fill: var(--glass-fill-strong);
+    overflow: visible;
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #ffffff 30%, transparent) inset,
+      0 14px 34px -12px color-mix(in srgb, var(--color-text) 50%, transparent);
+  }
+  :root[data-theme="dark"] .top-utility.lg-glass {
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #ffffff 14%, transparent) inset,
+      0 14px 34px -14px rgba(0, 0, 0, 0.65);
+  }
+  .top-utility.lg-glass::after {
+    opacity: 0.32;
+  }
+}
+
+/* Controls: primary text colour at a confident rest opacity, each with a
+   rounded hover/focus pill — the same in the header and in the dock. */
+.top-utility .global-theme-toggle,
+.top-utility .global-color-scheme-toggle,
+.top-utility .cmdk-open {
+  color: var(--color-text);
+  opacity: 0.72;
+  border-radius: 999px;
+  transition:
+    opacity var(--transition-base),
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.top-utility .global-theme-toggle:hover,
+.top-utility .global-color-scheme-toggle:hover,
+.top-utility .cmdk-open:hover,
+.top-utility .global-theme-toggle:focus-visible,
+.top-utility .global-color-scheme-toggle:focus-visible,
+.top-utility .cmdk-open:focus-visible {
+  opacity: 1;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+@media (max-width: 640px) {
+  .top-utility .global-theme-toggle,
+  .top-utility .global-color-scheme-toggle,
+  .top-utility .cmdk-open {
+    opacity: 0.9;
+  }
+}
+
+/* ============================================================================
+   View-Transition theme switch — the new theme reveals as a circle expanding
+   from the toggle. Scoped to html.theme-vt (set by theme-store.js only during
+   a toggle) so it never touches the cross-document page-navigation fade defined
+   in layout.css.
+   ========================================================================== */
+
+html.theme-vt::view-transition-old(root),
+html.theme-vt::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-vt::view-transition-old(root) {
+  z-index: 1;
+}
+html.theme-vt::view-transition-new(root) {
+  z-index: 2;
+  clip-path: circle(0% at var(--vt-x, 50%) var(--vt-y, 50%));
+  animation: vt-theme-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes vt-theme-reveal {
+  to {
+    clip-path: circle(150% at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.theme-vt::view-transition-new(root) {
+    animation: none;
+    clip-path: none;
+  }
+}
+
+/* ============================================================================
+   Color-scheme popover — a frosted tray of live swatches (native Popover API).
+   ========================================================================== */
+
+.scheme-popover {
+  /* Native popover renders in the top layer, centered by default; place it
+     under the top-utility dock instead. .lg-glass supplies the frosted skin. */
+  position: fixed;
+  inset: auto;
+  top: clamp(3.2rem, 8vh, 5rem);
+  right: clamp(1rem, 5vw, 3rem);
+  margin: 0;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 0.95rem 1rem 0.8rem;
+  color: var(--color-text);
+}
+.scheme-popover:popover-open {
+  /* Dedicated entrance — NOT the palette's cmdk-in (that animates
+     translateX(-50%) for the centered palette, which made this right-anchored
+     popover jump sideways on open). */
+  animation: scheme-pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes scheme-pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scheme-popover:popover-open { animation: none; }
+}
+
+/* A clean 3×3 of squircle swatches. Each previews the scheme honestly: its
+   paper BACKGROUND as the field, with the ACCENT as a centred disc — so the
+   swatch reads as "this scheme" at a glance. Flat fills (no gradient) keep it
+   calm. No per-item labels; the live caption below names them. */
+.scheme-popover__swatches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.55rem;
+}
+.scheme-swatch {
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: none;
+  border-radius: 32%; /* squircle, echoing the avatar */
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 50% 46%,
+      var(--sw-ac, var(--color-accent)) 0 42%,
+      transparent 46%),
+    var(--sw-bg, var(--color-bg));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-text) 12%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    0 1px 4px color-mix(in srgb, var(--color-text) 22%, transparent);
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition:
+    transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1),
+    outline-color 0.16s ease;
+}
+.scheme-swatch:hover,
+.scheme-swatch:focus-visible {
+  transform: scale(1.1);
+  outline-color: color-mix(in srgb, var(--color-text) 28%, transparent);
+}
+.scheme-swatch.is-current {
+  outline-color: var(--color-text);
+}
+
+/* Live caption — names the active or hovered scheme. */
+.scheme-popover__current {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  color: var(--color-text-secondary);
+  min-height: 1.15em;
+}
+
+/* Per-scheme preview colors — the REAL background + accent each scheme paints,
+   mirrored from theme.css so a swatch/chip shows the true scheme, not a stand-in.
+   --sw-bg = the scheme's page background, --sw-ac = its accent (highlight). Light
+   values here; the dark block below swaps in each scheme's real dark colors, so
+   the swatches track whatever theme the site is actually in. */
+[data-scheme="default"] { --sw-bg: #fefae0; --sw-ac: #8da101; }
+[data-scheme="sage"]    { --sw-bg: #dfe5db; --sw-ac: #c75b4a; }
+[data-scheme="blue"]    { --sw-bg: #e1f5fe; --sw-ac: #0288d1; }
+[data-scheme="tokyo"]   { --sw-bg: #e1e2e7; --sw-ac: #2e7de9; }
+[data-scheme="green"]   { --sw-bg: #e8f5e9; --sw-ac: #2e7d32; }
+[data-scheme="orange"]  { --sw-bg: #fff3e0; --sw-ac: #ff6f00; }
+[data-scheme="red"]     { --sw-bg: #ffebee; --sw-ac: #d32f2f; }
+[data-scheme="ayu"]     { --sw-bg: #fafafa; --sw-ac: #f4bf75; }
+[data-scheme="modus"]   { --sw-bg: #ffffff; --sw-ac: #3548cf; }
+
+:root[data-theme="dark"] [data-scheme="default"] { --sw-bg: #2d353b; --sw-ac: #a7c080; }
+:root[data-theme="dark"] [data-scheme="sage"]    { --sw-bg: #1f1619; --sw-ac: #f0a090; }
+:root[data-theme="dark"] [data-scheme="blue"]    { --sw-bg: #01579b; --sw-ac: #4fc3f7; }
+:root[data-theme="dark"] [data-scheme="tokyo"]   { --sw-bg: #1a1b26; --sw-ac: #7aa2f7; }
+:root[data-theme="dark"] [data-scheme="green"]   { --sw-bg: #1b5e20; --sw-ac: #81c784; }
+:root[data-theme="dark"] [data-scheme="orange"]  { --sw-bg: #e65100; --sw-ac: #ffb74d; }
+:root[data-theme="dark"] [data-scheme="red"]     { --sw-bg: #b71c1c; --sw-ac: #ef9a9a; }
+:root[data-theme="dark"] [data-scheme="ayu"]     { --sw-bg: #1f2430; --sw-ac: #ffcc66; }
+:root[data-theme="dark"] [data-scheme="modus"]   { --sw-bg: #0d0e1c; --sw-ac: #b6a0ff; }
+
+/* ============================================================================
+   Decorative rune glyphs (.rune) — the runic icons before tags, categories and
+   post metadata. Hidden unless params.rune_icons is on (body[data-runes]); the
+   labels themselves always remain, so the page reads plainly by default.
+   ========================================================================== */
+
+body:not([data-runes]) .rune {
+  display: none;
+}
+
+/* ============================================================================
+   About-page portrait — a small, left-aligned dithered photo. Keeps the scheme
+   duotone (the color-burn blend reads nicely against the page). Rendered with
+   show_original=false, so it's a bare <img.about-portrait> — no toggle button.
+   ========================================================================== */
+/* Higher specificity than the base `.responsive-image` rule (which sets
+   max-width:100% + margin:auto and loads after this file) so the constraint and
+   left-alignment actually win. Keeps the theme's parallelogram clip + duotone. */
+img.about-portrait,
+figure.responsive-image.about-portrait {
+  max-width: 320px;
+  margin: 0.25rem 0 1.75rem;
+}
+
+/* Duotone that follows the SITE theme, not the OS. The base .dithered-img rule
+   keys its blend on @media (prefers-color-scheme), which drifts out of sync with
+   the manual data-theme toggle — under a dark page on a light-OS machine its
+   color-burn rendered the portrait near-black. Pin it to luminosity (the same
+   blend the home avatar uses) so it stays a clean scheme-tinted duotone in both
+   themes, and at full opacity so the dither keeps its contrast. */
+img.about-portrait {
+  mix-blend-mode: luminosity;
+  opacity: 1;
+}
+
+/* ============================================================================
+   Accessibility: honor reduced transparency / increased contrast. Users who
+   ask for less translucency get solid panels instead of frosted glass — the
+   layout and color language stay identical.
+   ========================================================================== */
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg-glass,
+  .top-utility,
+  .scheme-popover,
+  .cmdk__panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: var(--color-bg) !important;
+    /* The bevel lived in the (now replaced) border-box gradient; keep a real
+       edge so the solid panel still separates from the page. */
+    border-color: var(--color-border) !important;
+  }
+  .cmdk::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, var(--color-bg) 80%, transparent);
+  }
+}
+
+/* ============================================================================
+   Motion & accessibility guards.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .river-link::before { transition: none; }
+}
+
+/* If the runtime CSS-Naked toggle strips styles, this file is disabled with the
+   rest — but guard the decorative scaffolding just in case it lingers. */
+:root[data-naked] .lg-progress {
+  display: none;
+}

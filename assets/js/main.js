@@ -1,6 +1,6 @@
-// Back to top button - vanilla JS implementation
+// Fixed back-to-top button (wide screens) — vanilla JS implementation
 (function() {
-  const buttons = document.querySelectorAll('.back-to-top-footer, .back-to-top-link');
+  const buttons = document.querySelectorAll('.back-to-top-footer');
   if (buttons.length === 0) return;
 
   // Create sentinel for Intersection Observer (better performance than scroll listener)
@@ -49,160 +49,40 @@
   });
 })();
 
-// Image toggles - vanilla JS for dithered/original switching
-(function() {
-  const figures = document.querySelectorAll('figure.has-toggle');
-
-  figures.forEach(function(figure) {
+// Image toggles — re-runs on swup page swaps via the "app:reinit" event
+// dispatched by swup-init.js. Uses data-init guard for idempotency.
+function initImageToggles() {
+  document.querySelectorAll('figure.has-toggle').forEach(function(figure) {
+    if (figure.dataset.toggleInit === '1') return;
     const ditheredImg = figure.querySelector('.dithered-img');
     const originalImg = figure.querySelector('.original-img');
     const toggleBtn = figure.querySelector('.toggle-original');
-
     if (!ditheredImg || !originalImg || !toggleBtn) return;
+    figure.dataset.toggleInit = '1';
 
     let showOriginal = false;
-
-    // Update visibility
     function updateImages() {
-      if (showOriginal) {
-        ditheredImg.style.display = 'none';
-        originalImg.style.display = 'block';
-        toggleBtn.setAttribute('aria-pressed', 'true');
-        // Update button text
-        const spans = toggleBtn.querySelectorAll('span');
-        if (spans.length === 2) {
-          spans[0].style.display = 'none'; // "show original"
-          spans[1].style.display = 'inline'; // "dither"
-        }
-      } else {
-        ditheredImg.style.display = 'block';
-        originalImg.style.display = 'none';
-        toggleBtn.setAttribute('aria-pressed', 'false');
-        // Update button text
-        const spans = toggleBtn.querySelectorAll('span');
-        if (spans.length === 2) {
-          spans[0].style.display = 'inline'; // "show original"
-          spans[1].style.display = 'none'; // "dither"
-        }
+      ditheredImg.style.display = showOriginal ? 'none' : 'block';
+      originalImg.style.display = showOriginal ? 'block' : 'none';
+      toggleBtn.setAttribute('aria-pressed', showOriginal ? 'true' : 'false');
+      const spans = toggleBtn.querySelectorAll('span');
+      if (spans.length === 2) {
+        spans[0].style.display = showOriginal ? 'none' : 'inline';
+        spans[1].style.display = showOriginal ? 'inline' : 'none';
       }
     }
-
-    // Initialize
     updateImages();
-
-    // Toggle on click
     toggleBtn.addEventListener('click', function() {
       showOriginal = !showOriginal;
       updateImages();
     });
   });
-})();
+}
+initImageToggles();
+document.addEventListener('app:reinit', initImageToggles);
 
-// Cursor gradient effect - only on headings and links
-(function() {
-  // Only enable on desktop
-  if (window.innerWidth <= 680) return;
-  
-  // Create cursor element
-  const cursor = document.createElement('div');
-  cursor.id = 'cursor';
-  cursor.className = 'gradient';
-  cursor.style.opacity = '0';
-  document.body.appendChild(cursor);
-  
-  let mouseX = 0;
-  let mouseY = 0;
-  let cursorX = 0;
-  let cursorY = 0;
-  let isOverTarget = false;
-  
-  // Check if element is a heading or link
-  function isTargetElement(element) {
-    if (!element) return false;
-    
-    // Check if it's a heading
-    if (/^H[1-6]$/.test(element.tagName)) return true;
-    
-    // Check if it's a link or inside a link
-    if (element.tagName === 'A') return true;
-    if (element.closest('a')) return true;
-    
-    return false;
-  }
-  
-  // Track mouse position and hover state (throttled)
-  let rafId = null;
-  document.addEventListener('mousemove', function(e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    
-    if (!rafId) {
-      rafId = requestAnimationFrame(function() {
-        const target = document.elementFromPoint(mouseX, mouseY);
-        const shouldShow = isTargetElement(target);
-        
-        if (shouldShow !== isOverTarget) {
-          isOverTarget = shouldShow;
-          cursor.style.opacity = shouldShow ? '1' : '0';
-        }
-        rafId = null;
-      });
-    }
-  }, { passive: true });
-  
-  // Smooth cursor movement
-  function animateCursor() {
-    const speed = 0.15;
-    cursorX += (mouseX - cursorX) * speed;
-    cursorY += (mouseY - cursorY) * speed;
-    
-    cursor.style.left = (cursorX - 125) + 'px';
-    cursor.style.top = (cursorY - 125) + 'px';
-    
-    requestAnimationFrame(animateCursor);
-  }
-  
-  animateCursor();
-})();
-
-// Page transitions
-(function() {
-  // Add fade-in on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFadeIn);
-  } else {
-    initFadeIn();
-  }
-  
-  function initFadeIn() {
-    document.body.style.opacity = '0';
-    requestAnimationFrame(function() {
-      document.body.style.transition = 'opacity 0.3s ease';
-      document.body.style.opacity = '1';
-    });
-  }
-  
-  // Smooth transitions for internal links (if View Transitions API is supported)
-  if (document.startViewTransition) {
-    document.addEventListener('click', function(e) {
-      const link = e.target.closest('a[href]');
-      if (!link || link.target || !link.href || link.href.startsWith('#')) return;
-      
-      // Only for same-origin links
-      try {
-        const url = new URL(link.href);
-        if (url.origin === window.location.origin) {
-          e.preventDefault();
-          document.startViewTransition(function() {
-            window.location.href = link.href;
-          });
-        }
-      } catch (err) {
-        // Invalid URL, ignore
-      }
-    });
-  }
-})();
+// Page transitions are handled by swup (when JS is enabled) or the @view-transition
+// CSS rule in layout.css (cross-document fallback). No JS body-fade needed.
 
 // Remove inline styles from code blocks (Zola adds background colors)
 (function() {
@@ -367,18 +247,16 @@
   });
 })();
 
-// Preserve filter parameters when navigating back from consumed single pages
-(function() {
-  // Check if we're on a consumed single page
-  const isConsumedSingle = document.querySelector('.consumed-single') && 
+// Preserve filter parameters when navigating back from consumed single pages.
+// Re-runs on swup page swaps via "app:reinit".
+function initPreserveFilter() {
+  const isConsumedSingle = document.querySelector('.consumed-single') &&
                            !document.querySelector('.consumed-single').classList.contains('consumed');
   if (!isConsumedSingle) return;
 
-  // Find the back button link to consumed listing
-  const backLink = document.querySelector('.back-nav a.back-link[href*="/consumed/"]');
-  if (!backLink) return;
+  const backLink = document.querySelector('.site-header a.back-link[href*="/margins/"]');
+  if (!backLink || backLink.dataset.filterRewritten === '1') return;
 
-  // Get referrer URL
   const referrer = document.referrer;
   if (!referrer) return;
 
@@ -387,7 +265,7 @@
     const referrerPath = referrerUrl.pathname;
     
     // Check if referrer is the consumed listing page
-    if (referrerPath.includes('/consumed/') && !referrerPath.match(/\/consumed\/[^\/]+\//)) {
+    if (referrerPath.includes('/margins/') && !referrerPath.match(/\/consumed\/[^\/]+\//)) {
       // Extract filter parameters from referrer
       const category = referrerUrl.searchParams.get('category');
       const year = referrerUrl.searchParams.get('year');
@@ -404,12 +282,15 @@
         });
         
         backLink.href = currentUrl.pathname + (currentUrl.search ? currentUrl.search : '');
+        backLink.dataset.filterRewritten = '1';
       }
     }
   } catch (e) {
     // Invalid referrer URL, ignore
   }
-})();
+}
+initPreserveFilter();
+document.addEventListener('app:reinit', initPreserveFilter);
 
 // Table of Contents is handled by toc.js
 
@@ -542,149 +423,383 @@
   });
 })();
 
-// Spoiler galleries - vanilla JS for expand/collapse
-(function() {
-  const containers = document.querySelectorAll('.spoiler-gallery-container');
-
-  containers.forEach(function(container) {
+// Spoiler galleries — re-runs on swup page swaps via "app:reinit".
+function initSpoilerGalleries() {
+  document.querySelectorAll('.spoiler-gallery-container').forEach(function(container) {
+    if (container.dataset.spoilerInit === '1') return;
     const button = container.querySelector('.spoiler-toggle');
     const content = container.querySelector('.spoiler-content');
-
     if (!button || !content) return;
+    container.dataset.spoilerInit = '1';
 
     let isOpen = false;
-
     function updateState() {
-      if (isOpen) {
-        button.classList.add('active');
-        button.setAttribute('aria-expanded', 'true');
-        content.style.display = 'block';
-        // Update button text
-        const spans = button.querySelectorAll('span');
-        if (spans.length === 2) {
-          spans[0].style.display = 'none'; // Show label
-          spans[1].style.display = 'inline'; // Hide label
-        }
-      } else {
-        button.classList.remove('active');
-        button.setAttribute('aria-expanded', 'false');
-        content.style.display = 'none';
-        // Update button text
-        const spans = button.querySelectorAll('span');
-        if (spans.length === 2) {
-          spans[0].style.display = 'inline'; // Show label
-          spans[1].style.display = 'none'; // Hide label
-        }
+      button.classList.toggle('active', isOpen);
+      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      content.style.display = isOpen ? 'block' : 'none';
+      const spans = button.querySelectorAll('span');
+      if (spans.length === 2) {
+        spans[0].style.display = isOpen ? 'none' : 'inline';
+        spans[1].style.display = isOpen ? 'inline' : 'none';
       }
     }
-
-    // Initialize
     updateState();
-
-    // Toggle on click
     button.addEventListener('click', function() {
       isOpen = !isOpen;
       updateState();
     });
   });
-})();
+}
+initSpoilerGalleries();
+document.addEventListener('app:reinit', initSpoilerGalleries);
 
-// Giscus: Hide comment form when comments are disabled (reactions only mode)
+// Playlist track player — expand/collapse BC embeds on demand, prev/next navigation.
+// Re-runs on swup page swaps via "app:reinit". Uses data-init guard for idempotency.
+// Initializes for every container that holds .playlist-track elements:
+//   - .playlist-single (the dedicated /playlists/ pages)
+//   - .yim-body        (year-in-music recaps)
+//   - .mr-body         (month-recaps)
+// Each container's prev/next navigation is scoped to its own track list.
+function initPlaylistPlayers() {
+  const containers = document.querySelectorAll('.playlist-single, .yim-body, .mr-body');
+  containers.forEach(initPlaylistContainer);
+}
+
+function initPlaylistContainer(container) {
+  if (!container || container.dataset.playlistInit === '1') return;
+  container.dataset.playlistInit = '1';
+
+  const tracks = Array.from(container.querySelectorAll('.playlist-track.has-embed'));
+  if (!tracks.length) return;
+
+  let activeIndex = -1;
+
+  function openTrack(index) {
+    if (index < 0 || index >= tracks.length) return;
+    const track = tracks[index];
+    const player = track.querySelector('.track-player');
+    const header = track.querySelector('.track-header');
+    const embedContainer = track.querySelector('.track-embed-container');
+
+    const iframe = document.createElement('iframe');
+    iframe.src = track.dataset.embed;
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('frameborder', '0');
+    if (track.dataset.embed.includes('youtube') || track.dataset.embed.includes('invidio') || track.dataset.embed.includes('yewtu')) {
+      iframe.height = '315';
+      iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      iframe.setAttribute('allowfullscreen', '');
+    } else {
+      iframe.height = '120';
+      iframe.setAttribute('allow', 'encrypted-media');
+      iframe.setAttribute('seamless', '');
+    }
+    embedContainer.appendChild(iframe);
+
+    player.removeAttribute('hidden');
+    header.setAttribute('aria-expanded', 'true');
+    activeIndex = index;
+  }
+
+  function closeTrack(index) {
+    if (index < 0 || index >= tracks.length) return;
+    const track = tracks[index];
+    const player = track.querySelector('.track-player');
+    const header = track.querySelector('.track-header');
+    const embedContainer = track.querySelector('.track-embed-container');
+
+    embedContainer.innerHTML = '';
+    player.setAttribute('hidden', '');
+    header.setAttribute('aria-expanded', 'false');
+    if (activeIndex === index) activeIndex = -1;
+  }
+
+  tracks.forEach(function(track, index) {
+    const header = track.querySelector('.track-header');
+    const prevBtn = track.querySelector('.track-prev');
+    const nextBtn = track.querySelector('.track-next');
+
+    header.addEventListener('click', function(e) {
+      if (e.target.closest('.track-buy, .track-discogs')) return;
+      if (activeIndex === index) {
+        closeTrack(index);
+      } else {
+        if (activeIndex !== -1) closeTrack(activeIndex);
+        openTrack(index);
+      }
+    });
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function() {
+        closeTrack(index);
+        if (index - 1 >= 0) openTrack(index - 1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function() {
+        closeTrack(index);
+        if (index + 1 < tracks.length) openTrack(index + 1);
+      });
+    }
+  });
+}
+initPlaylistPlayers();
+document.addEventListener('app:reinit', initPlaylistPlayers);
+
+// Archive filters (/listening/, /found/). They live here rather than inline in
+// their layouts because swup does not run scripts inside swapped content:
+// arriving at those pages via a link left the filter chips dead.
+// Both re-run on "app:reinit" and guard against double binding.
+
+// Mirror filter state into the URL. Keeps swup's history state but points its
+// url at the filtered address, so Back from an entry restores the filter.
+function replaceFilterUrl(params) {
+  const q = params.toString();
+  const url = window.location.pathname + (q ? '?' + q : '');
+  history.replaceState(Object.assign({}, history.state, { url: url }), '', url);
+}
+
+// Listening: year chips with per-year counts; defaults to the current year.
+function initListeningFilter() {
+  const root = document.querySelector('[data-listening-filters]');
+  if (!root || root.dataset.listeningInit === '1') return;
+  root.dataset.listeningInit = '1';
+
+  const rows = Array.from(document.querySelectorAll('.listening-row'));
+  const summary = root.querySelector('[data-listening-summary]');
+  const yearBtns = Array.from(root.querySelectorAll('[data-year]'));
+
+  const currentYear = String(new Date().getFullYear());
+  const availableYears = yearBtns
+    .map(function(b) { return b.getAttribute('data-year'); })
+    .filter(function(y) { return y && y !== 'all'; });
+  const defaultYear = availableYears.indexOf(currentYear) >= 0
+    ? currentYear : (availableYears[0] || 'all');
+
+  const params = new URLSearchParams(window.location.search);
+  let selectedYear = params.get('year') || defaultYear;
+
+  // Snapshot original labels so chips can be re-rendered with counts.
+  yearBtns.forEach(function(b) { b.dataset.label = b.textContent.trim(); });
+
+  function apply() {
+    let visible = 0;
+    rows.forEach(function(row) {
+      const ok = selectedYear === 'all' || row.getAttribute('data-year') === selectedYear;
+      row.style.display = ok ? '' : 'none';
+      if (ok) visible++;
+    });
+
+    yearBtns.forEach(function(b) {
+      const v = b.getAttribute('data-year');
+      const n = rows.filter(function(row) {
+        return v === 'all' || row.getAttribute('data-year') === v;
+      }).length;
+      b.innerHTML = b.dataset.label + ' <small>' + n + '</small>';
+      b.classList.toggle('active', v === selectedYear);
+      b.setAttribute('aria-pressed', v === selectedYear ? 'true' : 'false');
+    });
+
+    if (summary) {
+      const months = visible + ' month' + (visible === 1 ? '' : 's');
+      summary.textContent = selectedYear === 'all' ? months : months + ' — ' + selectedYear;
+    }
+
+    // Omit ?year=<default> to keep shareable URLs clean.
+    const p = new URLSearchParams();
+    if (selectedYear !== defaultYear) p.set('year', selectedYear);
+    replaceFilterUrl(p);
+  }
+
+  yearBtns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      selectedYear = b.getAttribute('data-year') || 'all';
+      apply();
+    });
+  });
+  apply();
+}
+initListeningFilter();
+document.addEventListener('app:reinit', initListeningFilter);
+
+// Found: category × year chips with live counts (empty intersections hide),
+// defaulting to the current year, with a safety cap and a "show all" opt-in.
+function initFoundFilter() {
+  const root = document.querySelector('[data-found-filters]');
+  if (!root || root.dataset.foundInit === '1') return;
+  const ledger = document.querySelector('.found-ledger--compact');
+  if (!ledger) return;
+  root.dataset.foundInit = '1';
+
+  const SAFETY_CAP = 60;
+  const rows = Array.from(ledger.querySelectorAll('.found-row--compact'));
+  const summary = root.querySelector('[data-found-summary]');
+  const overflow = document.querySelector('[data-found-overflow]');
+  const showAllBtn = overflow ? overflow.querySelector('[data-show-all-btn]') : null;
+  const catBtns = Array.from(root.querySelectorAll('[data-filter-type="category"] [data-category]'));
+  const yearBtns = Array.from(root.querySelectorAll('[data-filter-type="year"] [data-year]'));
+
+  // Fall back to the most recent year chip if the current year has no entries.
+  const currentYear = String(new Date().getFullYear());
+  const availableYears = yearBtns
+    .map(function(b) { return b.getAttribute('data-year'); })
+    .filter(function(y) { return y && y !== 'all'; });
+  const defaultYear = availableYears.indexOf(currentYear) >= 0
+    ? currentYear : (availableYears[0] || 'all');
+
+  const params = new URLSearchParams(window.location.search);
+  let selectedCategory = params.get('category') || 'all';
+  let selectedYear = params.get('year') || defaultYear;
+  let showAll = params.get('all') === '1';
+
+  function syncButtons(buttons, attr, current) {
+    buttons.forEach(function(b) {
+      const on = b.getAttribute('data-' + attr) === current;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  // Snapshot chip labels so they can be re-rendered with counts.
+  catBtns.forEach(function(b) { b.dataset.label = b.textContent.trim(); });
+  yearBtns.forEach(function(b) { b.dataset.label = b.textContent.trim(); });
+
+  // Hide chips that would yield zero results — except "all", which always
+  // stays so the user can reset.
+  function renderChip(btn, attr, count) {
+    if (count === 0 && btn.getAttribute('data-' + attr) !== 'all') {
+      btn.hidden = true;
+      return;
+    }
+    btn.hidden = false;
+    btn.innerHTML = btn.dataset.label + ' <span class="found-chip-count">' + count + '</span>';
+  }
+
+  function countRows(category, year) {
+    let n = 0;
+    rows.forEach(function(row) {
+      const rc = row.getAttribute('data-category') || '';
+      const ry = row.getAttribute('data-year') || '';
+      if ((category === 'all' || rc === category) && (year === 'all' || ry === year)) n++;
+    });
+    return n;
+  }
+
+  function apply() {
+    const cap = showAll ? Infinity : SAFETY_CAP;
+    let totalMatching = 0;
+    let visible = 0;
+    rows.forEach(function(row) {
+      const rc = row.getAttribute('data-category') || '';
+      const ry = row.getAttribute('data-year') || '';
+      const matches = (selectedCategory === 'all' || rc === selectedCategory)
+                   && (selectedYear === 'all' || ry === selectedYear);
+      if (matches) {
+        totalMatching++;
+        if (visible < cap) {
+          row.style.display = '';
+          visible++;
+          return;
+        }
+      }
+      row.style.display = 'none';
+    });
+
+    // Each chip counts rows matching the OTHER axis's current selection.
+    let catBtnSelected = false;
+    catBtns.forEach(function(b) {
+      const v = b.getAttribute('data-category');
+      renderChip(b, 'category', countRows(v, selectedYear));
+      if (v === selectedCategory && !b.hidden) catBtnSelected = true;
+    });
+    yearBtns.forEach(function(b) {
+      renderChip(b, 'year', countRows(selectedCategory, b.getAttribute('data-year')));
+    });
+
+    // The selected category's chip just disappeared: fall back to 'all'.
+    if (!catBtnSelected && selectedCategory !== 'all') {
+      selectedCategory = 'all';
+      return apply();
+    }
+
+    syncButtons(catBtns, 'category', selectedCategory);
+    syncButtons(yearBtns, 'year', selectedYear);
+
+    if (summary) {
+      const bits = [];
+      if (selectedCategory !== 'all') bits.push(selectedCategory);
+      if (selectedYear !== 'all') bits.push(selectedYear);
+      const suffix = bits.length ? ' — ' + bits.join(' · ') : '';
+      summary.textContent = totalMatching > cap
+        ? visible + ' of ' + totalMatching + ' entries' + suffix
+        : visible + ' entries' + suffix;
+    }
+
+    if (overflow) overflow.hidden = !(totalMatching > cap);
+
+    // Omit ?year=<default> to keep shareable URLs clean.
+    const p = new URLSearchParams();
+    if (selectedCategory !== 'all') p.set('category', selectedCategory);
+    if (selectedYear !== defaultYear) p.set('year', selectedYear);
+    if (showAll) p.set('all', '1');
+    replaceFilterUrl(p);
+  }
+
+  catBtns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      selectedCategory = b.getAttribute('data-category') || 'all';
+      showAll = false; // any chip click resets the show-all opt-in
+      apply();
+    });
+  });
+  yearBtns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      selectedYear = b.getAttribute('data-year') || 'all';
+      showAll = false;
+      apply();
+    });
+  });
+  if (showAllBtn) {
+    showAllBtn.addEventListener('click', function() {
+      showAll = true;
+      apply();
+    });
+  }
+
+  apply();
+}
+initFoundFilter();
+document.addEventListener('app:reinit', initFoundFilter);
+
+// Naked CSS Day toggle — strips all stylesheets when the broom button is clicked.
+// The button is only rendered on April 9 (see footer.html), so this listener is a no-op otherwise.
 (function() {
-  const giscusContainer = document.querySelector('.giscus-container.giscus-comments-disabled');
-  if (!giscusContainer) return;
+  const root = document.documentElement;
 
-  // Function to hide comment form in Giscus iframe
-  function hideGiscusCommentForm() {
-    const giscusFrame = giscusContainer.querySelector('iframe');
-    if (!giscusFrame) return;
-
-    try {
-      // Try to access iframe content (may fail due to CORS)
-      const iframeDoc = giscusFrame.contentDocument || giscusFrame.contentWindow.document;
-      
-      // Hide comment form elements - try multiple selectors
-      const selectors = [
-        'form[data-target="giscus.comment-form"]',
-        'form.giscus-comment-form',
-        'textarea[data-target="giscus.comment"]',
-        'textarea.giscus-comment',
-        'button[data-target="giscus.submit"]',
-        'button.giscus-submit',
-        '[data-target="giscus.sign-in"]',
-        '.giscus-sign-in',
-        // Common Giscus comment form selectors
-        'form[action*="discussions"]',
-        'textarea[placeholder*="comment"]',
-        'textarea[placeholder*="Comment"]',
-        // Hide the entire comment input section
-        'div:has(textarea[placeholder*="comment"])',
-        'div:has(textarea[placeholder*="Comment"])'
-      ];
-      
-      selectors.forEach(selector => {
-        try {
-          const elements = iframeDoc.querySelectorAll(selector);
-          elements.forEach(el => {
-            el.style.display = 'none';
-            el.style.visibility = 'hidden';
-            el.style.height = '0';
-            el.style.overflow = 'hidden';
-          });
-        } catch (e) {
-          // Selector might not be supported
-        }
-      });
-      
-      // Also try to hide parent containers
-      const textareas = iframeDoc.querySelectorAll('textarea');
-      textareas.forEach(textarea => {
-        const placeholder = textarea.getAttribute('placeholder') || '';
-        if (placeholder.toLowerCase().includes('comment')) {
-          let parent = textarea.parentElement;
-          // Hide up to 3 levels of parents
-          for (let i = 0; i < 3 && parent; i++) {
-            parent.style.display = 'none';
-            parent = parent.parentElement;
-          }
-        }
-      });
-      
-    } catch (e) {
-      // CORS error - cannot access iframe content
-      // Fall back to CSS-based approach (already handled in CSS)
+  function applyNaked(enabled) {
+    // Strip every stylesheet. CSS Naked Day spirit: "remove all CSS,
+    // strip it entirely of its design." Big images are part of that.
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach(function(el) {
+      el.disabled = enabled;
+    });
+    if (enabled) {
+      root.setAttribute('data-naked', '1');
+    } else {
+      root.removeAttribute('data-naked');
     }
   }
 
-  // Wait for Giscus to load - use multiple strategies
-  const observer = new MutationObserver(function(mutations) {
-    const giscusFrame = giscusContainer.querySelector('iframe');
-    if (giscusFrame) {
-      // Try multiple times as Giscus content loads
-      giscusFrame.addEventListener('load', function() {
-        hideGiscusCommentForm();
-        // Try again after a delay as content might load asynchronously
-        setTimeout(hideGiscusCommentForm, 500);
-        setTimeout(hideGiscusCommentForm, 1500);
-        setTimeout(hideGiscusCommentForm, 3000);
-      });
-      
-      // Also try immediately if iframe is already loaded
-      if (giscusFrame.contentDocument || giscusFrame.contentWindow) {
-        hideGiscusCommentForm();
-      }
-      
-      observer.disconnect();
-    }
+  if (root.getAttribute('data-naked') === '1') {
+    applyNaked(true);
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.naked-css-toggle, #naked-css-toggle');
+    if (!btn) return;
+    const next = root.getAttribute('data-naked') !== '1';
+    try { localStorage.setItem('naked', next ? '1' : ''); } catch (_) {}
+    applyNaked(next);
   });
-
-  observer.observe(giscusContainer, { childList: true, subtree: true });
-
-  // Also try immediately and at intervals in case Giscus is already loaded
-  hideGiscusCommentForm();
-  setTimeout(hideGiscusCommentForm, 500);
-  setTimeout(hideGiscusCommentForm, 1000);
-  setTimeout(hideGiscusCommentForm, 2000);
-  setTimeout(hideGiscusCommentForm, 3000);
-  setTimeout(hideGiscusCommentForm, 5000);
 })();
+

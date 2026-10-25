@@ -1,0 +1,142 @@
+{{/* Posts section listing - minimal metadata only */}}
+{{ define "content" }}
+<section class="blog">
+    <header>
+        <h1>{{ .Title }}</h1>
+        {{ with .Description }}
+            <p>{{ . }}</p>
+        {{ end }}
+    </header>
+
+    {{/* Extract unique categories for filtering */}}
+    {{ $categories := slice }}
+    {{ $categoriesMap := dict }}
+    {{ range .Pages }}
+        {{ range .Params.categories }}
+            {{ $categoriesMap = merge $categoriesMap (dict . true) }}
+        {{ end }}
+    {{ end }}
+    {{ range $category, $_ := $categoriesMap }}
+        {{ $categories = $categories | append $category }}
+    {{ end }}
+    {{ $categories = sort $categories }}
+
+    {{/* Render category filter if there are multiple categories */}}
+    {{ if gt (len $categories) 1 }}
+    <div class="collection-wrapper">
+    <div class="collection-filters">
+    <div class="collection-filter" data-filter-type="category">
+        <div class="filter-buttons">
+                <button
+                    class="filter-btn active"
+                    data-category="all"
+                    aria-pressed="true"
+                    type="button"
+                >
+                    {{ i18n "all" | default "All" }}
+                </button>
+            {{ range $categories }}
+                    <button
+                        class="filter-btn"
+                        data-category="{{ . | urlize }}"
+                        aria-pressed="false"
+                        type="button"
+                    >
+                        {{ . }}
+                    </button>
+            {{ end }}
+            </div>
+        </div>
+    </div>
+    <div class="posts" data-filterable="category">
+        {{ range .Pages }}
+            {{ $postCategories := .Params.categories }}
+            {{ $categorySlug := "" }}
+            {{ if $postCategories }}
+                {{ $categorySlug = index $postCategories 0 | urlize }}
+            {{ end }}
+            <article
+                class="post-preview{{ if .Params.featured }} featured{{ end }} collection-item visible"
+                {{ if $categorySlug }} data-category="{{ $categorySlug }}"{{ end }}>
+                <h2>
+                    {{ if .Params.featured }}<span class="featured-marker" title="Featured" aria-label="Featured"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.6 5.7 6.2.6-4.7 4.1 1.4 6.1L12 16.9l-5.5 3.2 1.4-6.1L3.2 8.9l6.2-.6z"/></svg></span>{{ end }}
+                    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                </h2>
+                <div class="post-meta">
+                    <div class="post-meta-left">
+                    </div>
+                    <div class="post-meta-right">
+                        {{ if $.Site.Params.show_tags_in_list }}
+                            {{ with .Params.tags }}
+                            <div class="tags">
+                                {{ range . }}
+                                    <span class="tag">{{ . }}</span>
+                                {{ end }}
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                        {{ if $.Site.Params.show_categories_in_list }}
+                            {{ with .Params.categories }}
+                            <div class="categories">
+                                {{ range . }}
+                                    <span class="category">{{ . }}</span>
+                                {{ end }}
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                        {{ with .Date }}
+                            <time datetime="{{ .Format "2006-01-02" }}">{{ .Format ($.Site.Params.date_format | default "Jan 2, 2006") }}</time>
+                        {{ end }}
+                    </div>
+                </div>
+            </article>
+    {{ end }}
+    </div>
+    </div>
+    {{ else }}
+    <div class="posts">
+        {{ range .Pages }}
+            {{ $postCategories := .Params.categories }}
+            {{ $categorySlug := "" }}
+            {{ if $postCategories }}
+                {{ $categorySlug = index $postCategories 0 | urlize }}
+            {{ end }}
+            <article class="post-preview{{ if .Params.featured }} featured{{ end }} collection-item"{{ if $categorySlug }} data-category="{{ $categorySlug }}"{{ end }}>
+                <h2>
+                    {{ if .Params.featured }}<span class="featured-marker" title="Featured" aria-label="Featured"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.6 5.7 6.2.6-4.7 4.1 1.4 6.1L12 16.9l-5.5 3.2 1.4-6.1L3.2 8.9l6.2-.6z"/></svg></span>{{ end }}
+                    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                </h2>
+                <div class="post-meta">
+                    <div class="post-meta-left">
+                    </div>
+                    <div class="post-meta-right">
+                        {{ if $.Site.Params.show_tags_in_list }}
+                            {{ with .Params.tags }}
+                            <div class="tags">
+                                {{ range . }}
+                                    <span class="tag">{{ . }}</span>
+                                {{ end }}
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                        {{ if $.Site.Params.show_categories_in_list }}
+                            {{ with .Params.categories }}
+                            <div class="categories">
+                                {{ range . }}
+                                    <span class="category">{{ . }}</span>
+                                {{ end }}
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                        {{ with .Date }}
+                            <time datetime="{{ .Format "2006-01-02" }}">{{ .Format ($.Site.Params.date_format | default "Jan 2, 2006") }}</time>
+                        {{ end }}
+                    </div>
+                </div>
+            </article>
+        {{ end }}
+    </div>
+    {{ end }}
+</section>
+{{ end }}
+

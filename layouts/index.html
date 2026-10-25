@@ -1,7 +1,7 @@
 {{ define "head" }}
   {{/* Prefetch recent posts for faster navigation */}}
   {{ if .Params.recent }}
-    {{ $blogSection := .Site.GetPage (.Site.Params.blog_section_path | default "/posts") }}
+    {{ $blogSection := .Site.GetPage (.Site.Params.blog_section_path | default "/made") }}
     {{ $max := .Params.recent_max | default 5 }}
     {{ range first $max $blogSection.Pages }}
       <link rel="prefetch" href="{{ .Permalink }}" as="document">
@@ -11,230 +11,178 @@
 
 {{ define "content" }}
 <main class="home">
-  <!-- Language switcher, color scheme toggle, and theme toggle - subtle, top corner -->
-  <div class="theme-toggle-wrapper">
-    {{ if .IsTranslated }}
-    <nav class="language-switcher">
-      {{ range .Translations }}
-        <a href="{{ .Permalink }}" title="{{ .Language.LanguageName }}" aria-label="{{ printf (i18n "switchToLanguage" | default "Switch to %s") .Language.LanguageName }}">
-          {{ if eq .Language.Lang "es" }}ES{{ else if eq .Language.Lang "en" }}EN{{ else }}{{ .Language.Lang | upper }}{{ end }}
-        </a>
-      {{ end }}
-    </nav>
-    {{ end }}
-    <button id="color-scheme-toggle" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="home-color-scheme-toggle">
-      ⚄
-    </button>
-    <button id="theme-toggle" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}">
-      <svg class="theme-icon theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>
-      <svg class="theme-icon theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-    </button>
-  </div>
-
   <div class="home-content-wrapper">
-    <!-- Personal introduction -->
-    {{ with .Params.name }}
-    <div class="home-intro">
-      {{ $avatar := $.Params.avatar }}
-      {{ if $avatar }}
-        {{/* Custom avatar - try to find dithered version */}}
-        {{ $avatarPath := strings.TrimPrefix "/" $avatar }}
-        {{ $ext := path.Ext $avatarPath }}
-        {{ $baseName := strings.TrimSuffix $ext $avatarPath }}
-        {{ $ditheredPath := printf "%s_dithered.png" $baseName }}
-        {{ $ditheredAvatar := resources.Get $ditheredPath }}
-        {{ $avatarResource := resources.Get $avatarPath }}
-        <div class="intro-avatar-container">
-          {{/* Original avatar - hidden by default, shown on hover */}}
-          <picture class="intro-avatar-picture">
-            {{ if $avatarResource }}
-              {{ $avatarAVIF := $avatarResource.Resize (printf "%dx avif q85" $avatarResource.Width) }}
-              {{ $avatarWebP := $avatarResource.Resize (printf "%dx webp q85" $avatarResource.Width) }}
-              <source srcset="{{ $avatarAVIF.RelPermalink }}" type="image/avif">
-              <source srcset="{{ $avatarWebP.RelPermalink }}" type="image/webp">
-              <img src="{{ $avatarWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-original" width="{{ $avatarWebP.Width }}" height="{{ $avatarWebP.Height }}">
-            {{ else }}
-              <img src="{{ $avatar | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
-            {{ end }}
-          </picture>
-          {{/* Dithered avatar - visible by default with blend mode */}}
-          {{ if $ditheredAvatar }}
-            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
-            {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
-            <picture class="intro-avatar-picture-dithered">
-              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
-              <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
-              <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
-            </picture>
-          {{ else }}
-            {{/* Fallback: try static dithered file */}}
-            {{ $staticDitheredPath := printf "/%s" $ditheredPath }}
-            <img src="{{ $staticDitheredPath | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" onerror="this.style.display='none'">
-          {{ end }}
-        </div>
-      {{ else }}
-        {{/* Check if avatar images exist as resources */}}
-        {{ $avatarWebP := resources.Get "img/avatar.webp" }}
-        {{ $avatarAVIF := resources.Get "img/avatar.avif" }}
-        {{ $ditheredAvatar := resources.Get "img/avatar_dithered.png" }}
-        {{ if or $avatarWebP $avatarAVIF $ditheredAvatar }}
-        <div class="intro-avatar-container">
-          {{/* Regular avatar - use static optimized versions */}}
-          <picture class="intro-avatar-picture">
-            <source srcset="{{ "img/avatar.avif" | relURL }}" type="image/avif">
-            <source srcset="{{ "img/avatar.webp" | relURL }}" type="image/webp">
-            <img src="{{ "img/avatar.webp" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-original">
-          </picture>
-          {{/* Dithered avatar - process through Hugo for AVIF/WebP */}}
-          {{ if $ditheredAvatar }}
-            {{ $ditheredAVIF := $ditheredAvatar.Resize (printf "%dx avif q85" $ditheredAvatar.Width) }}
-            {{ $ditheredWebP := $ditheredAvatar.Resize (printf "%dx webp q85" $ditheredAvatar.Width) }}
-            <picture class="intro-avatar-picture-dithered">
-              <source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">
-              <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
-              <img src="{{ $ditheredWebP.RelPermalink }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered" width="{{ $ditheredWebP.Width }}" height="{{ $ditheredWebP.Height }}">
-            </picture>
-          {{ else }}
-            {{/* Fallback to static file if resource not found */}}
-            <img src="{{ "img/avatar_dithered.png" | relURL }}" alt="{{ . }}" class="intro-avatar intro-avatar-dithered">
-          {{ end }}
-        </div>
-        {{ else }}
-        {{/* Fallback to letter avatar if no images exist */}}
-        <div class="intro-avatar-container intro-avatar-letter">
-          <span class="intro-avatar-letter-text">{{ substr . 0 1 | upper }}</span>
-        </div>
-        {{ end }}
-      {{ end }}
-      
-      <div class="intro-text">
-        <h1>{{ . }}</h1>
-        {{ if $.Params.bio }}
-        <div class="intro-bio">{{ $.Params.bio | markdownify }}</div>
-        {{ end }}
-      </div>
-    </div>
-    {{ end }}
-
-    <!-- Main content / About text -->
-    {{ with .Content }}
-    <div class="home-about">
-      {{ . }}
-    </div>
-    {{ end }}
-
-    <!-- Navigation - Integrated naturally -->
-    {{ with .Site.Params.sections }}
-    <nav class="home-explore">
-      <span class="explore-label">{{ i18n "explore" }}</span>
-      {{ range . }}
-        {{ if .is_external }}
-          <a href="{{ .path }}" target="_blank" rel="noopener noreferrer">{{ i18n .name | default .name }}</a>
-        {{ else }}
-          <a href="{{ .path | relLangURL }}">{{ i18n .name | default .name }}</a>
-        {{ end }}
-      {{ end }}
-    </nav>
-    {{ end }}
-
-    <!-- Social links - More integrated -->
-    {{ with .Params.links }}
-    <div class="home-connect">
-      <span class="connect-label">Connect</span>
-      <div class="connect-links">
-        {{ range . }}
-        <a href="{{ .url }}" rel="me noopener noreferrer" target="_blank" aria-label="{{ .name }}" title="{{ .name }}">
-          {{ if eq .icon "github" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if or (eq .icon "email") (eq .icon "mail") }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-            <polyline points="22,6 12,13 2,6"></polyline>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "twitter" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "bluesky" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 10.5c-2-3.5-5-6-7-6-1.5 0-2.5 1-2.5 3.5 0 4.5 2 7 4.5 8.5 1.5.8 3 1 4.5 1-.5-.5-1-1.5-1-3 0-2 1-3 1.5-3.5zm0 0c2-3.5 5-6 7-6 1.5 0 2.5 1 2.5 3.5 0 4.5-2 7-4.5 8.5-1.5.8-3 1-4.5 1 .5-.5 1-1.5 1-3 0-2-1-3-1.5-3.5z"/>
-            <path d="M12 14c-1 0-2 .5-2.5 1.5-.3.5-.5 1.5-.5 2.5s.5 2.5 1.5 3c.5.3 1.5.5 1.5.5s1 0 1.5-.5c1-.5 1.5-2 1.5-3s-.2-2-.5-2.5c-.5-1-1.5-1.5-2.5-1.5z"/>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "mastodon" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21.327 8.566c0-4.339-2.843-5.61-2.843-5.61-1.433-.658-3.894-.935-6.451-.956h-.063c-2.557.021-5.016.298-6.45.956 0 0-2.843 1.272-2.843 5.61 0 .993-.019 2.181.012 3.441.103 4.243.778 8.425 4.701 9.463 1.809.479 3.362.579 4.612.51 2.268-.126 3.541-.809 3.541-.809l-.075-1.646s-1.621.511-3.441.449c-1.804-.062-3.707-.194-3.999-2.409a4.523 4.523 0 0 1-.04-.621s1.77.433 4.014.536c1.372.063 2.658-.08 3.965-.236 2.506-.299 4.688-1.843 4.962-3.254.434-2.223.398-5.424.398-5.424z"/>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "twitch" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 11V7M21 2H3v16h5v4l4-4h5l4-4V2zM11 11V7"/>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "instagram" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-            <circle cx="12" cy="12" r="4"/>
-            <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else if eq .icon "linkedin" }}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
-            <rect x="2" y="9" width="4" height="12"/>
-            <circle cx="4" cy="4" r="2"/>
-          </svg>
-          <span>{{ .name }}</span>
-          {{ else }}
-          <span>{{ .name }}</span>
-          {{ end }}
+    {{/* Landing: greeting, name, bio and the short about beside a dithered
+         portrait (scheme duotone via CSS). Portrait sits above the name on
+         phones. */}}
+    <section class="home-hero lg-reveal">
+      {{ with .Params.portrait }}{{ with resources.Get . }}
+        {{ $small := partial "dither.html" (dict "img" . "width" 160) }}
+        {{ $large := partial "dither.html" (dict "img" . "width" 360) }}
+        {{ $about := site.GetPage "/about" }}
+        <a class="home-portrait-link" href="{{ with $about }}{{ .RelPermalink }}{{ else }}{{ "/about/" | relLangURL }}{{ end }}" aria-label="{{ with $about }}{{ .Title }}{{ else }}About{{ end }}">
+          <img class="home-portrait"
+               src="{{ $large.RelPermalink }}"
+               srcset="{{ $small.RelPermalink }} {{ $small.Width }}w, {{ $large.RelPermalink }} {{ $large.Width }}w"
+               sizes="(max-width: 640px) 96px, 300px"
+               width="{{ $large.Width }}" height="{{ $large.Height }}"
+               alt="" decoding="async" fetchpriority="high">
         </a>
+      {{ end }}{{ end }}
+      <div class="home-hero__text">
+        {{ with .Params.name }}
+        <div class="intro-text">
+          {{ with $.Params.status }}
+            <p class="home-eyebrow">{{ . }}</p>
+          {{ else }}
+            <p class="home-eyebrow" data-greeting hidden></p>
+          {{ end }}
+          <h1>{{ . }}</h1>
+          {{ with $.Params.bio }}<p class="intro-bio">{{ . | markdownify }}</p>{{ end }}
+        </div>
+        {{ end }}
+        {{ with .Content }}
+        <div class="home-about">{{ . }}</div>
+        {{ end }}
+        {{ with site.GetPage "/now" }}
+        <a class="home-now" href="{{ .RelPermalink }}">{{ i18n "homeNowLink" | default "What I'm doing now" }} <span aria-hidden="true">→</span></a>
         {{ end }}
       </div>
-    </div>
-    {{ end }}
+    </section>
 
-    <!-- Recent posts - More integrated -->
-    {{ if .Params.recent }}
-    <section class="home-recent">
-      <h2>Recent Writing</h2>
-      {{ $blogSection := .Site.GetPage (.Site.Params.blog_section_path | default "/posts") }}
-      {{ $max := .Params.recent_max | default 5 }}
-      <ul class="recent-list">
-        {{ range first $max $blogSection.Pages }}
-        <li>
-          <a href="{{ .Permalink }}">
-            <span class="recent-title">{{ .Title }}</span>
-            {{ with .Date }}
-            <time datetime="{{ .Format "2006-01-02" }}">{{ .Format (.Site.Params.date_format | default "Jan 2, 2006") }}</time>
+    {{/* Explore: an index of the content destinations, one ruled row each —
+         emoji, name, the section's own description and how much is inside. */}}
+    {{ $homeNav := .Site.Params.home_nav | default .Site.Params.sections }}
+    {{ with $homeNav }}
+    <nav class="home-explore lg-reveal" aria-labelledby="home-explore-title">
+      <h2 class="home-label" id="home-explore-title">{{ i18n "explore" }}</h2>
+      <ul class="explore-grid">
+        {{ range . }}
+          {{ $p := site.GetPage .path }}
+          {{ $label := i18n .name | default .name }}
+          <li>
+            {{ if .is_external }}
+            <a class="explore-card" href="{{ .path }}" target="_blank" rel="noopener noreferrer">
+              {{ with .emoji }}<span class="explore-emoji" aria-hidden="true">{{ . }}</span>{{ end }}
+              <span class="explore-name">{{ $label }} <span aria-hidden="true">↗</span></span>
+            </a>
+            {{ else }}
+            <a class="explore-card" href="{{ partial "nav-url.html" .path }}">
+              {{ with .emoji }}<span class="explore-emoji" aria-hidden="true">{{ . }}</span>{{ end }}
+              <span class="explore-text">
+                <span class="explore-name">{{ with $p }}{{ .Title }}{{ else }}{{ $label }}{{ end }}</span>
+                {{ with $p }}{{ with .Description }}<span class="explore-desc">{{ . }}</span>{{ end }}{{ end }}
+              </span>
+              {{/* Revealed on hover/focus: how much is inside and the newest
+                   entry, so the row answers "what's new here?" before you click. */}}
+              {{ with $p }}
+                {{ $entries := .RegularPagesRecursive.ByDate.Reverse }}
+                <span class="explore-meta">
+                  <span class="explore-count">{{ len $entries }} {{ i18n "entries" | default "entries" }}</span>
+                  {{ with index $entries 0 }}
+                    {{ $when := cond (eq (.Date.Format "2006") (now.Format "2006")) (.Date.Format "2 Jan") (.Date.Format "Jan 2006") }}
+                    <span class="explore-latest">{{ i18n "latest" | default "latest" }}: <em>{{ .Title }}</em> · {{ $when }}</span>
+                  {{ end }}
+                </span>
+              {{ end }}
+            </a>
             {{ end }}
-          </a>
-        </li>
+          </li>
         {{ end }}
       </ul>
-      {{ with $.Params.recent_more_text }}
-      <a href="{{ $.Site.Params.blog_section_path | default "/posts" | relURL }}" class="recent-more">
-        {{ . }}
-      </a>
-      {{ end }}
+    </nav>
+    {{ end }}
+
+    {{/* Lately — mixed recent entries, configured via params.river in hugo.toml.
+         Per-page frontmatter (recent / recent_max) still takes precedence. */}}
+    {{ $river := .Site.Params.river | default dict }}
+    {{ $riverOn := true }}
+    {{ if isset $river "enabled" }}{{ $riverOn = $river.enabled }}{{ end }}
+    {{ if .Params.recent }}{{ $riverOn = true }}{{ end }}
+    {{ if $riverOn }}
+    {{ $max := .Params.recent_max | default (index $river "max_items") | default 5 }}
+    {{ $sections := index $river "sections" | default (slice "made" "playlists" "margins" "found") }}
+    {{ $pool := where .Site.RegularPages "Section" "in" $sections }}
+    {{ $pool = first $max $pool.ByDate.Reverse }}
+    {{ $thisYear := now.Format "2006" }}
+    {{ if gt (len $pool) 0 }}
+    <section class="home-river" aria-labelledby="home-river-title">
+      <h2 class="home-label" id="home-river-title">{{ i18n "lately" | default "Lately" }}</h2>
+      <ol class="river-list">
+        {{ range $pool }}
+          {{/* Resolve kind + meta line per type. The kind label is the
+               verb of the entry — what action it represents in the
+               journal: wrote / curated / found / watched / heard / read. */}}
+          {{ $kind := "" }}
+          {{ $meta := "" }}
+          {{ $title := .Title }}
+          {{ if eq .Section "made" }}
+            {{ $kind = "wrote" }}
+          {{ else if eq .Section "playlists" }}
+            {{ $kind = "curated" }}
+          {{ else if eq .Section "found" }}
+            {{ $kind = "found" }}
+            {{ with .Params.link }}
+              {{ $h := . | strings.TrimPrefix "https://" | strings.TrimPrefix "http://" }}
+              {{ $meta = index (split $h "/") 0 | strings.TrimPrefix "www." }}
+            {{ end }}
+          {{ else if eq .Section "margins" }}
+            {{ $dir := .File.Dir }}
+            {{ if in $dir "movie" }}
+              {{ $kind = "watched" }}
+              {{ $director := .Params.director | default "" }}
+              {{ $year := .Params.year | default "" }}
+              {{ if and $director $year }}
+                {{ $meta = printf "%s (%s)" $director $year }}
+              {{ else if $director }}
+                {{ $meta = $director }}
+              {{ else if $year }}
+                {{ $meta = printf "(%s)" $year }}
+              {{ end }}
+            {{ else if in $dir "music" }}
+              {{ $kind = "heard" }}
+              {{ $meta = .Params.artist | default "" }}
+            {{ else if in $dir "book" }}
+              {{ $kind = "read" }}
+              {{ with .Params.author }}
+                {{ if reflect.IsSlice . }}
+                  {{ $meta = delimit . ", " }}
+                {{ else }}
+                  {{ $meta = . }}
+                {{ end }}
+              {{ end }}
+            {{ end }}
+          {{ else if eq .Section "listening" }}
+            {{ $kind = "listened" }}
+            {{/* Drop the "Listening — " / "Escuchando — " title prefix here: the
+                 "listened" kind already carries the verb, so the row shows just
+                 the month (e.g. "Febrero 2026") instead of repeating it. */}}
+            {{ $title = .Title | replaceRE "^(Listening|Escuchando) — " "" }}
+            {{ with .Params.total_plays }}{{ $meta = printf "%d %s" . (i18n "plays") }}{{ end }}
+          {{ else if eq .Section "year-in-music" }}
+            {{ $kind = "wrapped" }}
+          {{ end }}
+          {{/* data-kind keeps the English slug (CSS/JS hook); the visible label
+               is translated via the kind* i18n keys. */}}
+          {{ $kindLabel := $kind }}
+          {{ with $kind }}{{ $kindLabel = i18n (printf "kind%s" (title .)) | default . }}{{ end }}
+          {{ $sameYear := eq (.Date.Format "2006") $thisYear }}
+          <li class="river-row lg-reveal" data-kind="{{ $kind }}">
+            <a class="river-link" href="{{ .RelPermalink }}">
+              <span class="river-kind">{{ $kindLabel }}</span>
+              <span class="river-title">{{ $title }}</span>
+              {{ with $meta }}<span class="river-meta">{{ . }}</span>{{ end }}
+              <span class="river-leader" aria-hidden="true"></span>
+              <time class="river-date" datetime="{{ .Date.Format "2006-01-02" }}">
+                <span class="river-date-md">{{ .Date.Format "2 Jan" }}</span>
+                {{ if not $sameYear }}<span class="river-date-y">{{ printf "’%s" (.Date.Format "06") }}</span>{{ end }}
+              </time>
+            </a>
+          </li>
+        {{ end }}
+      </ol>
     </section>
+    {{ end }}
     {{ end }}
   </div>
 </main>

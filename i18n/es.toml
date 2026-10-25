@@ -1,15 +1,9 @@
-# Spanish translations
-[readMore]
-other = "Leer más"
-
-[back]
-other = "Volver"
+# Spanish translations for the apacible theme.
+# Nav/footer entries in hugo.toml (params.home_nav, params.footer, params.sections)
+# are looked up here by their `name`, falling back to the name itself.
 
 [allPosts]
 other = "todas las publicaciones"
-
-[recentPosts]
-other = "Publicaciones recientes"
 
 [tags]
 other = "Etiquetas"
@@ -17,20 +11,11 @@ other = "Etiquetas"
 [categories]
 other = "Categorías"
 
-[wordCount]
-other = "palabras"
-
-[readingTime]
-other = "min de lectura"
-
 [explore]
 other = "Explorar"
 
-[connect]
-other = "Conectar"
-
-[posts]
-other = "publicaciones"
+[made]
+other = "publicado"
 
 [about]
 other = "acerca de"
@@ -40,6 +25,9 @@ other = "ahora"
 
 [picks]
 other = "selecciones"
+
+[playlists]
+other = "listas"
 
 [all]
 other = "Todo"
@@ -73,12 +61,6 @@ other = "Correo"
 
 [emailAddress]
 other = "Dirección de correo"
-
-[emailError]
-other = "Por favor ingresa una dirección de correo válida"
-
-[consent]
-other = "Consentimiento"
 
 [newsletterConsent]
 other = "Consiento el procesamiento de mi nombre y dirección de correo electrónico con el fin de recibir el boletín."
@@ -134,15 +116,6 @@ other = "Ocultar Galería"
 [spoilerAlert]
 other = "Alerta de Spoiler"
 
-[notFound]
-other = "404 No Encontrado"
-
-[notFoundMessage]
-other = "La página que buscas no existe."
-
-[notFoundRecover]
-other = "⇽ volver al inicio"
-
 [noPicksYet]
 other = "Aún no hay selecciones."
 
@@ -151,12 +124,6 @@ other = "Aún no hay listas de reproducción."
 
 [doNotFill]
 other = "No llenes esto si eres humano:"
-
-[footerCredits]
-other = "Construido con&nbsp;%s&nbsp;y el tema&nbsp;%s"
-
-[atomFeed]
-other = "Feed Atom"
 
 [toggleTheme]
 other = "Alternar tema"
@@ -167,5 +134,192 @@ other = "Se encontraron %d artículo%s en esta etiqueta"
 [foundArticlesInCategory]
 other = "Se encontraron %d artículo%s en esta categoría"
 
+[read]
+other = "Leído"
+
+[watched]
+other = "Visto"
+
+[listened]
+other = "Escuchado"
+
+[year]
+other = "Año"
+
+[released]
+other = "Estrenado"
+
+[published]
+other = "Publicado"
+
+[rating]
+other = "Calificación"
+
+[publisher]
+other = "Editorial"
+
+[label]
+other = "Sello"
+
+[genre]
+other = "Género"
+
+[margins]
+other = "márgenes"
+
+[loved]
+other = "amados"
+
+[found]
+other = "hallado"
+
+[backToTop]
+other = "Volver arriba"
+
+[toggleTableOfContents]
+other = "Alternar tabla de contenidos"
+
+[toggleColorScheme]
+other = "Alternar esquema de color"
+
+[toggleOriginalImage]
+other = "Alternar imagen original"
+
+[showOriginal]
+other = "mostrar original"
+
+[dither]
+other = "pixelar"
+
 [scene]
 other = "Escena"
+
+[lately]
+other = "Últimamente"
+
+[plays]
+other = "reproducciones"
+
+[visit]
+other = "Visitar"
+
+[wayback]
+other = "Captura en Wayback Machine"
+
+[feedTitleAll]
+other = "%s"
+
+[feedTitleMade]
+other = "Artículos de %s"
+
+[feedTitleMargins]
+other = "Márgenes de %s"
+
+[feedTitleFound]
+other = "Hallazgos de %s"
+
+[feedTitlePlaylists]
+other = "Listas de %s"
+
+[feedTitlePicks]
+other = "Selecciones de %s"
+
+[privacy]
+other = "privacidad"
+
+[kindWrote]
+other = "escribí"
+
+[kindCurated]
+other = "armé"
+
+[kindFound]
+other = "encontré"
+
+[kindWatched]
+other = "vi"
+
+[kindHeard]
+other = "escuché"
+
+[kindRead]
+other = "leí"
+
+[kindListened]
+other = "escuché"
+
+[kindWrapped]
+other = "resumí"
+
+[menu]
+other = "Menú"
+
+[footerWriting]
+other = "Escritos"
+
+[footerGarden]
+other = "Jardín"
+
+[footerElsewhere]
+other = "En otros sitios"
+
+[footerFeed]
+other = "Feed"
+
+[footerBuiltWith]
+other = "Hecho con %s"
+
+[homeNowLink]
+other = "Qué estoy haciendo ahora"
+
+[entries]
+other = "entradas"
+
+[latest]
+other = "último"
+
+# Command palette, header
+[home]
+other = "Inicio"
+
+[more]
+other = "Más"
+
+[actions]
+other = "Acciones"
+
+[cmdkTitle]
+other = "Paleta de comandos"
+
+[cmdkPlaceholder]
+other = "Busca en el sitio, salta a una página o ejecuta un comando…"
+
+[cmdkPages]
+other = "Páginas"
+
+[cmdkToggleTheme]
+other = "Alternar claro / oscuro"
+
+[cmdkCycleScheme]
+other = "Cambiar esquema de color"
+
+[cmdkSchemeGroup]
+other = "Esquema de color"
+
+[cmdkEmpty]
+other = "Sin resultados."
+
+[cmdkNav]
+other = "navegar"
+
+[cmdkSelect]
+other = "abrir"
+
+[cmdkClose]
+other = "cerrar"
+
+[viewOnLetterboxd]
+other = "Ver en Letterboxd"
+
+[relatedMovies]
+other = "Películas relacionadas"

@@ -1,127 +1,252 @@
-# apacible hugo theme
+# apacible hugo theme — example site
 #
 # > good-tempered, calm, pleasant
 #
-# - docs: https://git.sr.ht/~ckopac/apacible
-# - check for updates: https://git.sr.ht/~ckopac/apacible/refs
+# - docs: https://github.com/christiankopac/apacible-hugo-theme
+#
+# Run from this directory (theme checked out as the repo root):
+#   npm install
+#   hugo server --themesDir ../.. --theme apacible-hugo-theme
 #==============================================================================
 
 # === Base ===
 baseURL = "http://localhost:1313/"
-title = "Apacible Theme Demo"
-languageCode = "en"
+title = "Apacible"
+defaultContentLanguage = "en"
 theme = "apacible"
+
+[languages.en]
+locale = "en"
+label = "English"
+weight = 1
 
 # === Build ===
 [build]
-  writeStats = false
+writeStats = false
 
-# === Markup Configuration ===
+# === Minification ===
+# Keep precision = 0: precision = 2 rounds numbers to 2 significant digits and
+# silently turns e.g. clamp(…, 1.25rem) into 1.3rem across every stylesheet.
+[minify]
+minifyOutput = true
+
+[minify.tdewolff.html]
+keepWhitespace = false
+keepEndTags = true
+keepDefaultAttrVals = true
+keepDocumentTags = true
+
+[minify.tdewolff.css]
+precision = 0
+
+[minify.tdewolff.js]
+precision = 0
+
+[minify.tdewolff.json]
+precision = 0
+
+# === Markup ===
 [markup]
-  defaultMarkdownHandler = "goldmark"
-  
-  [markup.goldmark]
-    [markup.goldmark.renderer]
-      unsafe = true  # Allow raw HTML in markdown
-    [markup.goldmark.parser]
-      autoHeadingID = true
-      autoHeadingIDType = "github"
-      [markup.goldmark.parser.attribute]
-        block = true
-        title = true
-    [markup.goldmark.extensions]
-      [markup.goldmark.extensions.passthrough]
-        enable = true
-        [markup.goldmark.extensions.passthrough.delimiters]
-          block = [['\[', '\]'], ['$$', '$$']]
-          inline = [['\(', '\)']]
-  
-  [markup.highlight]
-    codeFences = true
-    guessSyntax = false
-    lineNos = false
-    lineNumbersInTable = false
-    noClasses = false
-    tabWidth = 2
-  
-  [markup.tableOfContents]
-    endLevel = 4
-    ordered = false
-    startLevel = 2
+defaultMarkdownHandler = "goldmark"
+
+[markup.goldmark.renderer]
+unsafe = true # Allow raw HTML in markdown
+[markup.goldmark.parser]
+autoHeadingID = true
+autoHeadingIDType = "github"
+[markup.goldmark.parser.attribute]
+block = true
+title = true
+[markup.goldmark.extensions.passthrough]
+enable = true
+[markup.goldmark.extensions.passthrough.delimiters]
+block = [['\[', '\]'], ['$$', '$$']]
+inline = [['\(', '\)']]
+
+[markup.highlight]
+codeFences = true
+guessSyntax = false
+lineNos = false
+lineNumbersInTable = false
+noClasses = false # syntax colours come from the theme's syntax.css
+tabWidth = 2
+
+# Table of contents (shown on posts with `toc = true`)
+[markup.tableOfContents]
+startLevel = 2
+endLevel = 4
+ordered = false
 
 # === Taxonomies ===
 [taxonomies]
-  tag = "tags"
-  category = "categories"
+tag = "tags"
+category = "categories"
+collection = "collections" # curated groupings used by /found/
 
-# === Outputs ===
+# === Outputs: HTML + Atom feeds + Gemini capsule ===
+[mediaTypes."text/gemini"]
+suffixes = ["gmi"]
+[mediaTypes."application/atom+xml"]
+suffixes = ["xml"]
+
+[outputFormats.Atom]
+mediaType = "application/atom+xml"
+baseName = "atom"
+isPlainText = true
+isHTML = false
+
+[outputFormats.Gemini]
+mediaType = "text/gemini"
+baseName = "index"
+isPlainText = true
+isHTML = false
+
 [outputs]
-  home = ["HTML"]
-  section = ["HTML"]
-  taxonomy = ["HTML"]
-  term = ["HTML"]
+home = ["HTML", "Gemini", "Atom"]
+section = ["HTML", "Gemini", "Atom"]
+taxonomy = ["HTML", "Gemini"]
+term = ["HTML", "Gemini"]
+page = ["HTML", "Gemini"]
 
-[outputFormats]
-  [outputFormats.RSS]
-    mediaType = "application/rss+xml"
-    baseName = "atom"
+[pagination]
+pagerSize = 50
 
-# === Privacy ===
-[privacy]
-  [privacy.youtube]
-    privacyEnhanced = true
+[privacy.youtube]
+privacyEnhanced = true
 
 #==============================================================================
 
 [params]
-  # === Basic Config ===
-  description = "A calm, accessible Hugo theme for the smolweb - featuring dithered images and minimal JavaScript"
-  use_runes = true  # Use runes for icons (ᛟ, ᛞ, ᛉ, etc.) instead of default symbols
-  blog_section_path = "/posts"
-  back_link_text = "Back"  # Text for the back button
-  force_theme = false  # false | "light" | "dark"
-  
-  # Post metadata display
-  show_word_count = true
-  show_reading_time = true
-  
-  # Date format (Go format)
-  date_format = "Jan 2, 2006"
-  
-  # === Footer License Configuration ===
-  # Options: "cc-by", "cc-by-sa", "cc-by-nc", "cc-by-nc-sa", "cc-by-nd", "cc-by-nc-nd", "copyright", "none"
-  # Default: "cc-by-nc-nd"
-  footer_license = "cc-by-nc-nd"
-  
-  # Copyright year and holder (used for "copyright" type or as fallback)
-  copyright_holder = "Your Name"
-  copyright_year = "2025"
-  
-  # === 404 pages ===
-  not_found_text = "404 Not Found"
-  not_found_message = "The page you're looking for doesn't exist."
-  not_found_recover_text = "⇽ back to home"
-  
-  # === RSS ===
-  generate_feeds = true
+# === Basic ===
+description = "A calm, accessible Hugo theme for the smolweb."
+bio = "A calm, accessible Hugo theme for the smolweb."
+blog_section_path = "/made"
+force_theme = false # false | "light" | "dark"
+use_runes = true    # runes (ᚢ, ᚨ, ᛁ…) as callout icons
+rune_icons = false  # rune glyphs before tags/categories/post metadata
+toc_markers = false # †/‡ markers before table-of-contents entries
+date_format = "Jan 2, 2006"
+# logo = "img/logo.svg" # optional: an SVG under assets/ for the header mark (use currentColor)
 
-# Sections for navigation
+# Absolute site URL (Gemini files link back to it) and, if you publish a
+# capsule, its gemini:// origin.
+site_url = "http://localhost:1313"
+# gemini_url = "gemini://gemini.example.org"
+
+# Post metadata
+show_word_count = true
+show_reading_time = true
+show_tags_in_list = false
+show_categories_in_list = false
+show_tags_in_post = true
+show_categories_in_post = true
+
+# === Footer colophon ===
+# "cc-by" | "cc-by-sa" | "cc-by-nc" | "cc-by-nc-sa" | "cc-by-nd" | "cc-by-nc-nd" | "copyright" | "none"
+footer_license = "cc-by-sa"
+# license_url = "https://example.org/LICENSE" # defaults to the Creative Commons deed
+copyright_holder = "Your Name" # year: $HUGO_COPYRIGHT_YEAR, else the build year
+
+# === 404 ===
+not_found_text = "404 Not Found"
+not_found_message = "The page you're looking for doesn't exist."
+not_found_recover_text = "⇽ back to home"
+
+# === Newsletter (Netlify form in the footer) ===
+newsletter_enabled = false
+# privacy_policy_url = "/privacy/"
+
+# === Analytics (GoatCounter, production builds only) ===
+# [params.goatcounter]
+# code = "your-code"
+
+# === Home river ("Lately") ===
+[params.river]
+enabled = true
+max_items = 5
+sections = ["made", "playlists", "margins", "found"]
+
+# === Margins (movies / music / books) ===
+[params.margins]
+show_view_switcher = true
+show_loved = true
+loved_threshold = 5   # rating ≥ N is "Loved" (also feeds /picks/atom.xml)
+default_loved = false # true: /margins/ opens filtered to Loved
+
+# === Playlists ===
+# Optional: split /playlists/ into curated mixes and a radio-broadcast calendar.
+# A page counts as radio when `source` contains `source`, the title starts
+# with `name`, or its file path contains `path`. Omit to treat all as mixes.
+# [params.playlists.radio]
+# name = "Radio Example"
+# source = "radio.example.org"
+# path = "-radio-example"
+
+# Section nav (Gemini index, fallback for home_nav)
 [[params.sections]]
-  name = "posts"
-  path = "/posts"
-  is_external = false
+name = "made"
+path = "/made"
 
 [[params.sections]]
-  name = "collections"
-  path = "/collections"
-  is_external = false
+name = "margins"
+path = "/margins"
 
 [[params.sections]]
-  name = "consumed"
-  path = "/consumed"
-  is_external = false
+name = "playlists"
+path = "/playlists"
 
 [[params.sections]]
-  name = "about"
-  path = "/about"
-  is_external = false
+name = "found"
+path = "/found"
+
+# Home "explore" index — one row per destination: emoji (greyscale until
+# hover), the section's title + description and its entry count. `name` is
+# an i18n key (falls back to the literal name).
+[[params.home_nav]]
+name = "made"
+path = "/made"
+emoji = "🪡"
+
+[[params.home_nav]]
+name = "margins"
+path = "/margins"
+emoji = "🫧"
+
+[[params.home_nav]]
+name = "playlists"
+path = "/playlists"
+emoji = "🪇"
+
+[[params.home_nav]]
+name = "found"
+path = "/found"
+emoji = "🪼"
+
+# Footer index — the target of the header's menu button. Also feeds the
+# command palette's "More" group.
+[params.footer]
+writing = [
+  { name = "allPosts", path = "/made" },
+  { name = "now", path = "/now" },
+  { name = "about", path = "/about" },
+]
+garden = [
+  { name = "margins", path = "/margins" },
+  { name = "playlists", path = "/playlists" },
+  { name = "found", path = "/found" },
+  { name = "picks", path = "/picks" },
+]
+legal = [
+  { name = "privacy", path = "/privacy" },
+]
+
+# Footer "Elsewhere" column. icon: github | bluesky | linkedin | mastodon | email | rss
+[[params.social]]
+name = "GitHub"
+url = "https://github.com/christiankopac/apacible-hugo-theme"
+icon = "github"
+
+[[params.social]]
+name = "Email"
+url = "mailto:you@example.org"
+icon = "email"

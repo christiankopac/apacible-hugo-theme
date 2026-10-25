@@ -2,7 +2,7 @@
 {{- $items := slice -}}
 {{- if $file -}}
   {{- $dataPath := replace (replace $file (path.Ext $file) "") "/" "." -}}
-  {{- with index .Site.Data $dataPath -}}
+  {{- with index hugo.Data $dataPath -}}
     {{- if .collection -}}
       {{- $items = .collection -}}
     {{- end -}}

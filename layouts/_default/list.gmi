@@ -25,8 +25,14 @@
 {{- with .OutputFormats.Get "HTML" -}}
   {{- $webURL = .Permalink -}}
 {{- else -}}
-  {{- $webURL = printf "%s%s" .Site.BaseURL .RelPermalink -}}
+  {{- $siteURL := .Site.Params.site_url | default .Site.BaseURL -}}
+  {{- $webURL = printf "%s%s" $siteURL .RelPermalink -}}
+{{- end -}}
+{{- /* Map gemini:// links back to the web origin (params.gemini_url → params.site_url). */ -}}
+{{- with .Site.Params.gemini_url -}}
+  {{- $siteURL := $.Site.Params.site_url | default $.Site.BaseURL -}}
+  {{- $webURL = replace $webURL . $siteURL -}}
+  {{- $webURL = replace $webURL (printf "https://%s" (strings.TrimPrefix "gemini://" .)) $siteURL -}}
 {{- end -}}
 {{- $webURL = replace $webURL "gemini://" "https://" -}}
 => {{ $webURL }} Web version
-

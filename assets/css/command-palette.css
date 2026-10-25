@@ -1,0 +1,240 @@
+/* ============================================================================
+   Command palette (⌘K / "/") — a frosted-glass quick-nav overlay.
+
+   Pure progressive enhancement: the markup is a native <dialog> emitted by
+   Hugo with real <a href> links inside, so even with JS disabled the items are
+   crawlable/usable if the dialog is ever shown; with JS it becomes a keyboard-
+   driven launcher. Theme-agnostic — every surface is color-mixed from the
+   active scheme's tokens, so all nine schemes × light/dark work untouched.
+   ========================================================================== */
+
+.cmdk {
+  /* Native dialog: we keep the UA modality (focus trap, Esc, inert backdrop)
+     and only restyle the box. */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+.cmdk::backdrop {
+  background: color-mix(in srgb, var(--color-bg) 35%, transparent);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  backdrop-filter: blur(6px) saturate(1.2);
+}
+
+/* Center the panel near the top-third, the conventional palette position. */
+.cmdk__panel {
+  position: absolute;
+  left: 50%;
+  top: clamp(3rem, 12vh, 8rem);
+  transform: translateX(-50%);
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: min(70vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  /* .lg-glass supplies the frosted fill, edge, sheen and shadow. */
+  overflow: hidden;
+}
+
+/* Entrance: a soft rise + fade. Disabled under reduced motion below. */
+.cmdk[open] .cmdk__panel {
+  animation: cmdk-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes cmdk-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.985); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+.cmdk__input {
+  appearance: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-system-ui);
+  font-size: 1.05rem;
+  line-height: 1.4;
+  padding: 1.05rem 1.2rem;
+  border-bottom: 1px solid var(--glass-edge);
+  width: 100%;
+  box-sizing: border-box;
+}
+.cmdk__input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+.cmdk__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.cmdk__group {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  padding: 0.7rem 0.85rem 0.35rem;
+  font-family: var(--font-monospace);
+}
+
+.cmdk__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.85rem;
+  border-radius: 11px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-family: var(--font-system-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cmdk__item[hidden] { display: none; }
+
+/* The roving selection — driven by JS via .is-active. Pointer hover also
+   highlights for parity. */
+.cmdk__item.is-active,
+.cmdk__item:hover {
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-text);
+}
+
+.cmdk__item-icon {
+  flex-shrink: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Color chip for the per-scheme actions. The --sw-bg / --sw-ac custom props
+   come from the .scheme-swatch__chip--<slug> classes in liquid-glass.css. */
+.cmdk__item-icon.scheme-chip {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  /* Same language as the popover swatches: the scheme's paper BACKGROUND as the
+     field, its ACCENT as a centred disc — so the chip previews the real scheme,
+     not a hard two-tone wedge. */
+  background:
+    radial-gradient(circle at 50% 46%,
+      var(--sw-ac, var(--color-accent)) 0 40%,
+      transparent 45%),
+    var(--sw-bg, var(--color-bg));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-text) 14%, transparent),
+    inset 0 1px 1px color-mix(in srgb, #ffffff 35%, transparent);
+  opacity: 1;
+}
+.cmdk__item-label { flex: 1 1 auto; min-width: 0; }
+.cmdk__item-hint {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  font-family: var(--font-monospace);
+}
+
+/* Full-text results (Pagefind): title + section on the first line, a one-line
+   excerpt with the matched words marked underneath. */
+.cmdk__item--page {
+  flex-wrap: wrap;
+  row-gap: 0.15rem;
+}
+.cmdk__item-excerpt {
+  flex: 1 0 100%;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmdk__item-excerpt mark {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  color: var(--color-text);
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+.cmdk__empty {
+  padding: 1.4rem 1.2rem;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  font-size: 0.92rem;
+}
+
+.cmdk__hints {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--glass-edge);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  opacity: 0.75;
+  flex-wrap: wrap;
+}
+.cmdk__hints kbd {
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  border: 1px solid var(--glass-edge);
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  margin-right: 0.3rem;
+}
+
+/* The opener in the utility dock: a plain magnifier, sized like its siblings.
+   The shortcut (⌘K / Ctrl K or /) lives in its title tooltip. */
+.cmdk-open {
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-base);
+}
+/* The base rule sets display, which would otherwise defeat the [hidden]
+   attribute (author display beats the UA [hidden] rule). Re-assert it so the
+   opener is genuinely gone for no-JS visitors until JS reveals it. */
+.cmdk-open[hidden] { display: none; }
+.cmdk-open:hover { opacity: 0.95; }
+.cmdk-open svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk[open] .cmdk__panel { animation: none; }
+}

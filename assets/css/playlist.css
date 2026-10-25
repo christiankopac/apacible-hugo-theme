@@ -377,3 +377,424 @@ article.post .content h1,
     width: 100%;
   }
 }
+
+.track-meta {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* ── Track shortcode ── */
+
+.playlist-track {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border, rgba(128,128,128,0.12));
+}
+
+.playlist-track:last-child {
+  border-bottom: none;
+}
+
+.track-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+.playlist-track.has-embed .track-header {
+  cursor: pointer;
+}
+
+.playlist-track.has-embed .track-header:hover .track-title {
+  opacity: 0.7;
+}
+
+.track-number {
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
+  opacity: 0.35;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.75rem;
+  text-align: right;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.track-art {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.track-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-title strong {
+  font-weight: 500;
+}
+
+.track-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+.track-buy,
+.track-discogs,
+.track-yt {
+  font-size: 0.625rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  text-decoration: none;
+  opacity: 0.4;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  color: var(--color-text-secondary);
+  position: relative; /* lift above the track expand overlay */
+  z-index: 1;
+}
+
+.track-buy:hover,
+.track-discogs:hover,
+.track-yt:hover {
+  opacity: 0.85;
+}
+
+.track-expand-icon {
+  font-size: 0.55rem;
+  opacity: 0.35;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+.playlist-track.has-embed .track-header[aria-expanded="true"] .track-expand-icon {
+  transform: rotate(90deg);
+}
+
+.track-notes {
+  margin: 0.5rem 0 0.25rem 2.375rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+.track-notes p:first-child { margin-top: 0; }
+.track-notes p:last-child { margin-bottom: 0; }
+
+.track-player {
+  margin: 0.625rem 0 0.25rem 2.375rem;
+}
+
+.track-player-nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.track-prev,
+.track-next {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  opacity: 0.45;
+  font: inherit;
+  font-size: 0.75rem;
+  transition: opacity 0.15s;
+}
+
+.track-prev:hover,
+.track-next:hover {
+  opacity: 0.9;
+}
+
+.track-embed-container {
+  max-width: 520px;
+}
+
+.track-embed-container iframe {
+  display: block;
+  width: 100%;
+  border: none;
+}
+
+/* Source link in playlist header */
+.playlist-source-link {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.playlist-source-link:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  .track-title {
+    white-space: normal;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   Playlist single — radio + mix variants.
+   Refines the existing .playlist-single header treatment and
+   adds: eyebrow, lead, screenshot artifact, prev/next nav.
+   ────────────────────────────────────────────────────────── */
+.playlist-single__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-block: 0 var(--space-2xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+}
+
+.playlist-single__header h1 {
+  margin: 0;
+  font-family: var(--font-transitional);
+  font-size: clamp(1.85rem, 1.5rem + 1.6vw, 2.55rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.playlist-single__eyebrow {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.playlist-single__eyebrow [aria-hidden="true"] { opacity: 0.5; }
+
+.playlist-single__lead {
+  margin: 0.4rem 0 0;
+  max-width: 58ch;
+  font-family: var(--font-transitional);
+  font-style: italic;
+  font-size: clamp(1.05rem, 0.95rem + 0.3vw, 1.18rem);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.playlist-single__sourcerow {
+  margin: 0.5rem 0 0;
+}
+
+.playlist-single__sourcerow .playlist-source-link {
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text-secondary) 35%, transparent);
+  padding-bottom: 0.1rem;
+  opacity: 0.85;
+  transition: color .2s ease, border-color .2s ease, opacity .2s ease;
+}
+
+.playlist-single__sourcerow .playlist-source-link:hover {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+  opacity: 1;
+}
+
+/* ── Screenshot artifact (radio only) ──
+   Secondary reference below the tracklist: small and quiet, the tracks lead. */
+.playlist-single__artifact {
+  max-width: 320px;
+  margin: var(--space-2xl) 0 0;
+  padding: 0;
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+.playlist-single__artifact:hover {
+  opacity: 1;
+}
+
+.playlist-single__artifact-link {
+  display: block;
+  text-decoration: none;
+  border-radius: 12px;
+}
+
+.playlist-single__artifact picture,
+.playlist-single__artifact img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.playlist-single__artifact img {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+  box-shadow: 0 12px 32px -18px color-mix(in srgb, var(--color-text) 55%, transparent);
+  filter: saturate(0.92) contrast(0.98);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+}
+
+[data-theme="dark"] .playlist-single__artifact img {
+  filter: saturate(0.82) brightness(0.92) contrast(1.02);
+}
+
+.playlist-single__artifact-link:hover img,
+.playlist-single__artifact-link:focus-visible img {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 42px -16px color-mix(in srgb, var(--color-text) 65%, transparent);
+}
+
+/* On large screens, center the scan under the tracklist. */
+@media (min-width: 900px) {
+  .playlist-single__artifact {
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playlist-single__artifact img,
+  .playlist-single__artifact { transition: none; }
+}
+
+/* Mix variant — drop the source link styling, treat like an article */
+.playlist-single--mix .playlist-single__lead {
+  font-size: clamp(1.1rem, 1rem + 0.4vw, 1.3rem);
+  color: var(--color-text);
+  opacity: 0.92;
+}
+
+/* ── Prev / Up / Next navigation ── */
+.playlist-single__nav {
+  clear: both;
+  margin-top: var(--space-3xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.playlist-single__nav-side {
+  display: flex;
+  min-width: 0;
+}
+
+.playlist-single__nav-side--right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playlist-single__nav-link {
+  display: inline-grid;
+  /* Three slots — arrow, label, date — in both prev and next. The slot
+     order in the template puts arrow at start (prev) or end (next), but
+     the column count is always three. */
+  grid-template-columns: auto auto auto;
+  align-items: baseline;
+  column-gap: 0.55rem;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+  transition: color .2s ease, opacity .2s ease;
+  min-width: 0;
+}
+
+.playlist-single__nav-link:hover { color: var(--color-text); opacity: 1; }
+
+.playlist-single__nav-arrow {
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  opacity: 0.6;
+  align-self: center;
+}
+
+.playlist-single__nav-link:hover .playlist-single__nav-arrow { opacity: 1; }
+
+.playlist-single__nav-label {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.playlist-single__nav-date {
+  display: block;
+  font-family: var(--font-transitional);
+  font-style: italic;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: oldstyle-nums tabular-nums;
+  white-space: nowrap;
+}
+
+.playlist-single__nav-up {
+  text-decoration: none;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  color: var(--color-text-secondary);
+  opacity: 0.75;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 0.1rem;
+  transition: color .2s ease, border-color .2s ease, opacity .2s ease;
+}
+
+.playlist-single__nav-up:hover {
+  color: var(--color-text);
+  border-bottom-color: color-mix(in srgb, var(--color-text) 50%, transparent);
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .playlist-single__nav {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    text-align: left;
+  }
+  .playlist-single__nav-side--right { justify-content: flex-start; text-align: left; }
+}
+
+/* Hide the legacy .post-meta block if any cached templates still ship it */
+.playlist-single .post-meta { display: none; }

@@ -1,0 +1,47 @@
+{{/* Utility dock: command palette · colour scheme · theme. Rendered once,
+     inside the site header; CSS turns it into a floating bottom dock on narrow
+     screens. (The language switcher was removed — Spanish pages still exist
+     but are no longer advertised.) */}}
+<div class="top-utility lg-glass">
+  {{/* CSS Naked Day: theme + color toggles control CSS-only state, so
+       they're nonsense when CSS is stripped. Omit during the window.
+       JS Naked Day: no JS at all, so toggles are inert HTML; hide them
+       too since they'd render as dead buttons. */}}
+  {{ $sd := partialCached "special-day.html" . }}
+  {{ $hideCssToggles := or $sd.cssNaked $sd.jsNaked }}
+  {{ if not $hideCssToggles }}
+  {{/* Command palette opener. Hidden until command-palette.js reveals it, so
+       no-JS visitors never see a non-functional control. */}}
+  <button type="button" class="cmdk-open" hidden aria-label="{{ i18n "cmdkTitle" | default "Open command palette" }}" title="{{ i18n "cmdkTitle" | default "Command palette" }} (⌘K / /)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </button>
+  <button id="color-scheme-toggle-top" type="button" popovertarget="scheme-popover" aria-label="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" title="{{ i18n "toggleColorScheme" | default "Toggle color scheme" }}" class="global-color-scheme-toggle">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16c3.3 0 6-2.7 6-6 0-4.7-4.5-8.6-10-8.6z"></path>
+    </svg>
+  </button>
+  <button id="theme-toggle-top" aria-label="{{ i18n "toggleTheme" | default "Toggle theme" }}" title="{{ i18n "toggleTheme" | default "Toggle theme" }}" class="global-theme-toggle">
+    <svg class="theme-icon theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg class="theme-icon theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+  {{ end }}
+</div>

@@ -1,0 +1,24 @@
+{{- /*
+  special-day partial — returns a dict of booleans for today's special-day
+  status, computed against the 50-hour UTC window each celebration uses.
+
+  - cssNaked: CSS Naked Day, Apr 8 10:00 UTC → Apr 10 12:00 UTC (css-naked-day.org)
+  - jsNaked:  JS Naked Day,  Apr 23 10:00 UTC → Apr 25 12:00 UTC (js-naked-day.org)
+  - towel:    Towel Day,     May 25 all day UTC (towelday.org)
+
+  Usage:
+    {{ $sd := partialCached "special-day.html" . }}
+    {{ if $sd.cssNaked }} ... {{ end }}
+*/ -}}
+{{- $now := now.UTC -}}
+{{- $year := $now.Format "2006" -}}
+{{- $cssStart := time.AsTime (printf "%s-04-08T10:00:00Z" $year) -}}
+{{- $cssEnd   := time.AsTime (printf "%s-04-10T12:00:00Z" $year) -}}
+{{- $jsStart  := time.AsTime (printf "%s-04-23T10:00:00Z" $year) -}}
+{{- $jsEnd    := time.AsTime (printf "%s-04-25T12:00:00Z" $year) -}}
+{{- $towelStart := time.AsTime (printf "%s-05-25T00:00:00Z" $year) -}}
+{{- $towelEnd   := time.AsTime (printf "%s-05-26T00:00:00Z" $year) -}}
+{{- $cssNaked := and (ge $now.Unix $cssStart.Unix) (lt $now.Unix $cssEnd.Unix) -}}
+{{- $jsNaked  := and (ge $now.Unix $jsStart.Unix)  (lt $now.Unix $jsEnd.Unix)  -}}
+{{- $towel    := and (ge $now.Unix $towelStart.Unix) (lt $now.Unix $towelEnd.Unix) -}}
+{{- return (dict "cssNaked" $cssNaked "jsNaked" $jsNaked "towel" $towel) -}}

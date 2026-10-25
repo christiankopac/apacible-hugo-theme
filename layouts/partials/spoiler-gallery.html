@@ -25,7 +25,7 @@
   {{/* Fallback to data file for backwards compatibility */}}
   {{ $dataPath := replace $file (path.Ext $file) "" }}
   {{ $dataPath = replace $dataPath "/" "." }}
-  {{ $data := index $context.Site.Data $dataPath }}
+  {{ $data := index hugo.Data $dataPath }}
   {{ if $data }}
     {{ if $data.images }}
       {{ $images = $data.images }}
@@ -77,19 +77,24 @@
         {{/* Get image resource from assets directory (for optimization) */}}
         {{ $imgPath := strings.TrimPrefix "/" $imgSrc }}
         {{ $img := resources.Get $imgPath }}
-        
+
         {{ if $img }}
+          {{ $origExt := path.Ext $imgPath }}
+          {{ $avifPath := replace $imgPath $origExt ".avif" }}
+          {{ $avifImg := resources.Get $avifPath }}
+
           {{/* Optimize image - resize to max width while preserving aspect ratio */}}
           {{ $optimizedImg := $img.Resize (printf "%sx q%s" $fullWidth $fullQuality) }}
           {{ $optimizedWebP := $img.Resize (printf "%sx webp q%s" $fullWidth $fullQuality) }}
-          {{ $optimizedAVIF := $img.Resize (printf "%sx avif q%s" $fullWidth $fullQuality) }}
-          
+
           <figure class="screenshot-item">
             <picture>
-              <source srcset="{{ $optimizedAVIF.RelPermalink }}" type="image/avif" width="{{ $optimizedAVIF.Width }}" height="{{ $optimizedAVIF.Height }}">
+              {{ if $avifImg }}
+              <source srcset="{{ $avifImg.RelPermalink }}" type="image/avif" width="{{ $img.Width }}" height="{{ $img.Height }}">
+              {{ end }}
               <source srcset="{{ $optimizedWebP.RelPermalink }}" type="image/webp" width="{{ $optimizedWebP.Width }}" height="{{ $optimizedWebP.Height }}">
-              <img src="{{ $optimizedImg.RelPermalink }}" 
-                   alt="{{ $imgAlt }}" 
+              <img src="{{ $optimizedImg.RelPermalink }}"
+                   alt="{{ $imgAlt }}"
                    width="{{ $optimizedImg.Width }}"
                    height="{{ $optimizedImg.Height }}"
                    loading="lazy"
@@ -102,8 +107,8 @@
         {{ else }}
           {{/* Fallback to direct path if not found in assets (e.g., in static) */}}
           <figure class="screenshot-item">
-            <img src="{{ $imgSrc | relURL }}" 
-                 alt="{{ $imgAlt }}" 
+            <img src="{{ $imgSrc | relURL }}"
+                 alt="{{ $imgAlt }}"
                  loading="lazy"
                  decoding="async">
             {{ if $imgCaption }}

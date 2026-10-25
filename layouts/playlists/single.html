@@ -1,23 +1,109 @@
 {{ define "content" }}
-<article class="post playlist-single">
-  <header>
+{{/* Detect kind — same heuristic as the list page (params.playlists.radio) */}}
+{{ $radioCfg := (site.Params.playlists | default dict).radio | default dict }}
+{{ $isRadio := partial "playlist-is-radio.html" . }}
+
+{{/* Kind-aware prev/next: navigate between playlists of the same kind only.
+     Build the list of same-kind pages, find current, look at neighbours. */}}
+{{ $allPL := where .Site.RegularPages "Section" "playlists" }}
+{{ $allPL = $allPL.ByDate.Reverse }}
+{{ $sameKind := slice }}
+{{ range $allPL }}
+  {{ $r := partial "playlist-is-radio.html" . }}
+  {{ if eq $r $isRadio }}{{ $sameKind = $sameKind | append . }}{{ end }}
+{{ end }}
+{{ $prevPage := "" }}{{ $nextPage := "" }}
+{{ $cur := .RelPermalink }}
+{{ range $i, $p := $sameKind }}
+  {{ if eq $p.RelPermalink $cur }}
+    {{ if lt $i (sub (len $sameKind) 1) }}{{ $prevPage = index $sameKind (add $i 1) }}{{ end }}
+    {{ if gt $i 0 }}{{ $nextPage = index $sameKind (sub $i 1) }}{{ end }}
+  {{ end }}
+{{ end }}
+
+<article class="post playlist-single {{ if $isRadio }}playlist-single--radio{{ else }}playlist-single--mix{{ end }}">
+  <header class="playlist-single__header">
+    {{ if $isRadio }}
+      <p class="playlist-single__eyebrow">
+        <span>{{ replace ($radioCfg.name | default "Radio") " " "&nbsp;" | safeHTML }}</span>
+        <span aria-hidden="true">·</span>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Mon · 2 Jan 2006" }}</time>
+      </p>
+    {{ else }}
+      <p class="playlist-single__eyebrow">
+        <span>Curated mix</span>
+        <span aria-hidden="true">·</span>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2006" }}</time>
+      </p>
+    {{ end }}
+
     <h1>{{ .Title }}</h1>
-    <div class="post-meta">
-      <div class="post-meta-left">
-      </div>
-      <div class="post-meta-right">
-        {{ with .Date }}
-          {{ $dateFormatted := .Format "January 2006" }}
-          {{ if ne $dateFormatted $.Title }}
-            <time datetime="{{ .Format "2006-01-02" }}">{{ $dateFormatted }}</time>
-          {{ end }}
+
+    {{ with .Description }}<p class="playlist-single__lead">{{ . }}</p>{{ end }}
+
+    {{ if or .Params.source .Params.buymusicclub }}
+      <p class="playlist-single__sourcerow">
+        {{ with .Params.source }}
+          <a href="{{ . }}" class="playlist-source-link" rel="noopener" target="_blank">source ↗</a>
         {{ end }}
-      </div>
-    </div>
+        {{ with .Params.buymusicclub }}
+          <a href="{{ . }}" class="playlist-source-link playlist-source-link--bmc" rel="noopener" target="_blank">Buy Music Club ↗</a>
+        {{ end }}
+      </p>
+    {{ end }}
   </header>
 
   <div class="content">
     {{ .Content }}
   </div>
+
+  {{/* Radio: the original program scan. The tracklist is the primary content,
+       so the scan lives BELOW it as a small, secondary reference that links out
+       to the live listing. Captionless — the alt text + link title carry it. */}}
+  {{ if $isRadio }}
+    {{ with .Params.image }}
+      {{ $img := resources.Get (strings.TrimPrefix "/" .) }}
+      {{ if $img }}
+        {{ $w := $img.Resize "560x webp q85" }}
+        {{ $j := $img.Resize "560x q85" }}
+        {{ $src := $.Params.source }}
+        <figure class="playlist-single__artifact">
+          {{ if $src }}<a class="playlist-single__artifact-link" href="{{ $src }}" rel="noopener" target="_blank" title="Open the original {{ with $radioCfg.source }}{{ . }} {{ end }}program listing">{{ end }}
+          <picture>
+            <source type="image/webp" srcset="{{ $w.RelPermalink }}">
+            <img src="{{ $j.RelPermalink }}"
+                 alt="Original {{ with $radioCfg.source }}{{ . }} {{ end }}program listing, {{ $.Date.Format "2 January 2006" }}"
+                 width="{{ $w.Width }}" height="{{ $w.Height }}"
+                 loading="lazy" decoding="async">
+          </picture>
+          {{ if $src }}</a>{{ end }}
+        </figure>
+      {{ end }}
+    {{ end }}
+  {{ end }}
+
+  {{/* Kind-aware prev/next navigation (radio↔radio, mix↔mix only) */}}
+  <nav class="playlist-single__nav" data-pagefind-ignore aria-label="{{ if $isRadio }}Broadcast{{ else }}Mix{{ end }} navigation">
+    <div class="playlist-single__nav-side">
+      {{ with $prevPage }}
+        <a class="playlist-single__nav-link" href="{{ .RelPermalink }}" rel="prev">
+          <span class="playlist-single__nav-arrow" aria-hidden="true">←</span>
+          <span class="playlist-single__nav-label">Earlier</span>
+          <span class="playlist-single__nav-date">{{ .Date.Format "2 Jan 2006" }}</span>
+        </a>
+      {{ end }}
+    </div>
+    <a class="playlist-single__nav-up" href="/playlists/">All&nbsp;{{ if $isRadio }}broadcasts{{ else }}mixes{{ end }}</a>
+    <div class="playlist-single__nav-side playlist-single__nav-side--right">
+      {{ with $nextPage }}
+        <a class="playlist-single__nav-link" href="{{ .RelPermalink }}" rel="next">
+          <span class="playlist-single__nav-label">Later</span>
+          <span class="playlist-single__nav-date">{{ .Date.Format "2 Jan 2006" }}</span>
+          <span class="playlist-single__nav-arrow" aria-hidden="true">→</span>
+        </a>
+      {{ end }}
+    </div>
+  </nav>
+  {{ if templates.Exists "partials/backlinks.html" }}{{ partial "backlinks.html" . }}{{ end }}
 </article>
 {{ end }}

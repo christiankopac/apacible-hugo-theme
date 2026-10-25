@@ -32,7 +32,7 @@
 {{ $images := slice }}
 
 {{ if $file }}
-  {{ $data := index .Site.Data (strings.TrimSuffix (path.Ext $file) (path.Base $file)) }}
+  {{ $data := index hugo.Data (strings.TrimSuffix (path.Ext $file) (path.Base $file)) }}
   {{ if $data }}
     {{ $images = $data.images }}
   {{ end }}

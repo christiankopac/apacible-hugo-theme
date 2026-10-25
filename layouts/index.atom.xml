@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  {{- $eligible := where .Site.RegularPages "Section" "in" (slice "posts" "picks") -}}
-  {{- $pages := first 20 ($eligible.ByLastmod.Reverse) -}}
+  {{- /* River feed: mixed activity across the four content sections. */ -}}
+  {{- $eligible := where .Site.RegularPages "Section" "in" (slice "made" "playlists" "margins" "found") -}}
+  {{- $pages := first 30 ($eligible.ByDate.Reverse) -}}
   {{- $self := .OutputFormats.Get "Atom" -}}
   {{- $html := .OutputFormats.Get "HTML" -}}
-  <title>{{ .Site.Title }}</title>
+  {{- /* Hugo's smart-quote rendering emits HTML entities like &rsquo;
+         which are valid HTML but NOT predefined in XML. Anywhere outside
+         a CDATA section, we must decode HTML entities to Unicode and then
+         re-escape for XML. The helper below does that round-trip. */ -}}
+  {{- $owner := .Site.Params.copyright_holder | default .Site.Title -}}
+  <title>{{ printf (i18n "feedTitleAll" | default "%s") $owner | htmlUnescape | transform.XMLEscape }}</title>
   <id>{{ with $html }}{{ .Permalink }}{{ else }}{{ .Permalink }}{{ end }}</id>
   <updated>{{ with index $pages 0 }}{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}{{ else }}{{ now.UTC.Format "2006-01-02T15:04:05Z07:00" }}{{ end }}</updated>
   {{- with $self }}
@@ -14,12 +20,12 @@
   <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
   {{- end }}
   {{- with .Site.Params.description }}
-  <subtitle>{{ . | plainify }}</subtitle>
+  <subtitle>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</subtitle>
   {{- end }}
   <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
   {{- range $pages }}
   <entry>
-    <title>{{ .Title }}</title>
+    <title>{{ .Title | htmlUnescape | transform.XMLEscape }}</title>
     <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
     <id>{{ .Permalink }}</id>
     <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
@@ -27,15 +33,37 @@
     <published>{{ .Format "2006-01-02T15:04:05Z07:00" }}</published>
     {{- end }}
     <author>
-      <name>{{ with .Params.author }}{{ . }}{{ else }}{{ $.Site.Title }}{{ end }}</name>
+      <name>{{ with .Params.author }}{{ . | htmlUnescape | transform.XMLEscape }}{{ else }}{{ $.Site.Title | htmlUnescape | transform.XMLEscape }}{{ end }}</name>
     </author>
     {{- with .Params.description }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
     {{- else }}{{ with .Summary }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
     {{- end }}{{ end }}
-    <content type="html"><![CDATA[{{ .Content | safeHTML }}]]></content>
+    {{- /* Thumbnail: run originals through .Resize so the URL points at
+           a file Hugo actually publishes (originals in /assets/ aren't
+           copied unless transformed). External URLs pass through. */}}
+    {{- $img := .Params.img | default .Params.image }}
+    {{- $imgURL := "" }}
+    {{- $imgType := "image/jpeg" }}
+    {{- if $img }}
+      {{- if hasPrefix $img "http" }}
+        {{- $imgURL = $img }}
+        {{- $ext := path.Ext $imgURL | lower }}
+        {{- if eq $ext ".png" }}{{ $imgType = "image/png" }}{{ else if eq $ext ".webp" }}{{ $imgType = "image/webp" }}{{ else if eq $ext ".gif" }}{{ $imgType = "image/gif" }}{{ else if eq $ext ".avif" }}{{ $imgType = "image/avif" }}{{ end }}
+      {{- else }}
+        {{- $imgRes := resources.Get (strings.TrimPrefix "/" $img) }}
+        {{- if $imgRes }}
+          {{- $thumb := $imgRes.Resize "800x webp q85" }}
+          {{- $imgURL = $thumb.Permalink }}
+          {{- $imgType = "image/webp" }}
+        {{- else }}
+          {{- $imgURL = $img | absURL }}
+        {{- end }}
+      {{- end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ if $imgURL }}<p><img src="{{ $imgURL }}" alt="{{ .Title }}" /></p>{{ end }}{{ .Content | safeHTML }}]]></content>
   </entry>
   {{- end }}
 </feed>
-

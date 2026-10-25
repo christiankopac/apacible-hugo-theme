@@ -1,0 +1,146 @@
+{{ define "content" }}
+<section class="found-section">
+  <header class="found-header">
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="section-description">{{ . }}</p>{{ end }}
+  </header>
+
+  {{ $items := where .Site.RegularPages "Section" "found" }}
+  {{ $items = $items.ByDate.Reverse }}
+
+  {{/* Collections — curated groupings (multi-valued front-matter `collections`).
+       Count usages so we can sort by popularity and skip empty edge cases. */}}
+  {{ $collectionCount := dict }}
+  {{ range $items }}
+    {{ range .Params.collections }}
+      {{ $c := . | lower }}
+      {{ if $c }}
+        {{ $collectionCount = merge $collectionCount (dict $c (add (index $collectionCount $c | default 0) 1)) }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  {{ $collections := slice }}
+  {{ range $c, $_ := $collectionCount }}{{ $collections = $collections | append $c }}{{ end }}
+  {{ $collections = sort $collections }}
+
+  {{/* Years (descending) — for the year filter */}}
+  {{ $yearsMap := dict }}
+  {{ range $items }}
+    {{ $y := .Date.Format "2006" }}
+    {{ if $y }}{{ $yearsMap = merge $yearsMap (dict $y true) }}{{ end }}
+  {{ end }}
+  {{ $yearsRaw := slice }}
+  {{ range $y, $_ := $yearsMap }}{{ $yearsRaw = $yearsRaw | append (int $y) }}{{ end }}
+  {{ $yearsRaw = sort $yearsRaw }}
+  {{ $years := slice }}
+  {{ $len := len $yearsRaw }}
+  {{ range $i := seq $len }}
+    {{ $idx := sub $len $i }}
+    {{ $years = $years | append (printf "%d" (index $yearsRaw $idx)) }}
+  {{ end }}
+
+  {{/* Tag chips — every tag other than "github" becomes a filter. We collect
+       counts so we can keep just the most-used ones (avoids 50+ chips). */}}
+  {{ $tagCount := dict }}
+  {{ range $items }}
+    {{ range .Params.tags }}
+      {{ $t := . | lower }}
+      {{ if ne $t "github" }}
+        {{ $tagCount = merge $tagCount (dict $t (add (index $tagCount $t | default 0) 1)) }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  {{/* Threshold: show chips only for tags used by at least N entries. */}}
+  {{ $tagThreshold := 3 }}
+  {{ $tags := slice }}
+  {{ range $t, $c := $tagCount }}
+    {{ if ge $c $tagThreshold }}
+      {{ $tags = $tags | append $t }}
+    {{ end }}
+  {{ end }}
+  {{ $tags = sort $tags }}
+
+  {{ if gt (len $items) 0 }}
+    <div class="collection-wrapper">
+      {{ if gt (len $collections) 0 }}
+        <nav class="found-collections" aria-label="Collections">
+          <h2 class="found-collections-label">collections</h2>
+          <ul class="found-collections-list">
+            {{ range $collections }}
+              {{ $count := index $collectionCount . }}
+              <li>
+                <a href="{{ printf "/collections/%s/" . | relLangURL }}">
+                  <span class="found-collection-name">{{ . }}</span>
+                  <span class="found-collection-count">{{ $count }}</span>
+                </a>
+              </li>
+            {{ end }}
+          </ul>
+        </nav>
+      {{ end }}
+
+      {{ partial "collection-filters.html" (dict
+        "categories" $tags
+        "years" $years
+        "allLabel" "all"
+      ) }}
+
+      <ol class="found-ledger" data-filterable="category year">
+        {{ range $items }}
+          {{ $itemYear := .Date.Format "2006" }}
+          {{/* Pick the primary non-github tag as the data-category (drives the chip filter) */}}
+          {{ $primaryTag := "" }}
+          {{ range .Params.tags }}
+            {{ $t := . | lower }}
+            {{ if and (ne $t "github") (eq $primaryTag "") }}
+              {{ $primaryTag = $t }}
+            {{ end }}
+          {{ end }}
+          {{ $host := "" }}
+          {{ with .Params.link }}
+            {{ $h := . | strings.TrimPrefix "https://" | strings.TrimPrefix "http://" }}
+            {{ $host = index (split $h "/") 0 | strings.TrimPrefix "www." }}
+          {{ end }}
+          <li class="found-row collection-item"
+              data-year="{{ $itemYear }}"
+              {{ with $primaryTag }}data-category="{{ . }}"{{ end }}>
+            <div class="found-main">
+              <h2 class="found-title">
+                {{/* referrerpolicy override: the global Referrer-Policy
+                     (netlify.toml) sends origin-only on cross-origin clicks.
+                     For /found/ links specifically we WANT the destination
+                     to see the full source URL — that's the whole point of
+                     a linklog. */}}
+                <a href="{{ .Params.link }}" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade">
+                  {{ .Title }}
+                </a>
+              </h2>
+              {{ with .Content }}
+                <div class="found-take">{{ . }}</div>
+              {{ end }}
+              {{/* Tiny health line for GitHub-sourced entries */}}
+              {{ if eq (.Params.via | default "") "github" }}
+                <div class="found-health">
+                  {{ with .Params.params }}
+                    {{ with .stars }}<span class="found-stars" title="stars">★ {{ . }}</span>{{ end }}
+                    {{ with .last_push }}<span class="found-pushed" title="last push">↻ {{ . }}</span>{{ end }}
+                    {{ if .archived }}<span class="found-archived" title="archived">archived</span>{{ end }}
+                  {{ end }}
+                </div>
+              {{ end }}
+            </div>
+            <aside class="found-meta">
+              {{ with $host }}<span class="found-host">{{ . }}</span>{{ end }}
+              {{ with .Params.via }}<span class="found-via">via {{ . }}</span>{{ end }}
+              <time class="found-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>
+              <a class="found-permalink" href="{{ .RelPermalink }}" title="Permalink to this entry">¶</a>
+            </aside>
+          </li>
+        {{ end }}
+      </ol>
+    </div>
+  {{ else }}
+    <p><em>Nothing found yet.</em></p>
+  {{ end }}
+</section>
+{{ end }}

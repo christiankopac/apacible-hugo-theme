@@ -1,5 +1,40 @@
 /* Typography - Modern Font Stacks with Fluid Sizing and Tokens */
 
+/* Maple Mono (SIL OFL 1.1, see /fonts/maple-mono/OFL.txt) — self-hosted
+   static cuts from the official v7.9 release; the upstream variable build
+   ships TTF only, so four woff2 statics are lighter than one variable TTF. */
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/maple-mono/MapleMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/maple-mono/MapleMono-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/maple-mono/MapleMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/maple-mono/MapleMono-BoldItalic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* System UI for interface elements */
 :root {
   --font-system-ui: system-ui, sans-serif;
@@ -10,7 +45,7 @@
   --font-old-style: 'Old Style', 'Baskerville', 'Palatino', 'Times New Roman', serif;
   
   /* Monospace for code */
-  --font-monospace: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  --font-monospace: 'Maple Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
   
   /* Modern Typographic Scale - Perfect Fourth (1.333) */
   /* This creates a harmonious visual hierarchy following the ratio: 1.333 */
@@ -242,8 +277,9 @@ blockquote {
   font-family: var(--font-monospace);
 }
 
+/* Inline code follows the surrounding text size. */
 code {
-  font-size: 0.875em; /* sm scale */
+  font-size: 0.85em;
   padding: 0.2em 0.4em;
   background: unset;
   border-radius: 3px;
@@ -255,8 +291,16 @@ pre {
   margin: 1.5em 0;
   background: #1a1a1a !important;
   border-radius: 4px;
-  line-height: 1.5;
   position: relative;
+}
+
+/* Single source of truth for block code size. 0.5rem tracks the fluid root
+   (16px → 20px), so code lands in the requested 8–10px band: 8px on phones,
+   10px on wide screens. Mermaid sources are excluded — diagrams get their
+   font from mermaid-init.js. */
+pre:not(.mermaid) {
+  font-size: 0.5rem;
+  line-height: 1.65;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -265,7 +309,9 @@ pre {
   }
 }
 
+/* Undo the inline-code em scaling so blocks stay at the pre's size. */
 pre code {
+  font-size: inherit;
   padding: 0;
   background: transparent;
 }

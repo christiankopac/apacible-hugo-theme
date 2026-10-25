@@ -1,46 +1,5 @@
-/* Back to top button - Modern CSS with tokens */
-
-/* Inline back to top - visible only on small screens */
-.back-to-top-inline {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-block-start: var(--space-md);
-  margin-block-end: var(--space-sm);
-  padding-block: var(--space-sm);
-  border-top: 1px solid var(--color-border);
-}
-
-.back-to-top-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-normal);
-  opacity: var(--opacity-subtle);
-  transition: opacity var(--transition-base), transform var(--transition-base);
-  padding: var(--space-xs) var(--space-md);
-  border-radius: 4px;
-}
-
-.back-to-top-link:hover {
-  opacity: var(--opacity-full);
-  transform: translateY(-2px);
-}
-
-.back-to-top-link svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Hide inline back to top on large screens with TOC */
-@media (min-width: 940px) {
-  .back-to-top-inline {
-    display: none;
-  }
-}
+/* Fixed back-to-top button (wide screens). The always-available "↑ Top"
+   link lives in the footer colophon (footer.html). */
 
 /* Fixed back to top button - aligned with TOC */
 /* Hidden on small screens, only show on tablets and above */

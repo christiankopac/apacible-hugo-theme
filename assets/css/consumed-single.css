@@ -252,7 +252,7 @@
 }
 
 .consumed-page-content {
-  overflow: hidden; /* Contain floated elements */
+  display: flow-root; /* Contain floated elements without creating stacking context */
 }
 
 .consumed-page-content > *:first-child {

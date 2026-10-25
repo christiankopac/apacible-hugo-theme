@@ -179,9 +179,10 @@ section.blog header h1 {
 .post-preview .featured-marker {
   color: var(--color-accent);
   margin-right: 0.375rem;
-  font-size: 0.6875rem;
-  opacity: 0.5;
-  font-weight: 400;
+  opacity: 0.6;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 
 .post-preview .post-meta {
@@ -400,15 +401,25 @@ section.blog header h1 {
 }
 
 @media (max-width: 640px) {
+  /* Stack the date under the title: beside it, the date column squeezed
+     titles to ~60% of the line and they wrapped after two or three words. */
   .posts {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
   }
 
-  .post-preview {
-    grid-template-columns: subgrid;
-    align-items: baseline;
-    gap: var(--space-base);
-    padding: var(--space-sm) 0;
+  /* Same selectors as the base rule, which otherwise outranks this one. */
+  .post-preview,
+  .blog .post-preview {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--space-xs);
+    padding-block: var(--space-md);
+  }
+
+  /* The template always emits .post-meta-left; empty, its flex gap would
+     indent the date. */
+  .post-preview .post-meta .post-meta-left:not(:has(*)) {
+    display: none;
   }
 
   .post-preview:first-child {
@@ -421,6 +432,7 @@ section.blog header h1 {
   }
 
   .post-preview .post-meta {
+    justify-content: flex-start;
     font-size: var(--font-size-sm);
   }
 
@@ -430,6 +442,20 @@ section.blog header h1 {
 }
 
 /* Post page styles - focused reading */
+
+/* One reading column for the whole article. 46em of body text (~85ch)
+   follows Lea Verou's 50rem column (~48em of her body text); header, tags
+   and comments share it so title, text and tags start on the same edge. */
+.post {
+  --post-measure: calc(46 * var(--font-size-lg)); /* = 46em at .content size */
+}
+
+.post > :is(header, .outdate-alert, .post-footer, .giscus-container, .backlinks),
+.post .toc-sidebar {
+  max-width: var(--post-measure);
+  margin-inline: auto;
+}
+
 .post header {
   margin-bottom: var(--space-md);
   padding-bottom: 0;
@@ -1073,8 +1099,56 @@ section.blog header h1 {
   width: 100%;
 }
 
-/* Top-level items - symbol before link */
-.post .toc .toc-content ul > li > a::before {
+/* Collapsible sections (toc.js): an h2 entry with nested h3+ shows a ▸
+   toggle; the nested list is folded unless the section is current (you're
+   reading it) or opened by hand. The right-side lines fold the same way. */
+.post .toc .toc-content li.toc-has-children {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.25rem;
+}
+.post .toc .toc-content li.toc-has-children > ul {
+  grid-column: 1 / -1;
+  display: none;
+}
+.post .toc .toc-content li.toc-has-children:is(.is-open, .is-current) > ul {
+  display: block;
+}
+.post .toc .toc-disclosure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.post .toc .toc-disclosure::before {
+  content: "▸";
+}
+.post .toc .toc-disclosure[aria-expanded="true"] {
+  transform: rotate(90deg);
+}
+.post .toc .toc-disclosure:hover,
+.post .toc .toc-disclosure:focus-visible {
+  color: var(--color-accent);
+}
+.post .toc .toc-disclosure:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Top-level items - optional dagger marker, opt-in via params.toc_markers
+   (body[data-toc-markers]). Off by default: indentation conveys hierarchy. */
+[data-toc-markers] .post .toc .toc-content ul > li > a::before {
   content: "† ";
   opacity: 0.4;
   margin-right: 0.5rem;
@@ -1086,7 +1160,7 @@ section.blog header h1 {
 }
 
 /* Nested items (all levels) - all use double dagger */
-.post .toc .toc-content ul ul li > a::before {
+[data-toc-markers] .post .toc .toc-content ul ul li > a::before {
   content: "‡ ";
   opacity: 0.35;
   margin-right: 0.5rem;
@@ -1370,7 +1444,7 @@ section.blog header h1 {
   font-size: var(--font-size-lg);
   line-height: var(--line-height-2xl);
   color: var(--color-text);
-  max-width: 80ch;
+  max-width: var(--post-measure);
   margin-left: auto;
   margin-right: auto;
 }
@@ -1461,11 +1535,6 @@ section.blog header h1 {
   }
 }
 
-/* Ensure mermaid diagrams have transparent background */
-.post .content pre.mermaid {
-  background: transparent !important;
-}
-
 .post .content pre code,
 .post .content pre[style*="background"],
 .post .content code[style*="background"] {
@@ -1548,7 +1617,6 @@ section.blog header h1 {
   margin-top: var(--space-xl);
   padding-top: 0;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -1627,7 +1695,6 @@ section.blog header h1 {
 .post .giscus-container {
   border-top: 1px solid var(--color-border);
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 

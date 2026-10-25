@@ -50,11 +50,68 @@ figure.responsive-image .image-container .dithered-img,
   /* Alternative blend modes to try: soft-light, color-burn, darken */
 }
 
+/* Ensure dithered images in consumed page content maintain blend mode */
+/* Apply blend mode to the figure element to work around overflow: hidden stacking context */
+.consumed-page-content figure.responsive-image:has(.dithered-img),
+.consumed-content-section figure.responsive-image:has(.dithered-img) {
+  mix-blend-mode: color-burn;
+  isolation: auto;
+}
+
+/* Fallback for browsers without :has() support - apply blend mode directly to image */
+@supports not selector(:has(*)) {
+  .consumed-page-content .dithered-img,
+  .consumed-content-section .dithered-img {
+    mix-blend-mode: color-burn !important;
+    opacity: 0.85 !important;
+  }
+}
+
+.consumed-page-content .dithered-img,
+.consumed-content-section .dithered-img {
+  mix-blend-mode: normal !important; /* Set to normal when parent figure has blend mode */
+  opacity: 0.85 !important;
+}
+
+/* Remove isolation from image-container to allow blending with background */
+.consumed-page-content figure.responsive-image .image-container,
+.consumed-content-section figure.responsive-image .image-container {
+  isolation: auto !important;
+}
+
 @media (prefers-color-scheme: dark) {
   figure.responsive-image .image-container .dithered-img,
   .dithered-img {
     mix-blend-mode: luminosity; /* Better for dark backgrounds */
     opacity: 0.9;
+  }
+  
+  /* Ensure dithered images in consumed page content maintain blend mode in dark mode */
+  .consumed-page-content figure.responsive-image:has(.dithered-img),
+  .consumed-content-section figure.responsive-image:has(.dithered-img) {
+    mix-blend-mode: luminosity;
+    isolation: auto;
+  }
+  
+  /* Fallback for browsers without :has() support */
+  @supports not selector(:has(*)) {
+    .consumed-page-content .dithered-img,
+    .consumed-content-section .dithered-img {
+      mix-blend-mode: luminosity !important;
+      opacity: 0.9 !important;
+    }
+  }
+  
+  .consumed-page-content .dithered-img,
+  .consumed-content-section .dithered-img {
+    mix-blend-mode: normal !important; /* Set to normal when parent figure has blend mode */
+    opacity: 0.9 !important;
+  }
+  
+  /* Remove isolation from image-container in dark mode */
+  .consumed-page-content figure.responsive-image .image-container,
+  .consumed-content-section figure.responsive-image .image-container {
+    isolation: auto !important;
   }
 }
 
@@ -229,6 +286,17 @@ picture.responsive-image img {
 img[loading="lazy"] {
   /* Prevent layout shift during lazy loading */
   min-height: 200px;
+}
+
+/* Exception: Music images in consumed list should not have min-height */
+.consumed-poster-image-container[data-category="music"] img[loading="lazy"] {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+/* Exception: Playlist track art thumbnails have fixed size */
+.track-art[loading="lazy"] {
+  min-height: 0;
 }
 
 img[loading="lazy"]:not([src]) {

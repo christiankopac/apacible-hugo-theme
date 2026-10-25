@@ -1,0 +1,77 @@
+{{ $n := .Get "n" | default (add .Ordinal 1) }}
+{{ $embed := .Get "embed" }}
+{{ $img := .Get "img" }}
+{{ $youtube := .Get "youtube" }}
+{{/* `youtube` accepts either a plain video ID (~11 chars, no slashes)
+     OR a full URL (e.g. a search URL used as a fallback). For an ID we
+     build the no-cookie embed URL; for a URL we leave the link as-is
+     and skip the embed (search pages don't embed). */}}
+{{ $ytIsUrl := false }}
+{{ if and $youtube (or (in $youtube "://") (in $youtube "/")) }}
+  {{ $ytIsUrl = true }}
+{{ end }}
+{{ $ytEmbed := "" }}
+{{ if and $youtube (not $embed) (not $ytIsUrl) }}
+  {{/* Inline embed uses YouTube's own privacy-friendly variant — public
+       Invidious instances frequently block embedding or go offline, so
+       reliability wins for the inline player. The outbound YT pill
+       still routes through Invidious for click-through privacy. */}}
+  {{ $ytEmbed = printf "https://www.youtube-nocookie.com/embed/%s?rel=0" $youtube }}
+{{ end }}
+{{ $ytLink := "" }}
+{{ if $youtube }}
+  {{ if $ytIsUrl }}
+    {{ $ytLink = $youtube }}
+  {{ else }}
+    {{/* Plain video ID → route through Invidious instead of youtube.com.
+         Pill label stays "YT" for user familiarity. */}}
+    {{ $ytLink = printf "https://redirect.invidious.io/watch?v=%s" $youtube }}
+  {{ end }}
+{{ end }}
+{{ $activeEmbed := or $embed $ytEmbed }}
+{{/* If .Inner is just "NN plays" (how the listenbrainz plugin emits the
+     play count), we render it inline as a .track-plays element next to
+     the title — matching the .kc-tow-plays affordance on album rows. */}}
+{{ $innerTrim := trim .Inner " \n\t\r" }}
+{{ $playsMatch := findRE `^(\d[\d,]*)\s+plays?$` $innerTrim 1 }}
+{{ $inlinePlays := "" }}
+{{ if $playsMatch }}{{ $inlinePlays = index (findRE `\d[\d,]*` (index $playsMatch 0)) 0 }}{{ end }}
+<div class="playlist-track has-art{{ if $activeEmbed }} has-embed{{ end }}" data-track="{{ $n }}"{{ if $activeEmbed }} data-embed="{{ $activeEmbed }}"{{ end }}>
+  {{ if $activeEmbed -}}
+  <button class="track-header" aria-expanded="false">
+  {{- else -}}
+  <div class="track-header">
+  {{- end }}
+    <span class="track-number">{{ printf "%02d" (int $n) }}</span>
+    {{ if $img }}<img src="{{ $img }}" alt="{{ .Get "album" }}" class="track-art" loading="lazy" width="56" height="56">{{ else }}<span aria-hidden="true"></span>{{ end }}
+    {{ $displayTitle := .Get "track" | default (.Get "album") }}
+    {{ $label := .Get "label" }}
+    {{ $year := .Get "year" }}
+    <span class="track-title"><strong>{{ .Get "artist" }}</strong> — {{ $displayTitle }}{{ if or $label $year }} <span class="track-meta">({{ $label }}{{ if and $label $year }}, {{ end }}{{ $year }})</span>{{ end }}</span>
+    <span class="track-plays{{ if not $inlinePlays }} track-plays--empty{{ end }}">{{ if $inlinePlays }}{{ $inlinePlays }}<small> plays</small>{{ end }}</span>
+    <span class="track-actions" data-pagefind-ignore>
+      {{ if .Get "bandcamp" }}
+        <a href="{{ .Get "bandcamp" }}" class="track-buy" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade">BC</a>
+      {{ end }}
+      {{ if .Get "discogs" }}
+        <a href="{{ .Get "discogs" }}" class="track-discogs" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade">DC</a>
+      {{ end }}
+      {{ if $ytLink }}
+        <a href="{{ $ytLink }}" class="track-yt" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade">YT</a>
+      {{ end }}
+      {{ if $activeEmbed }}<span class="track-expand-icon" aria-hidden="true">▶</span>{{ end }}
+    </span>
+  {{ if $activeEmbed -}}
+  </button>
+  {{- else -}}
+  </div>
+  {{- end }}
+  {{ if and .Inner (not $inlinePlays) }}<div class="track-notes">{{ .Inner | markdownify }}</div>{{ end }}
+  {{ if $activeEmbed }}
+  <div class="track-player" hidden data-pagefind-ignore>
+    <button class="track-prev" aria-label="Previous track" title="Previous track">←</button>
+    <div class="track-embed-container"></div>
+    <button class="track-next" aria-label="Next track" title="Next track">→</button>
+  </div>
+  {{ end }}
+</div>

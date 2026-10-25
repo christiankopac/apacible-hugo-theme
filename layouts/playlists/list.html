@@ -1,42 +1,349 @@
 {{ define "content" }}
-<article class="prose">
-  <header>
-    <h1>{{ .Title }}</h1>
-    {{ with .Description }}
-      <p>{{ . }}</p>
+<article class="prose pl-page">
+  {{/* Radio broadcasts are language-agnostic track lists that live only in the
+       default-language content tree, so we read them from the default site and
+       render the SAME universal calendar in every language — no per-language
+       duplication. Mixes carry localized prose, so they stay scoped to the
+       current language. (hugo.Sites is weight-ordered; the default language, en,
+       is first.) On the default-language page both sources are identical, so its
+       behaviour is unchanged. */}}
+  {{ $defaultSite := index hugo.Sites 0 }}
+  {{ $radioSource := (where $defaultSite.RegularPages "Section" "playlists").ByDate.Reverse }}
+  {{ $mixSource := (where .Site.RegularPages "Section" "playlists").ByDate.Reverse }}
+
+  {{/* A playlist is "radio" per [params.playlists.radio] (see
+       partials/playlist-is-radio.html); everything else is a curated mix.
+       Without that config every playlist is a mix. The two loops draw from
+       different sources but the radio/mix test is mutually exclusive, so no
+       page is counted twice. */}}
+  {{ $radioCfg := (site.Params.playlists | default dict).radio | default dict }}
+  {{ $radio := slice }}
+  {{ range $radioSource }}
+    {{ if partial "playlist-is-radio.html" . }}
+      {{ $radio = $radio | append . }}
     {{ end }}
+  {{ end }}
+  {{ $mixes := slice }}
+  {{ range $mixSource }}
+    {{ if not (partial "playlist-is-radio.html" .) }}
+      {{ $mixes = $mixes | append . }}
+    {{ end }}
+  {{ end }}
+  {{ $playlists := $radio }}
+  {{ $total := len $playlists }}
+
+  {{/* Unique years from radio playlist dates, sorted descending */}}
+  {{ $yearsMap := dict }}
+  {{ range $playlists }}
+    {{ $y := .Date.Format "2006" }}
+    {{ if $y }}{{ $yearsMap = merge $yearsMap (dict $y true) }}{{ end }}
+  {{ end }}
+  {{ $yearsRaw := slice }}
+  {{ range $year, $_ := $yearsMap }}
+    {{ $yearsRaw = $yearsRaw | append (int $year) }}
+  {{ end }}
+  {{ $yearsRaw = sort $yearsRaw }}
+  {{ $years := slice }}
+  {{ $len := len $yearsRaw }}
+  {{ range $i := seq $len }}
+    {{ $idx := sub $len $i }}
+    {{ $years = $years | append (printf "%d" (index $yearsRaw $idx)) }}
+  {{ end }}
+  {{ $minYear := "" }}{{ $maxYear := "" }}
+  {{ if gt $len 0 }}
+    {{ $minYear = printf "%d" (index $yearsRaw 0) }}
+    {{ $maxYear = printf "%d" (index $yearsRaw (sub $len 1)) }}
+  {{ end }}
+
+  <header class="pl-header">
+    <h1 class="pl-header__title">{{ .Title }}</h1>
+    {{ if gt $total 0 }}
+    <p class="pl-header__sub">
+      <span>{{ replace ($radioCfg.name | default "Radio") " " "&nbsp;" | safeHTML }}</span>
+      <span aria-hidden="true">·</span>
+      <span>{{ $total }} broadcasts</span>
+      <span aria-hidden="true">·</span>
+      <span>{{ $minYear }}–{{ $maxYear }}</span>
+    </p>
+    {{ end }}
+    {{ with .Description }}<p class="pl-header__lead">{{ . }}</p>{{ end }}
   </header>
 
-  <div class="posts">
-    {{ $playlists := where .Site.RegularPages "Section" "playlists" }}
-    {{ $playlists = $playlists.ByDate.Reverse }}
+  {{/* ── Mixes — curated thematic sets, editorial table-of-contents ── */}}
+  {{ if gt (len $mixes) 0 }}
+    <section class="pl-mixes" aria-label="Curated mixes">
+      <header class="pl-mixes__head">
+        <h2 class="pl-mixes__title">Mixes</h2>
+        <p class="pl-mixes__sub">{{ len $mixes }} {{ if eq (len $mixes) 1 }}selection{{ else }}selections{{ end }}</p>
+      </header>
+      {{/* Mixes stay sorted by date desc (the same range Hugo gives us) so
+           the freshest is on top. The right tail shows the first tag — a
+           meaningful "theme" hook — instead of a date stamp, since the
+           date is encoded in the slug/title for date-named mixes and the
+           description carries the mood. */}}
+      <ol class="pl-mixes__list">
+        {{ range $mi, $mix := $mixes }}
+          <li class="pl-mix">
+            <a href="{{ $mix.RelPermalink }}" class="pl-mix__link">
+              <span class="pl-mix__index" aria-hidden="true">{{ printf "%02d" (add $mi 1) }}</span>
+              <span class="pl-mix__body">
+                <span class="pl-mix__title">{{ $mix.Title }}</span>
+                {{ with $mix.Description }}
+                  <span class="pl-mix__desc">{{ . }}</span>
+                {{ end }}
+              </span>
+              {{ with $mix.Params.tags }}
+                <span class="pl-mix__theme">{{ index . 0 | lower }}</span>
+              {{ end }}
+            </a>
+          </li>
+        {{ end }}
+      </ol>
+    </section>
 
     {{ if gt (len $playlists) 0 }}
-      {{ range $playlists }}
-        <article class="post-preview">
-          {{ $playlistTitle := .Title }}
-          <h2>
-            <a href="{{ .RelPermalink }}">{{ $playlistTitle }}</a>
-          </h2>
-          <div class="post-meta">
-            <div class="post-meta-left">
-            </div>
-            <div class="post-meta-right">
-              {{ with .Date }}
-                {{ $dateFormatted := .Format "January 2006" }}
-                {{ if ne $dateFormatted $playlistTitle }}
-                <time datetime="{{ .Format "2006-01-02" }}">
-                    {{ $dateFormatted }}
-                </time>
-                {{ end }}
+      <header class="pl-radio-head">
+        <h2 class="pl-radio-head__title">Radio</h2>
+      </header>
+    {{ end }}
+  {{ end }}
+
+  {{/* Default filter is "all" — the wall reads best when nothing is hidden */}}
+  {{ $defaultYear := "all" }}
+
+  {{/* Per-year counts — for filter sparklines */}}
+  {{ $yearCount := dict }}
+  {{ $maxCount := 1 }}
+  {{ range $playlists }}
+    {{ $y := .Date.Format "2006" }}
+    {{ $c := add (index $yearCount $y | default 0) 1 }}
+    {{ $yearCount = merge $yearCount (dict $y $c) }}
+    {{ if gt $c $maxCount }}{{ $maxCount = $c }}{{ end }}
+  {{ end }}
+
+  {{ if gt (len $playlists) 0 }}
+    <div class="collection-wrapper" data-default-year="{{ $defaultYear }}">
+      {{ if gt (len $years) 0 }}
+        <div class="collection-filters">
+          <div class="collection-filter pl-filter" data-filter-type="year">
+            <div class="filter-buttons">
+              <button class="filter-btn{{ if eq "all" $defaultYear }} active{{ end }}"
+                      data-year="all"
+                      aria-pressed="{{ if eq "all" $defaultYear }}true{{ else }}false{{ end }}"
+                      type="button">{{ i18n "all" | default "All" }}</button>
+              {{ range $years }}
+                {{ $count := index $yearCount . | default 0 }}
+                <button class="filter-btn{{ if eq . $defaultYear }} active{{ end }}"
+                        data-year="{{ . }}"
+                        aria-pressed="{{ if eq . $defaultYear }}true{{ else }}false{{ end }}"
+                        title="{{ $count }} broadcast{{ if ne $count 1 }}s{{ end }}"
+                        type="button">{{ . }}</button>
               {{ end }}
             </div>
           </div>
-        </article>
+        </div>
       {{ end }}
-    {{ else }}
-      <p>{{ i18n "noPlaylistsYet" | default "No playlists yet." }}</p>
-    {{ end }}
-  </div>
+
+      {{/* Group broadcasts by year-month for the calendar layout */}}
+      {{ $byYM := dict }}
+      {{ range $playlists }}
+        {{ $key := .Date.Format "2006-01" }}
+        {{ $arr := slice }}
+        {{ with index $byYM $key }}{{ $arr = . }}{{ end }}
+        {{ $arr = $arr | append . }}
+        {{ $byYM = merge $byYM (dict $key $arr) }}
+      {{ end }}
+      {{ $monthLabels := slice "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec" }}
+
+      <div class="pl-cal-scroll">
+      <div class="pl-cal" role="grid" aria-label="Broadcasts by year and month">
+        <div class="pl-cal__corner" aria-hidden="true"></div>
+        {{ range $i, $m := $monthLabels }}
+          <div class="pl-cal__chead" role="columnheader" data-month="{{ add $i 1 }}">{{ $m }}</div>
+        {{ end }}
+
+        {{ range $year := $years }}
+          {{ $yc := index $yearCount $year | default 0 }}
+          {{ $yhidden := and (ne $defaultYear "all") (ne $year $defaultYear) }}
+          <div class="pl-cal__rhead collection-item"
+               role="rowheader"
+               data-year="{{ $year }}"
+               {{ if $yhidden }}style="display:none"{{ end }}>
+            <span class="pl-cal__rhead-num">{{ $year }}</span>
+            <span class="pl-cal__rhead-count">{{ $yc }}</span>
+          </div>
+
+          {{ range $month := seq 1 12 }}
+            {{ $key := printf "%s-%02d" $year $month }}
+            {{ $entries := index $byYM $key | default slice }}
+            {{ $count := len $entries }}
+            <div class="pl-cal__cell{{ if eq $count 0 }} pl-cal__cell--empty{{ end }}{{ if gt $count 1 }} pl-cal__cell--multi{{ end }} collection-item"
+                 role="gridcell"
+                 data-year="{{ $year }}"
+                 data-month="{{ $month }}"
+                 data-count="{{ $count }}"
+                 {{ if $yhidden }}style="display:none"{{ end }}>
+              {{ range $ei, $entry := $entries }}
+                {{ $weekday := $entry.Date.Weekday }}
+                {{ $itemImg := $entry.Params.image | default "" }}
+                {{ $previewSrc := "" }}
+                {{ if $itemImg }}
+                  {{ $imgPath := strings.TrimPrefix "/" $itemImg }}
+                  {{ $imgRes := resources.Get $imgPath }}
+                  {{ if $imgRes }}
+                    {{ $previewSrc = ($imgRes.Resize "320x webp q70").RelPermalink }}
+                  {{ end }}
+                {{ end }}
+                <a class="pl-tile"
+                   href="{{ $entry.RelPermalink }}"
+                   style="--month: {{ $month }}; --weekday: {{ $weekday }};"
+                   data-day="{{ $entry.Date.Format "2" }}"
+                   {{ with $previewSrc }}data-img="{{ . }}"{{ end }}
+                   data-cap="{{ $entry.Date.Format "Mon · 2 Jan 2006" }}"
+                   aria-label="{{ $entry.Title }}, {{ $entry.Date.Format "2 Jan 2006" }}"
+                   title="{{ $entry.Title }} — {{ $entry.Date.Format "Mon · 2 Jan 2006" }}">
+                  <span class="pl-tile__day" aria-hidden="true">{{ $entry.Date.Format "2" }}</span>
+                </a>
+              {{ end }}
+            </div>
+          {{ end }}
+        {{ end }}
+      </div>
+      </div>
+    </div>
+  {{ else if eq (len $mixes) 0 }}
+    <p>{{ i18n "noPlaylistsYet" | default "No playlists yet." }}</p>
+  {{ end }}
 </article>
+
+{{/* Calendar hover preview — floating screenshot magnifier.
+
+     The preview element is appended to <body>, which lives OUTSIDE swup's swap
+     containers (#main-content, .site-header). So it must clean itself up on
+     navigation, or it lingers at the page bottom after you click a tile (swup
+     swaps the page but the orphaned, still-active preview survives on <body>).
+
+     init() is idempotent and re-runs on swup's "app:reinit" event: it removes
+     the stray preview when there's no calendar on the new page, and rebinds the
+     magnifier when navigating back to the list (inline scripts don't re-execute
+     on swup swaps, but the persistent document listener does). */}}
+<script>
+(() => {
+  let preview = null, imgEl = null, capEl = null;
+  let active = null, scrollRaf = 0, hideTimer = 0;
+
+  const PW = 320, PH = 320, GAP = 14, CAP_H = 30;
+
+  function ensurePreview() {
+    preview = document.querySelector('.pl-preview');
+    if (!preview) {
+      preview = document.createElement('div');
+      preview.className = 'pl-preview';
+      preview.setAttribute('aria-hidden', 'true');
+      preview.innerHTML = '<img alt="" decoding="async"><span class="pl-preview__cap"></span>';
+      document.body.appendChild(preview);
+    }
+    imgEl = preview.querySelector('img');
+    capEl = preview.querySelector('.pl-preview__cap');
+  }
+
+  function place(tile) {
+    const r = tile.getBoundingClientRect();
+    // Prefer right side; flip if it'd go off-screen
+    let x = r.right + GAP;
+    if (x + PW > window.innerWidth - GAP) x = r.left - PW - GAP;
+    if (x < GAP) x = GAP;
+    let y = r.top + r.height / 2 - PH / 2;
+    if (y < GAP) y = GAP;
+    // Reserve room for the caption tab below; flip caption above if it'd overflow
+    const captionFitsBelow = y + PH + CAP_H + GAP <= window.innerHeight;
+    if (!captionFitsBelow) {
+      preview.classList.add('cap-up');
+    } else {
+      preview.classList.remove('cap-up');
+    }
+    if (y + PH > window.innerHeight - GAP) y = window.innerHeight - PH - GAP;
+    preview.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  function show(tile) {
+    clearTimeout(hideTimer);
+    active = tile;
+    if (imgEl.src !== tile.dataset.img) imgEl.src = tile.dataset.img;
+    capEl.textContent = tile.dataset.cap || '';
+    const wasActive = preview.classList.contains('is-active');
+    if (!wasActive) {
+      // First show: snap to position without animating in from off-screen
+      preview.classList.remove('is-tracking');
+      place(tile);
+      // Force a layout flush so the snap takes effect before transitions resume
+      void preview.offsetWidth;
+      preview.classList.add('is-active', 'is-tracking');
+    } else {
+      // Subsequent moves: position animates smoothly via CSS transition
+      place(tile);
+    }
+  }
+
+  function hide() {
+    active = null;
+    preview.classList.remove('is-active');
+    // After fade-out, drop the tracking class so the next show snaps cleanly
+    hideTimer = setTimeout(() => {
+      if (!active) preview.classList.remove('is-tracking');
+    }, 260);
+  }
+
+  function init() {
+    const cal = document.querySelector('.pl-cal');
+
+    // No calendar on this page (e.g. swup-navigated into a single playlist):
+    // remove any floating preview orphaned from the list so it doesn't linger
+    // at the bottom of the page.
+    if (!cal) {
+      const stray = document.querySelector('.pl-preview');
+      if (stray) stray.remove();
+      preview = imgEl = capEl = active = null;
+      return;
+    }
+
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (cal.dataset.previewInit === '1') return;
+    cal.dataset.previewInit = '1';
+
+    ensurePreview();
+
+    cal.addEventListener('pointerover', e => {
+      const tile = e.target.closest('.pl-tile[data-img]');
+      if (!tile || tile === active) return;
+      show(tile);
+    });
+
+    cal.addEventListener('pointerout', e => {
+      const tile = e.target.closest('.pl-tile[data-img]');
+      if (!tile) return;
+      // Moving to another tile: let the next pointerover handle the swap (no flicker)
+      const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.pl-tile[data-img]');
+      if (next) return;
+      // Moving to a non-tile child of the same tile: ignore
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      hide();
+    });
+
+    // Hide preview if pointer leaves the calendar entirely
+    cal.addEventListener('pointerleave', hide);
+  }
+
+  // Reposition on scroll while a preview is showing. Bound once to window
+  // (which survives swup swaps); guarded so it no-ops when nothing is active.
+  window.addEventListener('scroll', () => {
+    if (!active || !preview) return;
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => { place(active); scrollRaf = 0; });
+  }, { passive: true });
+
+  init();
+  document.addEventListener('app:reinit', init);
+})();
+</script>
 {{ end }}

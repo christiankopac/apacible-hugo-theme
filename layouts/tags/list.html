@@ -10,8 +10,9 @@
         <p class="count-message">{{ $plural := cond (eq $count 1) "" "s" }}{{ printf (i18n "foundArticlesInTag" | default "Found %d article%s in this tag") $count $plural | safeHTML }}</p>
     </header>
 
+    {{ $paginator := .Paginate .Pages }}
     <div class="posts">
-        {{ range .Pages }}
+        {{ range $paginator.Pages }}
             {{ $postCategories := .Params.categories }}
             {{ $categorySlug := "" }}
             {{ if $postCategories }}
@@ -19,8 +20,8 @@
             {{ end }}
             <article class="post-preview{{ if .Params.featured }} featured{{ end }} collection-item"{{ if $categorySlug }} data-category="{{ $categorySlug }}"{{ end }}>
                 <h2>
-                    {{ if .Params.featured }}<span class="featured-marker">ᛟ</span>{{ end }}
-                    <a href="{{ .Permalink }}">{{ .Title }}</a>
+                    {{ if .Params.featured }}<span class="featured-marker" title="Featured" aria-label="Featured"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.6 5.7 6.2.6-4.7 4.1 1.4 6.1L12 16.9l-5.5 3.2 1.4-6.1L3.2 8.9l6.2-.6z"/></svg></span>{{ end }}
+                    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
                 </h2>
                 <div class="post-meta">
                     <div class="post-meta-left">
@@ -35,15 +36,6 @@
                             </div>
                             {{ end }}
                         {{ end }}
-                        {{ if $.Site.Params.show_categories_in_list }}
-                            {{ with .Params.categories }}
-                            <div class="categories">
-                                {{ range . }}
-                                    <span class="category">{{ . }}</span>
-                                {{ end }}
-                            </div>
-                            {{ end }}
-                        {{ end }}
                         {{ with .Date }}
                             <time datetime="{{ .Format "2006-01-02" }}">{{ .Format ($.Site.Params.date_format | default "Jan 2, 2006") }}</time>
                         {{ end }}
@@ -52,6 +44,10 @@
             </article>
         {{ end }}
     </div>
+
+    {{ if gt $paginator.TotalPages 1 }}
+      {{ template "_internal/pagination.html" . }}
+    {{ end }}
 </section>
 {{ end }}
 

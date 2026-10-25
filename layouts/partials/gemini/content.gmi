@@ -25,10 +25,6 @@
 {{- $scratch.Set "content" (replaceRE `\*` "" ($scratch.Get "content")) -}}
 {{- $scratch.Set "content" (replaceRE `_` "" ($scratch.Get "content")) -}}
 {{- $scratch.Set "content" (replaceRE `~~` "" ($scratch.Get "content")) -}}
-{{- $scratch.Set "content" (replaceRE `(?m)^\s*-{3,}\s*$` "" ($scratch.Get "content")) -}}
-{{- $scratch.Set "content" (replaceRE `(?m)^\s*[-\*\+]\s*` "* " ($scratch.Get "content")) -}}
-{{- $scratch.Set "content" (replaceRE `(?m)[ \t]+=>` "=>" ($scratch.Get "content")) -}}
-{{- $scratch.Set "content" (replaceRE `(?m)(.)=>` "$1\n=>" ($scratch.Get "content")) -}}
 {{- /* Remove HTML formatting tags */ -}}
 {{- $scratch.Set "content" (replaceRE `(?i)<(strong|b|em|i|u|s|del|mark|small|big)>` "" ($scratch.Get "content")) -}}
 {{- $scratch.Set "content" (replaceRE `(?i)</(strong|b|em|i|u|s|del|mark|small|big)>` "" ($scratch.Get "content")) -}}
@@ -41,4 +37,3 @@
 {{- if $content }}
 {{ printf "%s\n" $content }}  
 {{- end }}
-

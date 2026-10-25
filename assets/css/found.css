@@ -1,0 +1,393 @@
+/* /found/ — bookmark ledger
+   Two-column row: title + take (main) on left, host/via/date (meta) on right.
+   Stacks under 720px. */
+
+/* .found-section width comes from the shared :is() rule in layout.css
+   (1480px). Don't set width here or it overrides the rail. */
+
+.found-header {
+  margin-block-end: var(--space-2xl);
+}
+
+.found-header h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.found-header .section-description {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-loose);
+}
+
+.found-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.found-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, auto);
+  column-gap: var(--space-2xl);
+  align-items: baseline;
+  padding-block: var(--space-md);
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+}
+
+.found-row:first-child { padding-block-start: 0; }
+.found-row:last-child { border-bottom: none; }
+
+[data-theme="dark"] .found-row {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.found-main { min-width: 0; }
+
+.found-title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.found-title a {
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-base);
+}
+.found-title a:hover { border-bottom-color: currentColor; }
+
+.found-title a::after {
+  content: "↗";
+  margin-inline-start: 0.25em;
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.found-take {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.found-take p { margin: 0; }
+.found-take p + p { margin-top: 0.5em; }
+
+.found-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  font-feature-settings: "tnum" 1;
+  white-space: nowrap;
+}
+
+.found-host {
+  font-family: var(--font-monospace);
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.found-via { font-style: italic; opacity: 0.8; }
+
+.found-date { opacity: 0.85; }
+
+.found-permalink {
+  margin-top: var(--space-xs);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  opacity: 0.4;
+  transition: opacity var(--transition-base);
+}
+.found-row:hover .found-permalink { opacity: 1; }
+
+@media (max-width: 720px) {
+  .found-row {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-xs);
+  }
+  .found-meta {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+  .found-permalink { margin-top: 0; }
+}
+
+/* Single page — bookmark detail.
+   The page's primary action is to leave. So: clear typographic header,
+   the body of the take, then a pill CTA + a quiet wayback fallback. */
+.found-single {
+  width: min(680px, 100% - 2rem);
+  margin-inline: auto;
+}
+.found-single-header {
+  margin-block-end: var(--space-xl);
+  padding-block-end: var(--space-base);
+  border-block-end: 1px solid color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.found-kind {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-monospace);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.found-single-title {
+  margin: 0 0 var(--space-base);
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.1rem);
+  line-height: 1.18;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.018em;
+  color: var(--color-text);
+}
+
+.found-single-meta {
+  margin: 0;
+  font-family: var(--font-monospace);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: baseline;
+  opacity: 0.85;
+  letter-spacing: 0.01em;
+}
+.found-single-meta .found-sep { opacity: 0.4; }
+.found-host-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color var(--transition-base), border-color var(--transition-base);
+}
+.found-host-link:hover,
+.found-host-link:focus-visible {
+  color: var(--color-accent);
+  border-bottom-color: currentColor;
+  outline: none;
+}
+.found-via { font-style: normal; opacity: 0.85; }
+
+/* The take — give it some breathing room from the meta */
+.found-single .found-take {
+  margin-block: var(--space-lg) var(--space-xl);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--color-text);
+  opacity: 0.92;
+}
+
+/* Primary action row — pill CTA + quiet wayback fallback */
+.found-actions {
+  margin-block: var(--space-2xl) var(--space-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+/* Visit link — typographic, not a button. A quiet bottom border at rest
+   that fills on hover, matching the river row underline. The mono host
+   carries the "this goes off-site" signal; the arrow nudges. */
+.found-cta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--font-size-lg);
+  letter-spacing: -0.005em;
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  transition: border-color var(--transition-base);
+}
+.found-cta:hover,
+.found-cta:focus-visible {
+  border-bottom-color: currentColor;
+  outline: none;
+}
+.found-cta-label {
+  font-weight: var(--font-weight-normal);
+}
+.found-cta-host {
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+  opacity: 0.75;
+}
+.found-cta-arrow {
+  display: inline-block;
+  font-size: 0.95em;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-base);
+}
+.found-cta:hover .found-cta-arrow,
+.found-cta:focus-visible .found-cta-arrow {
+  transform: translate(2px, -2px);
+}
+
+.found-secondary {
+  font-family: var(--font-monospace);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  opacity: 0.5;
+  transition: opacity var(--transition-base), color var(--transition-base);
+}
+.found-secondary:hover,
+.found-secondary:focus-visible {
+  opacity: 1;
+  color: var(--color-accent);
+  outline: none;
+}
+
+.found-tags {
+  list-style: none;
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-base);
+  font-family: var(--font-monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+.found-tags a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  opacity: 0.65;
+  transition: opacity var(--transition-base), color var(--transition-base);
+}
+.found-tags a:hover,
+.found-tags a:focus-visible {
+  opacity: 1;
+  color: var(--color-accent);
+  outline: none;
+}
+
+/* Repo-health line (GitHub-sourced /found/ entries). Quiet inline chips. */
+.found-health {
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  font-family: var(--font-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+.found-health > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.found-health .found-lang,
+.found-health .found-stars,
+.found-health .found-pushed { opacity: 0.85; }
+.found-health .found-archived {
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  opacity: 0.85;
+}
+
+/* Collections strip — curated groupings above the tag chips. */
+.found-collections {
+  margin: 0 0 1.25rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.found-collections-label {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  font-weight: normal;
+}
+.found-collections-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+}
+.found-collections-list a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: var(--color-text);
+}
+.found-collections-list a:hover {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.found-collection-count {
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  opacity: 0.75;
+}
+
+/* Single collection page header */
+.found-collection-kind {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+
+/* Eyebrow line above collection title — small breadcrumb-style label */
+.found-eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  opacity: 0.75;
+}
+.found-eyebrow a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-base), color var(--transition-base);
+}
+.found-eyebrow a:hover {
+  color: var(--color-accent);
+  border-bottom-color: currentColor;
+}

@@ -1,0 +1,139 @@
+{{/*
+  Reusable filter row for listing pages.
+
+  Renders an optional category-filter row (with optional grid/table view
+  switcher to its right), and an optional year-filter row beneath it.
+
+  Context (.) is a dict with keys:
+    categories       []string  category values (i18n keys for labels). Optional.
+    allLabel         string    i18n key for the "all" button (default: "all").
+    showViewSwitcher bool      render the grid/table view toggle.
+    years            []string  year values, descending. Optional.
+    yearsByCategory  dict      "<cat>_years" -> dict[year]bool. Drives
+                               data-categories on year buttons for cross-linking.
+    allYearsLabel    string    i18n key for the "all years" button (default: "allYears").
+    showAllYears     bool      render the "All Years" button (default: true).
+    defaultCategory  string    pre-active category value (default: "all").
+    defaultYear      string    pre-active year value (default: "all").
+
+  The bespoke /playlists/ wall has its own filter; this partial is used by
+  /margins/, /made/, /found/ (and /margins/ during transition).
+*/}}
+
+{{ $cats := .categories | default slice }}
+{{ $years := .years | default slice }}
+{{ $yearsByCat := .yearsByCategory | default dict }}
+{{ $defaultCat := .defaultCategory | default "all" }}
+{{ $defaultYear := .defaultYear | default "all" }}
+{{ $allLabel := .allLabel | default "all" }}
+{{ $allYearsLabel := .allYearsLabel | default "allYears" }}
+{{ $showAllYears := true }}
+{{ if isset . "showAllYears" }}{{ $showAllYears = .showAllYears }}{{ end }}
+{{ $showViewSwitcher := false }}
+{{ if isset . "showViewSwitcher" }}{{ $showViewSwitcher = .showViewSwitcher }}{{ end }}
+{{ $showLoved := false }}
+{{ if isset . "showLoved" }}{{ $showLoved = .showLoved }}{{ end }}
+{{ $defaultLoved := false }}
+{{ if isset . "defaultLoved" }}{{ $defaultLoved = .defaultLoved }}{{ end }}
+{{ $lovedLabel := .lovedLabel | default "loved" }}
+{{ $lovedThreshold := .lovedThreshold | default 4 }}
+
+{{ if or (gt (len $cats) 0) (gt (len $years) 0) }}
+<div class="collection-filters">
+  {{ if gt (len $cats) 0 }}
+  <div class="collection-controls-row">
+    <div class="collection-filter" data-filter-type="category">
+      <div class="filter-buttons">
+        <button
+          class="filter-btn{{ if eq $defaultCat "all" }} active{{ end }}"
+          data-category="all"
+          aria-pressed="{{ if eq $defaultCat "all" }}true{{ else }}false{{ end }}"
+          type="button">
+          {{ i18n $allLabel | default "All" }}
+        </button>
+        {{ range $cats }}
+        <button
+          class="filter-btn{{ if eq $defaultCat . }} active{{ end }}"
+          data-category="{{ . }}"
+          aria-pressed="{{ if eq $defaultCat . }}true{{ else }}false{{ end }}"
+          type="button">
+          {{ i18n . | default (title .) }}
+        </button>
+        {{ end }}
+      </div>
+    </div>
+
+    <div class="collection-controls-meta">
+      {{ if $showLoved }}
+      <button
+        class="filter-btn loved-toggle{{ if $defaultLoved }} active{{ end }}"
+        data-loved-toggle
+        data-loved-threshold="{{ $lovedThreshold }}"
+        aria-pressed="{{ if $defaultLoved }}true{{ else }}false{{ end }}"
+        type="button"
+        title="{{ printf "Rated %v★" $lovedThreshold }}">
+        {{ i18n $lovedLabel | default "Loved" }}
+      </button>
+      {{ end }}
+
+      {{ if $showViewSwitcher }}
+      <div class="view-switcher">
+        <button class="view-btn active" data-view="poster-grid" title="Grid View" aria-label="Grid View">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="1" width="5" height="5" />
+            <rect x="10" y="1" width="5" height="5" />
+            <rect x="1" y="10" width="5" height="5" />
+            <rect x="10" y="10" width="5" height="5" />
+          </svg>
+        </button>
+        <button class="view-btn" data-view="table" title="Table View" aria-label="Table View">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="1" width="14" height="14" />
+            <line x1="1" y1="5" x2="15" y2="5" />
+            <line x1="1" y1="9" x2="15" y2="9" />
+            <line x1="6" y1="5" x2="6" y2="15" />
+          </svg>
+        </button>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+
+  {{ if gt (len $years) 0 }}
+  <div class="collection-filter" data-filter-type="year">
+    <div class="filter-buttons">
+      {{ if $showAllYears }}
+      <button
+        class="filter-btn{{ if eq $defaultYear "all" }} active{{ end }}"
+        data-year="all"
+        aria-pressed="{{ if eq $defaultYear "all" }}true{{ else }}false{{ end }}"
+        type="button">
+        {{ i18n $allYearsLabel | default "All Years" }}
+      </button>
+      {{ end }}
+      {{ range $year := $years }}
+        {{/* Cross-link: which categories have items in this year */}}
+        {{ $yearCategories := slice }}
+        {{ range $category := $cats }}
+          {{ $key := printf "%s_years" $category }}
+          {{ $catYears := index $yearsByCat $key | default (dict) }}
+          {{ if index $catYears $year }}
+            {{ $yearCategories = $yearCategories | append $category }}
+          {{ end }}
+        {{ end }}
+        {{ $yearCatStr := delimit $yearCategories "," }}
+        <button
+          class="filter-btn{{ if eq $defaultYear $year }} active{{ end }}"
+          data-year="{{ $year }}"
+          {{ with $yearCatStr }}data-categories="{{ . }}"{{ end }}
+          aria-pressed="{{ if eq $defaultYear $year }}true{{ else }}false{{ end }}"
+          type="button">
+          {{ $year }}
+        </button>
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+</div>
+{{ end }}

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  {{- $self := .OutputFormats.Get "Atom" -}}
+  {{- $html := .OutputFormats.Get "HTML" -}}
+  <title>{{ .Title | htmlUnescape | transform.XMLEscape }}</title>
+  <id>{{ with $html }}{{ .Permalink }}{{ else }}{{ .Permalink }}{{ end }}</id>
+  <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+  {{- with $self }}
+  <link rel="self" type="application/atom+xml" href="{{ .Permalink }}" />
+  {{- end }}
+  {{- with $html }}
+  <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
+  {{- end }}
+  {{- if .Description }}
+  <subtitle>{{ .Description | plainify | htmlUnescape | transform.XMLEscape }}</subtitle>
+  {{- else if .Site.Params.description }}
+  <subtitle>{{ .Site.Params.description | plainify | htmlUnescape | transform.XMLEscape }}</subtitle>
+  {{- end }}
+  <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
+  <entry>
+    <title>{{ .Title | htmlUnescape | transform.XMLEscape }}</title>
+    <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
+    <id>{{ .Permalink }}</id>
+    <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+    {{- with .Date }}
+    <published>{{ .Format "2006-01-02T15:04:05Z07:00" }}</published>
+    {{- end }}
+    <author>
+      <name>{{ with .Params.author }}{{ . | htmlUnescape | transform.XMLEscape }}{{ else }}{{ $.Site.Title | htmlUnescape | transform.XMLEscape }}{{ end }}</name>
+    </author>
+    {{- with .Params.description }}
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
+    {{- else }}{{ with .Summary }}
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
+    {{- end }}{{ end }}
+    {{- /* Thumbnail: same approach as list.atom.xml — resolve through
+           Hugo's resource pipeline + .Resize so the URL actually exists
+           in public/. External URLs pass through unchanged. */}}
+    {{- $img := .Params.img | default .Params.image }}
+    {{- $imgURL := "" }}
+    {{- $imgType := "image/jpeg" }}
+    {{- if $img }}
+      {{- if hasPrefix $img "http" }}
+        {{- $imgURL = $img }}
+        {{- $ext := path.Ext $imgURL | lower }}
+        {{- if eq $ext ".png" }}{{ $imgType = "image/png" }}{{ else if eq $ext ".webp" }}{{ $imgType = "image/webp" }}{{ else if eq $ext ".gif" }}{{ $imgType = "image/gif" }}{{ else if eq $ext ".avif" }}{{ $imgType = "image/avif" }}{{ end }}
+      {{- else }}
+        {{- $imgRes := resources.Get (strings.TrimPrefix "/" $img) }}
+        {{- if $imgRes }}
+          {{- $thumb := $imgRes.Resize "800x webp q85" }}
+          {{- $imgURL = $thumb.Permalink }}
+          {{- $imgType = "image/webp" }}
+        {{- else }}
+          {{- $imgURL = $img | absURL }}
+        {{- end }}
+      {{- end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ if $imgURL }}<p><img src="{{ $imgURL }}" alt="{{ .Title | htmlUnescape | transform.XMLEscape }}" /></p>{{ end }}{{ .Content | safeHTML }}]]></content>
+  </entry>
+</feed>
+

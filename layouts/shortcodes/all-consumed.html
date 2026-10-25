@@ -7,21 +7,22 @@
 {{ $style := .Get "style" | default "poster-grid" }}
 
 {{/* Get all pages from consumed sections - check directory path */}}
-{{ $consumedPages := where .Site.RegularPages "Section" "consumed" }}
+{{ $consumedPages := where .Site.RegularPages "Section" "margins" }}
 {{ $moviePages := slice }}
 {{ $musicPages := slice }}
 {{ $bookPages := slice }}
 {{ range $consumedPages }}
-  {{ if and (not .IsSection) (ne .File.Path "consumed/_index.md") }}
-    {{ $dir := .File.Dir }}
+  {{ if and (not .IsSection) (ne .File.Path "margins/_index.md") }}
+    {{/* Normalize the OS path separator so "movie/" etc. match on Windows too. */}}
+    {{ $dir := replace .File.Dir "\\" "/" }}
     {{ $path := .File.Path }}
     {{ $relPath := .RelPermalink }}
     {{/* Check File.Dir, File.Path, and RelPermalink for flexibility */}}
-    {{ if or (in $dir "movie/") (in $path "consumed/movie/") (in $relPath "/consumed/movie/") (eq (.Params.category | default "") "movie") }}
+    {{ if or (in $dir "movie/") (in $path "margins/movie/") (in $relPath "/margins/movie/") (eq (.Params.category | default "") "movie") }}
       {{ $moviePages = $moviePages | append . }}
-    {{ else if or (in $dir "music/") (in $path "consumed/music/") (in $relPath "/consumed/music/") (eq (.Params.category | default "") "music") }}
+    {{ else if or (in $dir "music/") (in $path "margins/music/") (in $relPath "/margins/music/") (eq (.Params.category | default "") "music") }}
       {{ $musicPages = $musicPages | append . }}
-    {{ else if or (in $dir "book/") (in $path "consumed/book/") (in $relPath "/consumed/book/") (eq (.Params.category | default "") "book") }}
+    {{ else if or (in $dir "book/") (in $path "margins/book/") (in $relPath "/margins/book/") (eq (.Params.category | default "") "book") }}
       {{ $bookPages = $bookPages | append . }}
     {{ end }}
   {{ end }}
@@ -54,13 +55,13 @@
       "year" ($englishPage.Params.year | default "")
       "director" ($englishPage.Params.director | default "")
       "rating" ($englishPage.Params.rating | default 0)
+      "loved" ($englishPage.Params.loved | default false)
       "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
       "tmdb" ($englishPage.Params.tmdb | default "")
       "content" (.Params.content | default "")
       "review" (.Params.review | default "")
       "trailer" ($englishPage.Params.trailer | default "")
-      "footer" ($englishPage.Params.footer | default "")
-      "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01")
       "draft" (cond .Draft "true" "false")
       "link" (.RelPermalink | default "")
       "processed" ($englishPage.Params.processed | default false)
@@ -99,14 +100,14 @@
       "discogsLabel" ($englishPage.Params.discogsLabel | default "")
       "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
       "content" (.Params.content | default "")
-      "footer" ($englishPage.Params.footer | default "")
-      "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01")
       "draft" (cond .Draft "true" "false")
       "link" (.RelPermalink | default "")
       "genre" ($englishPage.Params.genre | default "")
       "style" ($englishPage.Params.style | default "")
       "songs" ($englishPage.Params.songs | default slice)
       "rating" ($englishPage.Params.rating | default 0)
+      "loved" ($englishPage.Params.loved | default false)
       "processed" ($englishPage.Params.processed | default false)
       "page" .
     }}
@@ -142,9 +143,9 @@
       "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
       "content" (.Params.content | default "")
       "review" (.Params.review | default "")
-      "footer" ($englishPage.Params.footer | default "")
-      "date_read" ($englishPage.Params.date_read | default "")
+      "date" ($englishPage.Date.Format "2006-01")
       "rating" ($englishPage.Params.rating | default 0)
+      "loved" ($englishPage.Params.loved | default false)
       "draft" (cond .Draft "true" "false")
       "link" (.RelPermalink | default "")
       "processed" ($englishPage.Params.processed | default false)
@@ -157,45 +158,7 @@
 {{/* Sort items by consumed date (most recent first) */}}
 {{ $itemsWithSortDate := slice }}
 {{ range $allItems }}
-  {{ $sortDate := "" }}
-  {{/* Prefer date_read if available (format: "2025-01" or "2025-01-15") */}}
-  {{ if .date_read }}
-    {{ $sortDate = .date_read }}
-  {{ else if .footer }}
-    {{/* Try to extract date from footer (e.g., "Watched Nov 2025") */}}
-    {{ $footerTrimmed := strings.TrimSpace .footer }}
-    {{ $footerLower := lower $footerTrimmed }}
-    {{/* Look for month names and year */}}
-    {{ $months := slice "jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec" }}
-    {{ $monthNum := 0 }}
-    {{ range $idx, $month := $months }}
-      {{ if in $footerLower $month }}
-        {{ $monthNum = add $idx 1 }}
-        {{ break }}
-      {{ end }}
-    {{ end }}
-    {{ if gt $monthNum 0 }}
-      {{ range $i := seq 2000 2100 }}
-        {{ $yearStr := printf "%d" $i }}
-        {{ if in $footerLower $yearStr }}
-          {{ $sortDate = printf "%s-%02d" $yearStr $monthNum }}
-          {{ break }}
-        {{ end }}
-      {{ end }}
-    {{ else }}
-      {{/* Fallback: just extract year */}}
-      {{ range $i := seq 2000 2100 }}
-        {{ $yearStr := printf "%d" $i }}
-        {{ if in $footerLower $yearStr }}
-          {{ $sortDate = printf "%s-01" $yearStr }}
-          {{ break }}
-        {{ end }}
-      {{ end }}
-    {{ end }}
-  {{ else if .page }}
-    {{/* Fallback to page date */}}
-    {{ $sortDate = .page.Date.Format "2006-01" }}
-  {{ end }}
+  {{ $sortDate := .date | default (.page.Date.Format "2006-01") }}
   {{ $itemsWithSortDate = $itemsWithSortDate | append (dict "item" . "sortDate" $sortDate) }}
 {{ end }}
 {{ $allItems = slice }}
@@ -255,74 +218,106 @@
 
 {{/* Render filters - show if we have items */}}
 {{ if gt (len $allItems) 0 }}
-<div class="collection-wrapper">
-  {{/* Show filters - always show if we have categories or years */}}
-  {{ if or (gt (len $categories) 0) (gt (len $years) 0) }}
-<div class="collection-filters">
-    {{ if gt (len $categories) 0 }}
-  <div class="collection-filter" data-filter-type="category">
-    <div class="filter-buttons">
-        <button
-          class="filter-btn active"
-          data-category="all"
-          aria-pressed="true"
-          type="button"
-        >
-          {{ i18n "all" | default "All" }}
-        </button>
-      {{ range $categories }}
-          <button
-            class="filter-btn"
-            data-category="{{ . }}"
-            aria-pressed="false"
-            type="button"
-          >
-            {{ i18n . | default (title .) }}
-          </button>
-      {{ end }}
-    </div>
-  </div>
-  {{ end }}
-    {{ if gt (len $years) 0 }}
-  <div class="collection-filter" data-filter-type="year">
-    <div class="filter-buttons">
-        <button
-          class="filter-btn active"
-          data-year="all"
-          aria-pressed="true"
-          type="button"
-        >
-          {{ i18n "allYears" | default "All Years" }}
-        </button>
-      {{ range $year := $years }}
-        {{/* Get categories that have this year */}}
-        {{ $yearCategories := slice }}
-        {{ range $category := $categories }}
-          {{ $categoryYearsKey := printf "%s_years" $category }}
-          {{ $categoryYears := index $yearsByCategory $categoryYearsKey | default (dict) }}
-          {{ if index $categoryYears $year }}
-            {{ $yearCategories = $yearCategories | append $category }}
-          {{ end }}
-        {{ end }}
-        {{ $yearCategoriesStr := delimit $yearCategories "," }}
-        <button
-          class="filter-btn"
-          data-year="{{ $year }}"
-          data-categories="{{ $yearCategoriesStr }}"
-          aria-pressed="false"
-          type="button"
-        >
-          {{ $year }}
-        </button>
-      {{ end }}
-    </div>
-  </div>
-  {{ end }}
-</div>
-{{ end }}
+{{ $marginsCfg := .Site.Params.margins | default dict }}
+{{ $showLoved := true }}
+{{ if isset $marginsCfg "show_loved" }}{{ $showLoved = $marginsCfg.show_loved }}{{ end }}
+{{ $defaultLoved := and $showLoved (index $marginsCfg "default_loved" | default false) }}
+<div class="collection-wrapper"{{ if $defaultLoved }} data-default-loved="1"{{ end }}>
+  {{ $showViewSwitcher := true }}
+  {{ if isset $marginsCfg "show_view_switcher" }}{{ $showViewSwitcher = $marginsCfg.show_view_switcher }}{{ end }}
+  {{ $lovedThreshold := index $marginsCfg "loved_threshold" | default 5 }}
+  {{ partial "collection-filters.html" (dict
+    "categories" $categories
+    "years" $years
+    "yearsByCategory" $yearsByCategory
+    "showViewSwitcher" $showViewSwitcher
+    "showLoved" $showLoved
+    "defaultLoved" $defaultLoved
+    "lovedThreshold" $lovedThreshold
+  ) }}
 
   {{ $isPosterGrid := eq $style "poster-grid" }}
-  <div class="collection{{ if $isPosterGrid }} collection-poster poster-grid{{ else }} collection-card{{ end }}" data-filterable="category date">
+  {{ $isTable := eq $style "table" }}
+
+  {{/* Container for all views */}}
+  <div class="consumed-views-container">
+
+  {{/* Table View */}}
+  <div class="consumed-view consumed-table-wrapper" data-view="table" data-filterable="category date" style="{{ if not $isTable }}display: none;{{ end }}">
+    <table class="consumed-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort="title">
+            <button class="sort-btn" type="button">
+              Title <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="sortable col-year" data-sort="year" data-default="Released" data-movies="Released" data-music="Released" data-books="Published">
+            <button class="sort-btn" type="button">
+              Released <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="sortable col-creator" data-sort="creator" data-default="Creator" data-movies="Director" data-music="Artist" data-books="Author">
+            <button class="sort-btn" type="button">
+              Creator <span class="sort-icon"></span>
+            </button>
+          </th>
+          <th class="col-loved">
+            <span class="loved-header" title="Loved">♥</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range $allItems }}
+        {{ if ne .draft "true" }}
+        {{ $consumedLink := .link | default "" }}
+        {{ $releaseYear := .year | default "-" }}
+        {{ $creator := "" }}
+        {{ $extra := "" }}
+        {{ $dateWatched := .date | default (.page.Date.Format "2006-01") | default "-" }}
+
+        {{ if eq .category "movies" }}
+          {{ $creator = .director | default "-" }}
+          {{ $genres := slice }}
+          {{ with .page }}
+            {{ with .Params.genres }}
+              {{ $genres = . }}
+            {{ end }}
+          {{ end }}
+          {{ $extra = delimit $genres ", " }}
+          {{ if not $extra }}{{ $extra = "-" }}{{ end }}
+        {{ else if eq .category "music" }}
+          {{ $creator = .artist | default "-" }}
+          {{ $extra = .label | default "-" }}
+        {{ else if eq .category "books" }}
+          {{ $creator = .author | default "-" }}
+          {{ $extra = .publisher | default "-" }}
+        {{ end }}
+
+        <tr class="consumed-row" data-category="{{ .category }}" data-year="{{ $releaseYear }}" data-title="{{ .title | lower }}" data-rating="{{ .rating | default 0 }}" data-loved="{{ if .loved }}true{{ else }}false{{ end }}" data-creator="{{ $creator | lower }}">
+          <td class="col-title">
+            {{ if $consumedLink }}
+              <a href="{{ $consumedLink }}">{{ .title }}</a>
+            {{ else }}
+              {{ .title }}
+            {{ end }}
+          </td>
+          <td class="col-year">{{ $releaseYear }}</td>
+          <td class="col-creator">{{ $creator }}</td>
+          <td class="col-loved">
+            {{ if .loved }}
+              <span class="loved-mark" title="loved">♥</span>
+            {{ end }}
+          </td>
+        </tr>
+        {{ end }}
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+
+  {{/* Poster/Card Grid View */}}
+  <div class="consumed-view collection{{ if $isPosterGrid }} collection-poster poster-grid{{ else }} collection-card{{ end }}" data-view="poster-grid" data-filterable="category date" style="{{ if not $isPosterGrid }}display: none;{{ end }}">
     {{ if gt (len $allItems) 0 }}
       {{ range $allItems }}
       {{/* Use link from item if available, otherwise generate from title */}}
@@ -331,17 +326,17 @@
       {{ if eq .category "music" }}
         {{ if and .artist .title }}
           {{ $slug := printf "%s-%s" (.artist | urlize) (.title | urlize) }}
-          {{ $consumedLink = printf "/consumed/music/%s" $slug }}
+          {{ $consumedLink = printf "/margins/music/%s" $slug }}
         {{ else if .title }}
-          {{ $consumedLink = printf "/consumed/music/%s" (.title | urlize) }}
+          {{ $consumedLink = printf "/margins/music/%s" (.title | urlize) }}
         {{ end }}
       {{ else if eq .category "movies" }}
         {{ if .title }}
-          {{ $consumedLink = printf "/consumed/movie/%s" (.title | urlize) }}
+          {{ $consumedLink = printf "/margins/movie/%s" (.title | urlize) }}
         {{ end }}
       {{ else if eq .category "books" }}
         {{ if .title }}
-          {{ $consumedLink = printf "/consumed/book/%s" (.title | urlize) }}
+          {{ $consumedLink = printf "/margins/book/%s" (.title | urlize) }}
           {{ end }}
         {{ end }}
       {{ end }}
@@ -367,22 +362,32 @@
       {{ end }}
       <article
         class="collection-item{{ $ratingClass }}"
-        {{ if .category }} data-category="{{ .category }}"{{ end }}{{ if $releaseYear }} data-year="{{ $releaseYear }}"{{ end }}{{ if .title }} data-title="{{ .title | safeHTML }}"{{ end }}{{ if .director }} data-director="{{ .director }}"{{ end }}{{ if .author }} data-author="{{ .author }}"{{ end }}{{ if .artist }} data-artist="{{ .artist }}"{{ end }}{{ if .label }} data-label="{{ .label }}"{{ end }}{{ if .publisher }} data-publisher="{{ .publisher }}"{{ end }}{{ if .rating }} data-rating="{{ .rating }}"{{ end }}{{ if .review }} data-review="{{ .review | safeHTML }}"{{ end }}{{ if .content }} data-content="{{ .content | safeHTML }}"{{ end }}{{ if .footer }} data-footer="{{ .footer | safeHTML }}"{{ end }}{{ if .tmdb }} data-tmdb="{{ .tmdb }}"{{ end }}{{ if .discogs }} data-discogs="{{ .discogs }}"{{ end }}{{ if .discogsArtist }} data-discogs-artist="{{ .discogsArtist }}"{{ end }}{{ if .discogsLabel }} data-discogs-label="{{ .discogsLabel }}"{{ end }}{{ if .genre }} data-genre="{{ .genre }}"{{ end }}{{ if .style }} data-style="{{ .style }}"{{ end }}{{ if .openlibrary }} data-openlibrary="{{ .openlibrary }}"{{ end }}{{ if .songs }} data-songs="{{ .songs | jsonify }}"{{ end }}{{ if $consumedLink }} data-link="{{ $consumedLink }}"{{ end }}>
+        {{ if .category }} data-category="{{ .category }}"{{ end }}{{ if $releaseYear }} data-year="{{ $releaseYear }}"{{ end }}{{ if .date }} data-date="{{ .date }}"{{ end }}{{ if .title }} data-title="{{ .title | safeHTML }}"{{ end }}{{ if .director }} data-director="{{ .director }}"{{ end }}{{ if .author }} data-author="{{ .author }}"{{ end }}{{ if .artist }} data-artist="{{ .artist }}"{{ end }}{{ if .label }} data-label="{{ .label }}"{{ end }}{{ if .publisher }} data-publisher="{{ .publisher }}"{{ end }}{{ if .rating }} data-rating="{{ .rating }}"{{ end }}{{ if .review }} data-review="{{ .review | safeHTML }}"{{ end }}{{ if .content }} data-content="{{ .content | safeHTML }}"{{ end }}{{ if .tmdb }} data-tmdb="{{ .tmdb }}"{{ end }}{{ if .discogs }} data-discogs="{{ .discogs }}"{{ end }}{{ if .discogsArtist }} data-discogs-artist="{{ .discogsArtist }}"{{ end }}{{ if .discogsLabel }} data-discogs-label="{{ .discogsLabel }}"{{ end }}{{ if .genre }} data-genre="{{ .genre }}"{{ end }}{{ if .style }} data-style="{{ .style }}"{{ end }}{{ if .openlibrary }} data-openlibrary="{{ .openlibrary }}"{{ end }}{{ if .songs }} data-songs="{{ .songs | jsonify }}"{{ end }}{{ if $consumedLink }} data-link="{{ $consumedLink }}"{{ end }}>
         {{ if $isPosterGrid }}
           {{ $itemImg := .img | default "" }}
           {{ if $itemImg }}
-            {{/* Process image through Hugo for dithering effect - WebP/AVIF only */}}
+            {{/* Process image through Hugo for dithering effect - WebP only */}}
             {{ $imgResource := "" }}
             {{ if hasPrefix $itemImg "/" }}
               {{ $imgPath := strings.TrimPrefix "/" $itemImg }}
+              {{/* Try to get from assets first */}}
               {{ $imgResource = resources.Get $imgPath }}
+              {{/* If not found, try without images/ prefix (in case path is wrong) */}}
+              {{ if not $imgResource }}
+                {{ $imgPathAlt := strings.TrimPrefix "images/" $imgPath }}
+                {{ if ne $imgPathAlt $imgPath }}
+                  {{ $imgResource = resources.Get $imgPathAlt }}
+                {{ end }}
+              {{ end }}
             {{ else }}
               {{ $imgResource = resources.Get $itemImg }}
             {{ end }}
             {{ if $imgResource }}
               {{/* Resize for poster grid - maintain aspect ratio */}}
               {{ $resizedImg := $imgResource.Resize "400x q90" }}
-              {{ $grayscaleImg := $resizedImg.Filter (images.Grayscale) }}
+              {{/* Adjust contrast to normalize brightness for better blend mode behavior */}}
+              {{ $contrastImg := $resizedImg.Filter (images.Contrast -5) }}
+              {{ $grayscaleImg := $contrastImg.Filter (images.Grayscale) }}
               
               {{/* Dither options - using grayscale palette with FloydSteinberg */}}
               {{ $ditherOpts := dict
@@ -394,19 +399,16 @@
               {{ $ditherFilter := images.Dither $ditherOpts }}
               {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
               
-              {{/* Create WebP and AVIF versions of dithered image */}}
+              {{/* Create WebP version of dithered image */}}
               {{ $ditheredWebP := $ditheredImg.Resize "400x webp q90" }}
-              {{ $ditheredAVIF := $ditheredImg.Resize "400x avif q90" }}
-              
-              {{/* Create WebP and AVIF versions of original for hover */}}
+
+              {{/* Create WebP version of original for hover */}}
               {{ $originalWebP := $imgResource.Resize "400x webp q90" }}
-              {{ $originalAVIF := $imgResource.Resize "400x avif q90" }}
               
               {{ if $consumedLink }}
                 <a href="{{ $consumedLink }}" class="consumed-poster-link">
                   <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
                     <picture class="dithered-poster">
-                      {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
                       <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
                       <img src="{{ $ditheredWebP.RelPermalink }}" 
                            alt="{{ .title | safeHTML }}" 
@@ -415,10 +417,9 @@
                            height="{{ $ditheredWebP.Height }}"
                            loading="lazy"
                            decoding="async"
-                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                           >
                     </picture>
                     <picture class="original-poster">
-                      {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
                       <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
                       <img src="{{ $originalWebP.RelPermalink }}" 
                            alt="{{ .title | safeHTML }} (original)" 
@@ -426,14 +427,13 @@
                            height="{{ $originalWebP.Height }}"
                            loading="lazy"
                            decoding="async"
-                           {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                           >
                     </picture>
                   </div>
                 </a>
               {{ else }}
                 <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
                   <picture class="dithered-poster">
-                    {{ if $ditheredAVIF }}<source srcset="{{ $ditheredAVIF.RelPermalink }}" type="image/avif">{{ end }}
                     <source srcset="{{ $ditheredWebP.RelPermalink }}" type="image/webp">
                     <img src="{{ $ditheredWebP.RelPermalink }}" 
                          alt="{{ .title | safeHTML }}" 
@@ -442,10 +442,9 @@
                          height="{{ $ditheredWebP.Height }}"
                          loading="lazy"
                          decoding="async"
-                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                         >
                   </picture>
                   <picture class="original-poster">
-                    {{ if $originalAVIF }}<source srcset="{{ $originalAVIF.RelPermalink }}" type="image/avif">{{ end }}
                     <source srcset="{{ $originalWebP.RelPermalink }}" type="image/webp">
                     <img src="{{ $originalWebP.RelPermalink }}" 
                          alt="{{ .title | safeHTML }} (original)" 
@@ -453,18 +452,32 @@
                          height="{{ $originalWebP.Height }}"
                          loading="lazy"
                          decoding="async"
-                         {{ if eq .category "music" }}style="object-fit: contain;"{{ else }}style="width: 100%; height: 100%; object-fit: cover;"{{ end }}>
+                         >
                   </picture>
                 </div>
               {{ end }}
             {{ else }}
-              {{/* Fallback to original image if resource not found */}}
+              {{/* Fallback to original image if resource not found - wrap in container for consistency */}}
               {{ if $consumedLink }}
-                <a href="{{ $consumedLink }}">
-                  <img src="{{ $itemImg }}" alt="{{ .title | safeHTML }}">
+                <a href="{{ $consumedLink }}" class="consumed-poster-link">
+                  <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                    <img src="{{ $itemImg }}" 
+                         alt="{{ .title | safeHTML }}" 
+                         class="dithered-img"
+                         loading="lazy"
+                         decoding="async"
+                         >
+                  </div>
                 </a>
               {{ else }}
-                <img src="{{ $itemImg }}" alt="{{ .title | safeHTML }}">
+                <div class="consumed-poster-image-container"{{ if .category }} data-category="{{ .category }}"{{ end }}>
+                  <img src="{{ $itemImg }}" 
+                       alt="{{ .title | safeHTML }}" 
+                       class="dithered-img"
+                       loading="lazy"
+                       decoding="async"
+                       >
+                </div>
               {{ end }}
             {{ end }}
           {{ else }}
@@ -500,7 +513,11 @@
   {{ else }}
     <p><em>No items to display.</em></p>
   {{ end }}
-</div>
+  </div>
+
+  {{/* Close views container */}}
+  </div>
+
 </div>
 {{ end }}
 

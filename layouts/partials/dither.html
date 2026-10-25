@@ -1,0 +1,14 @@
+{{/* Dither an image resource the site's way: resize → grayscale → 5-step grey
+     Floyd–Steinberg. The scheme duotone comes from CSS (mix-blend-mode), so
+     the output is neutral grey and works in every colour scheme.
+     Context: dict "img" <image resource> "width" <px> ["quality" <1-100>].
+     Returns the processed image resource. */}}
+{{- $spec := printf "%vx q%v" .width (.quality | default 85) -}}
+{{- $gray := (.img.Resize $spec).Filter (images.Grayscale) -}}
+{{- $dither := images.Dither (dict
+  "colors" (slice "1a1a1a" "4d4d4d" "808080" "b3b3b3" "e6e6e6")
+  "method" "FloydSteinberg"
+  "strength" 0.9
+  "serpentine" true
+) -}}
+{{- return ($gray.Filter $dither) -}}

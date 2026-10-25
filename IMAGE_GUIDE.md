@@ -6,11 +6,11 @@ This guide explains how to use the image processing system with dithered images 
 
 The theme supports:
 - ✅ **WebP format** (modern, efficient)
-- ✅ **AVIF format** (optional, for modern browsers)
+- ✅ **AVIF** (only when you provide a pre-converted `.avif` next to the source in `assets/`; Hugo does not encode AVIF)
 - ✅ **Dithered images** (lo-fi aesthetic using Hugo's native `images.Dither`)
 - ✅ **Toggle to original** (via button in caption)
 - ✅ **Lazy loading** (performance)
-- ✅ **Automatic processing** (no pre-dithered files needed)
+- ✅ **Automatic dithering** with the `dithered` shortcode (no pre-dithered files needed)
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ The theme supports:
 Put images in one of these locations:
 - `assets/` - Processed by Hugo (recommended)
 - `static/` - Served as-is (for pre-processed images)
-- `content/posts/` - Page-relative images
+- `content/made/` - Page-relative images
 
 ### 2. Use in Content
 
@@ -108,7 +108,7 @@ This shortcode automatically creates dithered images using Hugo's native `images
 2. Resizes it to the specified width (preserving aspect ratio)
 3. Converts to grayscale
 4. Applies Floyd-Steinberg dithering with a 5-color grayscale palette
-5. Generates optimized WebP/AVIF versions
+5. Generates optimized WebP versions (plus a pre-converted `.avif` sibling, if one exists)
 6. Creates a toggle button in the caption (if enabled)
 
 ### `img_compare` - Side-by-Side Comparison
@@ -203,7 +203,7 @@ Files served as-is, no Hugo processing. For dithered images, use `assets/` inste
 ### Page Resources
 
 ```
-content/posts/my-post/
+content/made/my-post/
   index.md
   image.jpg
 ```
@@ -303,7 +303,7 @@ snap install hugo --channel=extended
 ## Performance Tips
 
 1. **Appropriate sizes**: Don't use 4K images for thumbnails
-2. **WebP/AVIF compression**: Already optimized in shortcodes
+2. **WebP compression**: Already optimized in shortcodes
 3. **Lazy loading**: Enabled by default in shortcodes
 4. **Build caching**: Hugo caches processed images
 
@@ -320,7 +320,7 @@ See the theme demo for live examples:
 | Format | Support | Notes |
 |--------|---------|-------|
 | WebP | ✅ Yes | Auto-generated, with fallback |
-| AVIF | ✅ Yes | Auto-generated for modern browsers |
+| AVIF | ✅ Optional | Used only if a pre-converted `.avif` sibling exists in `assets/` |
 | JPEG | ✅ Yes | Fallback format |
 | PNG | ✅ Yes | For graphics with transparency |
 

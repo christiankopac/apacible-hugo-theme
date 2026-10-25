@@ -1,0 +1,88 @@
+{{ define "content" }}
+{{ $items := where .Pages "Section" "found" }}
+{{ $items = $items.ByDate.Reverse }}
+
+{{/* Sibling collections — others that share items with this one */}}
+{{ $siblings := dict }}
+{{ $thisSlug := .Data.Term | lower }}
+{{ range $items }}
+  {{ range .Params.collections }}
+    {{ $s := . | lower }}
+    {{ if ne $s $thisSlug }}
+      {{ $siblings = merge $siblings (dict $s (add (index $siblings $s | default 0) 1)) }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ $siblingPairs := slice }}
+{{ range $s, $n := $siblings }}
+  {{ $siblingPairs = $siblingPairs | append (dict "name" $s "n" $n) }}
+{{ end }}
+{{ $siblingPairs = sort $siblingPairs "n" "desc" }}
+
+<section class="found-section">
+  <header class="found-header">
+    <p class="found-eyebrow">
+      <a href="{{ "/found/" | relLangURL }}">found</a> · collection
+    </p>
+    <h1>{{ .Title }}</h1>
+    <p class="section-description">{{ len $items }} item{{ if ne (len $items) 1 }}s{{ end }}.</p>
+  </header>
+
+  {{ if gt (len $items) 0 }}
+    <ol class="found-ledger">
+      {{ range $items }}
+        {{ $host := "" }}
+        {{ with .Params.link }}
+          {{ $h := . | strings.TrimPrefix "https://" | strings.TrimPrefix "http://" }}
+          {{ $host = index (split $h "/") 0 | strings.TrimPrefix "www." }}
+        {{ end }}
+        <li class="found-row">
+          <div class="found-main">
+            <h2 class="found-title">
+              <a href="{{ .Params.link }}" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade">
+                {{ .Title }}
+              </a>
+            </h2>
+            {{ with .Content }}
+              <div class="found-take">{{ . }}</div>
+            {{ end }}
+            {{ if eq (.Params.via | default "") "github" }}
+              <div class="found-health">
+                {{ with .Params.params }}
+                  {{ with .stars }}<span class="found-stars" title="stars">★ {{ . }}</span>{{ end }}
+                  {{ with .last_push }}<span class="found-pushed" title="last push">↻ {{ . }}</span>{{ end }}
+                  {{ if .archived }}<span class="found-archived" title="archived">archived</span>{{ end }}
+                {{ end }}
+              </div>
+            {{ end }}
+          </div>
+          <aside class="found-meta">
+            {{ with $host }}<span class="found-host">{{ . }}</span>{{ end }}
+            {{ with .Params.via }}<span class="found-via">via {{ . }}</span>{{ end }}
+            <time class="found-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>
+            <a class="found-permalink" href="{{ .RelPermalink }}" title="Permalink to this entry">¶</a>
+          </aside>
+        </li>
+      {{ end }}
+    </ol>
+  {{ else }}
+    <p><em>Nothing in this collection yet.</em></p>
+  {{ end }}
+
+  {{ if gt (len $siblingPairs) 0 }}
+    <nav class="found-collections" aria-label="Adjacent collections">
+      <h2 class="found-collections-label">adjacent</h2>
+      <ul class="found-collections-list">
+        {{ range $siblingPairs }}
+          <li>
+            <a href="{{ printf "/collections/%s/" .name | relLangURL }}">
+              <span class="found-collection-name">{{ .name }}</span>
+              <span class="found-collection-count">{{ .n }}</span>
+            </a>
+          </li>
+        {{ end }}
+      </ul>
+    </nav>
+  {{ end }}
+</section>
+{{ end }}

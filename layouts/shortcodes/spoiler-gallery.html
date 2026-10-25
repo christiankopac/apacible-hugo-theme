@@ -22,7 +22,7 @@
 {{ if $file }}
   {{ $dataPath := replace $file (path.Ext $file) "" }}
   {{ $dataPath = replace $dataPath "/" "." }}
-  {{ $data := index .Site.Data $dataPath }}
+  {{ $data := index hugo.Data $dataPath }}
   {{ if $data }}
     {{ $images = $data.images }}
   {{ end }}
@@ -50,14 +50,18 @@
         {{ $img := resources.Get $imgPath }}
         
         {{ if $img }}
-          {{/* Optimize image - resize to max width while preserving aspect ratio */}}
+          {{ $origExt := path.Ext $imgPath }}
+          {{ $avifPath := replace $imgPath $origExt ".avif" }}
+          {{ $avifImg := resources.Get $avifPath }}
+
           {{ $optimizedImg := $img.Resize (printf "%sx q%s" $fullWidth $fullQuality) }}
           {{ $optimizedWebP := $img.Resize (printf "%sx webp q%s" $fullWidth $fullQuality) }}
-          {{ $optimizedAVIF := $img.Resize (printf "%sx avif q%s" $fullWidth $fullQuality) }}
-          
+
           <figure class="screenshot-item">
             <picture>
-              <source srcset="{{ $optimizedAVIF.RelPermalink }}" type="image/avif" width="{{ $optimizedAVIF.Width }}" height="{{ $optimizedAVIF.Height }}">
+              {{ if $avifImg }}
+              <source srcset="{{ $avifImg.RelPermalink }}" type="image/avif" width="{{ $img.Width }}" height="{{ $img.Height }}">
+              {{ end }}
               <source srcset="{{ $optimizedWebP.RelPermalink }}" type="image/webp" width="{{ $optimizedWebP.Width }}" height="{{ $optimizedWebP.Height }}">
               <img src="{{ $optimizedImg.RelPermalink }}" 
                    alt="{{ $imgAlt }}" 

@@ -1,0 +1,12 @@
+{{/* Is this /playlists/ page a radio broadcast (vs a curated mix)?
+     Configured via [params.playlists.radio]: a page is radio when its
+     `source` contains `source`, its title starts with `name`, or its file
+     path contains `path`. Without that table every playlist is a mix.
+     Context: the page. Returns a bool. */}}
+{{- $radio := (site.Params.playlists | default dict).radio | default dict -}}
+{{- $src := .Params.source | default "" -}}
+{{- $path := .File.Path | default "" -}}
+{{- return (not (not (or
+  (and $radio.source $src (in $src $radio.source))
+  (and $radio.name (hasPrefix .Title $radio.name))
+  (and $radio.path (in $path $radio.path))))) -}}

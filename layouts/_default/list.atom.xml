@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  {{- $pages := first 20 (.Pages.ByLastmod.Reverse) -}}
+  {{- /* For consumed section, include all items; for others, limit to 20 */}}
+  {{- $pages := .Pages.ByLastmod.Reverse -}}
+  {{- if ne .Section "margins" }}
+    {{- $pages = first 20 $pages -}}
+  {{- end }}
   {{- $self := .OutputFormats.Get "Atom" -}}
   {{- $html := .OutputFormats.Get "HTML" -}}
-  <title>{{ .Title }}</title>
+  {{- $owner := .Site.Params.copyright_holder | default .Site.Title -}}
+  {{- $feedTitle := .Title -}}
+  {{- if eq .Section "made" -}}
+    {{- $feedTitle = printf (i18n "feedTitleMade" | default "%s’s Articles") $owner -}}
+  {{- else if eq .Section "margins" -}}
+    {{- $feedTitle = printf (i18n "feedTitleMargins" | default "%s’s Margins") $owner -}}
+  {{- else if eq .Section "found" -}}
+    {{- $feedTitle = printf (i18n "feedTitleFound" | default "%s’s Found") $owner -}}
+  {{- else if eq .Section "playlists" -}}
+    {{- $feedTitle = printf (i18n "feedTitlePlaylists" | default "%s’s Playlists") $owner -}}
+  {{- end -}}
+  <title>{{ $feedTitle | htmlUnescape | transform.XMLEscape }}</title>
   <id>{{ with $html }}{{ .Permalink }}{{ else }}{{ .Permalink }}{{ end }}</id>
   <updated>{{ with index $pages 0 }}{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}{{ else }}{{ now.UTC.Format "2006-01-02T15:04:05Z07:00" }}{{ end }}</updated>
   {{- with $self }}
@@ -13,14 +28,14 @@
   <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
   {{- end }}
   {{- if .Description }}
-  <subtitle>{{ .Description | plainify }}</subtitle>
+  <subtitle>{{ .Description | plainify | htmlUnescape | transform.XMLEscape }}</subtitle>
   {{- else if .Site.Params.description }}
-  <subtitle>{{ .Site.Params.description | plainify }}</subtitle>
+  <subtitle>{{ .Site.Params.description | plainify | htmlUnescape | transform.XMLEscape }}</subtitle>
   {{- end }}
   <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
   {{- range $pages }}
   <entry>
-    <title>{{ .Title }}</title>
+    <title>{{ .Title | htmlUnescape | transform.XMLEscape }}</title>
     <link rel="alternate" type="text/html" href="{{ .Permalink }}" />
     <id>{{ .Permalink }}</id>
     <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
@@ -28,15 +43,44 @@
     <published>{{ .Format "2006-01-02T15:04:05Z07:00" }}</published>
     {{- end }}
     <author>
-      <name>{{ with .Params.author }}{{ . }}{{ else }}{{ $.Site.Title }}{{ end }}</name>
+      <name>{{ with .Params.author }}{{ . | htmlUnescape | transform.XMLEscape }}{{ else }}{{ $.Site.Title | htmlUnescape | transform.XMLEscape }}{{ end }}</name>
     </author>
     {{- with .Params.description }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
     {{- else }}{{ with .Summary }}
-    <summary>{{ . | plainify }}</summary>
+    <summary>{{ . | plainify | htmlUnescape | transform.XMLEscape }}</summary>
     {{- end }}{{ end }}
-    <content type="html"><![CDATA[{{ .Content | safeHTML }}]]></content>
+    {{- /* Thumbnail image for feed readers. Hugo's asset pipeline only
+           publishes resources that are *transformed* (e.g. .Resize), so
+           we run the image through a small webp resize. This guarantees
+           the emitted URL points at a file that will be in public/ and
+           keeps the feed payload light. External URLs pass through. */}}
+    {{- $img := .Params.img | default .Params.image }}
+    {{- $imgURL := "" }}
+    {{- $imgType := "image/jpeg" }}
+    {{- if $img }}
+      {{- if hasPrefix $img "http" }}
+        {{- $imgURL = $img }}
+      {{- else }}
+        {{- $imgRes := resources.Get (strings.TrimPrefix "/" $img) }}
+        {{- if $imgRes }}
+          {{- $thumb := $imgRes.Resize "800x webp q85" }}
+          {{- $imgURL = $thumb.Permalink }}
+          {{- $imgType = "image/webp" }}
+        {{- else }}
+          {{- /* Fallback: treat as a /static/ path */}}
+          {{- $imgURL = $img | absURL }}
+          {{- $ext := path.Ext $imgURL | lower }}
+          {{- if eq $ext ".png" }}{{- $imgType = "image/png" }}
+          {{- else if eq $ext ".webp" }}{{- $imgType = "image/webp" }}
+          {{- else if eq $ext ".gif" }}{{- $imgType = "image/gif" }}
+          {{- else if eq $ext ".avif" }}{{- $imgType = "image/avif" }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    <link rel="enclosure" type="{{ $imgType }}" href="{{ $imgURL }}" />
+    {{- end }}
+    <content type="html"><![CDATA[{{ if $imgURL }}<p><img src="{{ $imgURL }}" alt="{{ .Title | htmlUnescape | transform.XMLEscape }}" /></p>{{ end }}{{ .Content | safeHTML }}]]></content>
   </entry>
   {{- end }}
 </feed>
-

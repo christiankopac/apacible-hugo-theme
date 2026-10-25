@@ -17,6 +17,7 @@
 {{ $src := .Get "src" }}
 {{ $alt := .Get "alt" }}
 {{ $caption := .Get "caption" }}
+{{ $class := .Get "class" }}
 {{ $width := .Get "width" | default "800" }}
 {{ $height := .Get "height" | default "600" }}
 {{ $quality := .Get "quality" | default "85" }}
@@ -39,41 +40,29 @@
 {{ end }}
 
 {{ if $img }}
+  {{/* Check for pre-converted AVIF file for original */}}
+  {{ $origExt := path.Ext $imgPath }}
+  {{ $avifPath := replace $imgPath $origExt ".avif" }}
+  {{ $avifImg := resources.Get $avifPath }}
+
   {{/* Use Hugo's native image processing with built-in dithering */}}
   {{ $spec := printf "%sx q%s" $width $quality }}
   {{ $webpSpec := printf "%sx webp q%s" $width $quality }}
-  {{ $avifSpec := printf "%sx avif q%s" $width $quality }}
   
-  {{/* Create dithered version using Hugo's images.Dither filter */}}
-  {{/* Recommended: resize first, then grayscale, then dither, convert to PNG for best results */}}
-  {{ $resizedImg := $img.Resize $spec }}
-  {{ $grayscaleImg := $resizedImg.Filter (images.Grayscale) }}
-  
-  {{/* Dither options - using grayscale palette with FloydSteinberg for smoother dithering */}}
-  {{ $ditherOpts := dict
-    "colors" (slice "1a1a1a" "4d4d4d" "808080" "b3b3b3" "e6e6e6")
-    "method" "FloydSteinberg"
-    "strength" 0.9
-    "serpentine" true
-  }}
-  {{ $ditherFilter := images.Dither $ditherOpts }}
-  {{ $ditheredImg := $grayscaleImg.Filter $ditherFilter }}
-  {{/* Use dithered image directly (Hugo will handle format) */}}
-  {{ $processedDithered := $ditheredImg }}
+  {{/* Dithered version via the shared pipeline (partials/dither.html). */}}
+  {{ $processedDithered := partial "dither.html" (dict "img" $img "width" $width "quality" $quality) }}
   
   {{/* Process original for toggle */}}
   {{ $processedOrig := "" }}
   {{ $processedOrigWebP := "" }}
-  {{ $processedOrigAVIF := "" }}
   {{ if $showOriginal }}
     {{ $processedOrig = $img.Resize $spec }}
     {{ $processedOrigWebP = $img.Resize $webpSpec }}
-    {{ $processedOrigAVIF = $img.Resize $avifSpec }}
   {{ end }}
 
   {{/* Always wrap in figure if caption exists or showOriginal is true */}}
   {{ if or $showOriginal $caption }}
-<figure class="responsive-image{{ if $showOriginal }} has-toggle{{ end }}">
+<figure class="responsive-image{{ if $showOriginal }} has-toggle{{ end }}{{ with $class }} {{ . }}{{ end }}">
   <div class="image-container">
     {{ if $showOriginal }}
       {{/* Dithered images with toggle */}}
@@ -85,7 +74,7 @@
            loading="lazy"
            decoding="async">
       <picture class="original-img" style="display: none;">
-        <source srcset="{{ $processedOrigAVIF.RelPermalink }}" type="image/avif">
+        {{ if $avifImg }}<source srcset="{{ $avifImg.RelPermalink }}" type="image/avif">{{ end }}
         <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
         <img src="{{ $processedOrig.RelPermalink }}"
              alt="{{ $alt }} (original)"
@@ -120,8 +109,8 @@
 </figure>
   {{ else }}
     {{/* No caption and no toggle - just show dithered image */}}
-    <img class="responsive-image dithered-img" 
-         src="{{ $processedDithered.RelPermalink }}" 
+    <img class="responsive-image dithered-img{{ with $class }} {{ . }}{{ end }}"
+         src="{{ $processedDithered.RelPermalink }}"
          alt="{{ $alt }}" 
          width="{{ $processedDithered.Width }}" 
          height="{{ $processedDithered.Height }}"

@@ -1,0 +1,9 @@
+{{/* Header logo mark. params.logo names an SVG under assets/ that is inlined
+     as-is (draw it with currentColor so it follows the theme/scheme and hover
+     colour). Without it, the bundled mark from static/img/favicon.svg is used.
+     Decorative: the wrapping link carries the accessible name. */}}
+{{- with site.Params.logo -}}
+  {{- with resources.Get . -}}{{ .Content | safeHTML }}{{- else -}}{{ warnf "apacible: params.logo %q not found under assets/" . }}{{- end -}}
+{{- else }}
+<svg class="logo-mark" viewBox="0 0 270 270" fill="none" aria-hidden="true" focusable="false"><path d="M114.384 52.8279C-25.5684 142.352 22.3605 312.65 171.26 129.563M171.26 129.563C189.325 107.35 215.355 67.6364 239 36M171.26 129.563L171.26 52.8279M171.26 129.563V209.664M171.26 129.563L239 209.664" stroke="currentColor" stroke-width="28" stroke-linecap="round"/></svg>
+{{- end }}

@@ -61,31 +61,31 @@
     {{ end }}
   {{ end }}
   
+  {{/* Check for pre-converted AVIF file */}}
+  {{ $origExt := path.Ext $imgPath }}
+  {{ $avifPath := replace $imgPath $origExt ".avif" }}
+  {{ $avifImg := resources.Get $avifPath }}
+
   {{/* Use Hugo's native image processing */}}
   {{ $processedImg := "" }}
   {{ $processedWebP := "" }}
-  {{ $processedAVIF := "" }}
   {{ $processedDithered := "" }}
   {{ $processedOrigWebP := "" }}
-  {{ $processedOrigAVIF := "" }}
   {{ $processedOrig := "" }}
 
   {{/* Build the process spec - use only width to preserve aspect ratio */}}
   {{ $spec := printf "%sx q%s" $width $quality }}
   {{ $webpSpec := printf "%sx webp q%s" $width $quality }}
-  {{ $avifSpec := printf "%sx avif q%s" $width $quality }}
 
   {{/* Always use Resize with width only to preserve aspect ratio and prevent rotation */}}
   {{ $processedImg = $img.Resize $spec }}
   {{ $processedWebP = $img.Resize $webpSpec }}
-  {{ $processedAVIF = $img.Resize $avifSpec }}
   {{ if $ditheredImg }}
     {{ $processedDithered = $ditheredImg.Resize $spec }}
   {{ end }}
   {{ if $showOriginal }}
     {{ $processedOrig = $img.Resize $spec }}
     {{ $processedOrigWebP = $img.Resize $webpSpec }}
-    {{ $processedOrigAVIF = $img.Resize $avifSpec }}
   {{ end }}
 
   {{/* Wrap in figure if caption is provided */}}
@@ -101,32 +101,32 @@
            height="{{ $processedDithered.Height }}"
            loading="lazy"
            decoding="async">
-      {{ if $showOriginal }}
-      <picture class="original-img" style="display: none;">
-        <source srcset="{{ $processedOrigAVIF.RelPermalink }}" type="image/avif">
-        <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
-        <img src="{{ $processedOrig.RelPermalink }}"
-             alt="{{ $alt }} (original)"
-             width="{{ $processedOrig.Width }}"
-             height="{{ $processedOrig.Height }}"
-             loading="lazy"
-             decoding="async">
-      </picture>
-      {{ end }}
-    {{ else }}
-      <picture>
-        <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
-        <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
-        <img src="{{ $processedImg.RelPermalink }}"
-             alt="{{ $alt }}"
-             width="{{ $processedImg.Width }}"
-             height="{{ $processedImg.Height }}"
-             loading="lazy"
-             decoding="async">
-      </picture>
-    {{ end }}
-  </div>
-  <figcaption>
+       {{ if $showOriginal }}
+       <picture class="original-img" style="display: none;">
+         {{ if $avifImg }}<source srcset="{{ $avifImg.RelPermalink }}" type="image/avif">{{ end }}
+         <source srcset="{{ $processedOrigWebP.RelPermalink }}" type="image/webp">
+         <img src="{{ $processedOrig.RelPermalink }}"
+              alt="{{ $alt }} (original)"
+              width="{{ $processedOrig.Width }}"
+              height="{{ $processedOrig.Height }}"
+              loading="lazy"
+              decoding="async">
+       </picture>
+       {{ end }}
+     {{ else }}
+       <picture>
+         {{ if $avifImg }}<source srcset="{{ $avifImg.RelPermalink }}" type="image/avif" width="{{ $img.Width }}" height="{{ $img.Height }}">{{ end }}
+         <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
+         <img src="{{ $processedImg.RelPermalink }}"
+              alt="{{ $alt }}"
+              width="{{ $processedImg.Width }}"
+              height="{{ $processedImg.Height }}"
+              loading="lazy"
+              decoding="async">
+       </picture>
+     {{ end }}
+   </div>
+   <figcaption>
     {{ $caption | markdownify }}
     {{ if and $dithered $ditheredImg $showOriginal }}
     <button class="toggle-original"
@@ -150,7 +150,7 @@
          decoding="async">
     {{ else }}
     <picture class="responsive-image">
-      <source srcset="{{ $processedAVIF.RelPermalink }}" type="image/avif" width="{{ $processedAVIF.Width }}" height="{{ $processedAVIF.Height }}">
+      {{ if $avifImg }}<source srcset="{{ $avifImg.RelPermalink }}" type="image/avif" width="{{ $img.Width }}" height="{{ $img.Height }}">{{ end }}
       <source srcset="{{ $processedWebP.RelPermalink }}" type="image/webp" width="{{ $processedWebP.Width }}" height="{{ $processedWebP.Height }}">
       <img src="{{ $processedImg.RelPermalink }}"
            alt="{{ $alt }}"

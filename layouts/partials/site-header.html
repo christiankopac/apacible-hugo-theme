@@ -1,0 +1,41 @@
+{{/* Site header: CK mark (home) · one-level-up crumb · utility dock · menu.
+
+     The header is a swup swap container (the crumb changes per page). The menu
+     button is a plain in-page link to the footer index (#site-footer), so it
+     works without JS and scrolls smoothly via `scroll-behavior` on <html>.
+
+     The utility dock (search · colour · theme) sits in the header on wide
+     screens; on narrow screens CSS lifts the same element into a floating
+     bottom dock within thumb reach, so there is one set of controls (one set of
+     IDs) at every size. */}}
+<header class="site-header" id="top">
+  <a class="site-logo" href="{{ "/" | relLangURL }}" aria-label="{{ i18n "home" | default "Home" }} — {{ site.Params.copyright_holder | default site.Title }}">{{ partial "logo-mark.html" . }}</a>
+
+  {{ if not .IsHome }}
+    {{ $backUrl := "" }}
+    {{ $backText := "" }}
+    {{ if .IsPage }}
+      {{ with .Site.GetPage (printf "/%s" .Section) }}
+        {{ $backUrl = .RelPermalink }}
+        {{ $backText = .Title }}
+      {{ end }}
+    {{ else if and .IsSection .Parent (not .Parent.IsHome) }}
+      {{ $backUrl = .Parent.RelPermalink }}
+      {{ $backText = .Parent.Title }}
+    {{ end }}
+    {{ with $backUrl }}
+    <a href="{{ . }}" class="back-link"><span aria-hidden="true">/</span> {{ $backText }}</a>
+    {{ end }}
+  {{ end }}
+
+  <div class="site-header__end">
+    {{ partial "top-utility.html" . }}
+    <a class="menu-link" href="#site-footer" aria-label="{{ i18n "menu" | default "Menu" }}" title="{{ i18n "menu" | default "Menu" }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <line x1="4" y1="7" x2="20" y2="7"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="17" x2="20" y2="17"></line>
+      </svg>
+    </a>
+  </div>
+</header>

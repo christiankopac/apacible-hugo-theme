@@ -1,45 +1,104 @@
-@import url('/css/tokens.css');
-/* Theme System - Earthy & Playful */
+/* Theme System */
 
 /* Fallback for initial page load before JavaScript sets data-theme */
 :root:not([data-theme]) {
-  /* Light theme - soft sage green for calm vibes */
-  --color-bg: #dfe5db;
-  --color-bg-secondary: #d2d9cd;
-  --color-text: #1a1a1a;
-  --color-text-secondary: #4a524a;
-  --color-text-tertiary: #7a827a;
-  --color-border: #c8d0c2;
-  --color-border-secondary: #b8c2b0;
-  --color-link: #c75b4a;
-  --color-link-hover: #8a3d2e;
-  --color-accent: #c75b4a;
-  --color-accent-secondary: #6a9474;
-  --color-accent-tertiary: #7282a8;
-  --color-code-bg: #d0d8ca;
-  
-  /* Syntax highlighting variables */
+  /* Everforest light (default) */
+  --color-bg: #fefae0;
+  --color-bg-secondary: #f2efdf;
+  --color-text: #5c6a72;
+  --color-text-secondary: #7a8478;
+  --color-text-tertiary: #939f91;
+  --color-border: #e0dcc7;
+  --color-border-secondary: #d3cfba;
+  --color-link: #8da101;
+  --color-link-hover: #6c7e00;
+  --color-accent: #8da101;
+  --color-accent-secondary: #a7c080;
+  --color-accent-tertiary: #7fbbb3;
+  --color-code-bg: #f2efdf;
   --syntax-bg: var(--color-code-bg);
   --syntax-fg: var(--color-text);
   --syntax-comment: var(--color-text-tertiary);
-  --syntax-keyword: #5a6a5a;
-  --syntax-string: #8a5a4a;
-  --syntax-function: #5a6a7a;
+  --syntax-keyword: #8da101;
+  --syntax-string: #f57d26;
+  --syntax-function: #7fbbb3;
   --syntax-variable: var(--color-text-secondary);
-  --syntax-number: #6a5a4a;
+  --syntax-number: #d699b6;
   --syntax-operator: var(--color-text-secondary);
-  --syntax-type: #5a6a5a;
-  --syntax-constant: #7a4a3a;
-  --syntax-tag: #5a6a7a;
-  --syntax-attribute: #6a5a4a;
-  
+  --syntax-type: #a7c080;
+  --syntax-constant: #e67e80;
+  --syntax-tag: #7fbbb3;
+  --syntax-attribute: #dbbc7f;
   color-scheme: light;
 }
 
-/* Default light theme - only applies when no color scheme is set or when explicitly default */
+/* Everforest (default) */
 html[data-theme="light"]:not([data-color-scheme]),
-html[data-color-scheme="default"][data-theme="light"] {
-  /* Light theme - soft sage green for calm vibes */
+html[data-color-scheme="default"][data-theme="light"],
+html[data-color-scheme="everforest"][data-theme="light"] {
+  --color-bg: #fefae0;
+  --color-bg-secondary: #f2efdf;
+  --color-text: #5c6a72;
+  --color-text-secondary: #7a8478;
+  --color-text-tertiary: #939f91;
+  --color-border: #e0dcc7;
+  --color-border-secondary: #d3cfba;
+  --color-link: #8da101;
+  --color-link-hover: #6c7e00;
+  --color-accent: #8da101;
+  --color-accent-secondary: #a7c080;
+  --color-accent-tertiary: #7fbbb3;
+  --color-code-bg: #f2efdf;
+  --syntax-bg: var(--color-code-bg);
+  --syntax-fg: var(--color-text);
+  --syntax-comment: var(--color-text-tertiary);
+  --syntax-keyword: #8da101;
+  --syntax-string: #f57d26;
+  --syntax-function: #7fbbb3;
+  --syntax-variable: var(--color-text-secondary);
+  --syntax-number: #d699b6;
+  --syntax-operator: var(--color-text-secondary);
+  --syntax-type: #a7c080;
+  --syntax-constant: #e67e80;
+  --syntax-tag: #7fbbb3;
+  --syntax-attribute: #dbbc7f;
+  color-scheme: light;
+}
+
+html[data-theme="dark"]:not([data-color-scheme]),
+html[data-color-scheme="default"][data-theme="dark"],
+html[data-color-scheme="everforest"][data-theme="dark"] {
+  --color-bg: #2d353b;
+  --color-bg-secondary: #343f44;
+  --color-text: #d3c6aa;
+  --color-text-secondary: #9da9a0;
+  --color-text-tertiary: #7a8478;
+  --color-border: #3d484d;
+  --color-border-secondary: #4a5559;
+  --color-link: #a7c080;
+  --color-link-hover: #83c092;
+  --color-accent: #a7c080;
+  --color-accent-secondary: #7fbbb3;
+  --color-accent-tertiary: #d699b6;
+  --color-code-bg: #333e43;
+  --syntax-bg: var(--color-code-bg);
+  --syntax-fg: var(--color-text);
+  --syntax-comment: var(--color-text-tertiary);
+  --syntax-keyword: #a7c080;
+  --syntax-string: #e69875;
+  --syntax-function: #7fbbb3;
+  --syntax-variable: var(--color-text-secondary);
+  --syntax-number: #d699b6;
+  --syntax-operator: var(--color-text-secondary);
+  --syntax-type: #a7c080;
+  --syntax-constant: #e67e80;
+  --syntax-tag: #7fbbb3;
+  --syntax-attribute: #dbbc7f;
+  color-scheme: dark;
+}
+
+/* Sage */
+html[data-color-scheme="sage"][data-theme="light"] {
   --color-bg: #dfe5db;
   --color-bg-secondary: #d2d9cd;
   --color-text: #1a1a1a;
@@ -53,29 +112,18 @@ html[data-color-scheme="default"][data-theme="light"] {
   --color-accent-secondary: #6a9474;
   --color-accent-tertiary: #7282a8;
   --color-code-bg: #d0d8ca;
-  
-  /* Syntax highlighting variables */
-  --syntax-bg: var(--color-code-bg);
-  --syntax-fg: var(--color-text);
-  --syntax-comment: var(--color-text-tertiary);
   --syntax-keyword: #5a6a5a;
   --syntax-string: #8a5a4a;
   --syntax-function: #5a6a7a;
-  --syntax-variable: var(--color-text-secondary);
   --syntax-number: #6a5a4a;
-  --syntax-operator: var(--color-text-secondary);
   --syntax-type: #5a6a5a;
   --syntax-constant: #7a4a3a;
   --syntax-tag: #5a6a7a;
   --syntax-attribute: #6a5a4a;
-  
   color-scheme: light;
 }
 
-/* Default dark theme - only applies when no color scheme is set or when explicitly default */
-html[data-theme="dark"]:not([data-color-scheme]),
-html[data-color-scheme="default"][data-theme="dark"] {
-  /* Dark theme - deep burgundy/plum with muted color pops */
+html[data-color-scheme="sage"][data-theme="dark"] {
   --color-bg: #1f1619;
   --color-bg-secondary: #2a1f23;
   --color-text: #ebe5e7;
@@ -89,28 +137,18 @@ html[data-color-scheme="default"][data-theme="dark"] {
   --color-accent-secondary: #a0c8b0;
   --color-accent-tertiary: #b0b8e0;
   --color-code-bg: #27191e;
-  
-  /* Syntax highlighting variables */
-  --syntax-bg: var(--color-code-bg);
-  --syntax-fg: var(--color-text);
-  --syntax-comment: var(--color-text-tertiary);
   --syntax-keyword: #7a9885;
   --syntax-string: #b87a6a;
   --syntax-function: #8a8aa8;
-  --syntax-variable: var(--color-text-secondary);
   --syntax-number: #a88a6a;
-  --syntax-operator: var(--color-text-secondary);
   --syntax-type: #7a9885;
   --syntax-constant: #c88a7a;
   --syntax-tag: #8a8aa8;
   --syntax-attribute: #a88a6a;
-  
   color-scheme: dark;
 }
 
-/* Color Scheme 1: Default (Sage Green) - already defined above */
-
-/* Color Scheme 2: Radical Blue - Higher specificity to override default */
+/* Blue */
 html[data-color-scheme="blue"][data-theme="light"] {
   --color-bg: #e1f5fe;
   --color-bg-secondary: #b3e5fc;
@@ -133,6 +171,7 @@ html[data-color-scheme="blue"][data-theme="light"] {
   --syntax-constant: #01579b;
   --syntax-tag: #0288d1;
   --syntax-attribute: #0277bd;
+  color-scheme: light;
 }
 
 html[data-color-scheme="blue"][data-theme="dark"] {
@@ -157,58 +196,61 @@ html[data-color-scheme="blue"][data-theme="dark"] {
   --syntax-constant: #b3e5fc;
   --syntax-tag: #4fc3f7;
   --syntax-attribute: #81d4fa;
+  color-scheme: dark;
 }
 
-/* Color Scheme 3: Radical Purple */
-html[data-color-scheme="purple"][data-theme="light"] {
-  --color-bg: #f3e5f5;
-  --color-bg-secondary: #e1bee7;
-  --color-text: #4a148c;
-  --color-text-secondary: #6a1b9a;
-  --color-text-tertiary: #7b1fa2;
-  --color-border: #ce93d8;
-  --color-border-secondary: #ba68c8;
-  --color-link: #9c27b0;
-  --color-link-hover: #4a148c;
-  --color-accent: #9c27b0;
-  --color-accent-secondary: #ab47bc;
-  --color-accent-tertiary: #8e24aa;
-  --color-code-bg: #e1bee7;
-  --syntax-keyword: #6a1b9a;
-  --syntax-string: #4a148c;
-  --syntax-function: #9c27b0;
-  --syntax-number: #4a148c;
-  --syntax-type: #6a1b9a;
-  --syntax-constant: #4a148c;
-  --syntax-tag: #9c27b0;
-  --syntax-attribute: #6a1b9a;
+/* Tokyo Night — "Day" variant for light, "Night" for dark */
+html[data-color-scheme="tokyo"][data-theme="light"] {
+  --color-bg: #e1e2e7;
+  --color-bg-secondary: #d0d5e3;
+  --color-text: #3760bf;
+  --color-text-secondary: #6172b0;
+  --color-text-tertiary: #848cb5;
+  --color-border: #c4c8da;
+  --color-border-secondary: #a8aecb;
+  --color-link: #2e7de9;
+  --color-link-hover: #007197;
+  --color-accent: #2e7de9;
+  --color-accent-secondary: #9854f1;
+  --color-accent-tertiary: #007197;
+  --color-code-bg: #d0d5e3;
+  --syntax-keyword: #9854f1;
+  --syntax-string: #587539;
+  --syntax-function: #2e7de9;
+  --syntax-number: #b15c00;
+  --syntax-type: #188092;
+  --syntax-constant: #b15c00;
+  --syntax-tag: #f52a65;
+  --syntax-attribute: #8c6c3e;
+  color-scheme: light;
 }
 
-html[data-color-scheme="purple"][data-theme="dark"] {
-  --color-bg: #4a148c;
-  --color-bg-secondary: #6a1b9a;
-  --color-text: #f3e5f5;
-  --color-text-secondary: #e1bee7;
-  --color-text-tertiary: #ce93d8;
-  --color-border: #9c27b0;
-  --color-border-secondary: #ab47bc;
-  --color-link: #ce93d8;
-  --color-link-hover: #e1bee7;
-  --color-accent: #ce93d8;
-  --color-accent-secondary: #ab47bc;
-  --color-accent-tertiary: #ba68c8;
-  --color-code-bg: #6a1b9a;
-  --syntax-keyword: #ce93d8;
-  --syntax-string: #e1bee7;
-  --syntax-function: #ce93d8;
-  --syntax-number: #e1bee7;
-  --syntax-type: #ce93d8;
-  --syntax-constant: #e1bee7;
-  --syntax-tag: #ce93d8;
-  --syntax-attribute: #ce93d8;
+html[data-color-scheme="tokyo"][data-theme="dark"] {
+  --color-bg: #1a1b26;
+  --color-bg-secondary: #24283b;
+  --color-text: #c0caf5;
+  --color-text-secondary: #a9b1d6;
+  --color-text-tertiary: #737aa2;
+  --color-border: #292e42;
+  --color-border-secondary: #3b4261;
+  --color-link: #7aa2f7;
+  --color-link-hover: #7dcfff;
+  --color-accent: #7aa2f7;
+  --color-accent-secondary: #bb9af7;
+  --color-accent-tertiary: #7dcfff;
+  --color-code-bg: #16161e;
+  --syntax-keyword: #bb9af7;
+  --syntax-string: #9ece6a;
+  --syntax-function: #7aa2f7;
+  --syntax-number: #ff9e64;
+  --syntax-type: #2ac3de;
+  --syntax-constant: #ff9e64;
+  --syntax-tag: #f7768e;
+  --syntax-attribute: #73daca;
+  color-scheme: dark;
 }
 
-/* Color Scheme 4: Radical Green */
+/* Green */
 html[data-color-scheme="green"][data-theme="light"] {
   --color-bg: #e8f5e9;
   --color-bg-secondary: #c8e6c9;
@@ -231,6 +273,7 @@ html[data-color-scheme="green"][data-theme="light"] {
   --syntax-constant: #1b5e20;
   --syntax-tag: #2e7d32;
   --syntax-attribute: #2e7d32;
+  color-scheme: light;
 }
 
 html[data-color-scheme="green"][data-theme="dark"] {
@@ -255,9 +298,10 @@ html[data-color-scheme="green"][data-theme="dark"] {
   --syntax-constant: #c8e6c9;
   --syntax-tag: #81c784;
   --syntax-attribute: #a5d6a7;
+  color-scheme: dark;
 }
 
-/* Color Scheme 5: Radical Orange */
+/* Orange */
 html[data-color-scheme="orange"][data-theme="light"] {
   --color-bg: #fff3e0;
   --color-bg-secondary: #ffe0b2;
@@ -280,6 +324,7 @@ html[data-color-scheme="orange"][data-theme="light"] {
   --syntax-constant: #e65100;
   --syntax-tag: #ff6f00;
   --syntax-attribute: #f57c00;
+  color-scheme: light;
 }
 
 html[data-color-scheme="orange"][data-theme="dark"] {
@@ -304,9 +349,10 @@ html[data-color-scheme="orange"][data-theme="dark"] {
   --syntax-constant: #ffe0b2;
   --syntax-tag: #ffb74d;
   --syntax-attribute: #ffcc80;
+  color-scheme: dark;
 }
 
-/* Color Scheme 6: Radical Red */
+/* Red */
 html[data-color-scheme="red"][data-theme="light"] {
   --color-bg: #ffebee;
   --color-bg-secondary: #ffcdd2;
@@ -329,6 +375,7 @@ html[data-color-scheme="red"][data-theme="light"] {
   --syntax-constant: #b71c1c;
   --syntax-tag: #d32f2f;
   --syntax-attribute: #c62828;
+  color-scheme: light;
 }
 
 html[data-color-scheme="red"][data-theme="dark"] {
@@ -353,6 +400,109 @@ html[data-color-scheme="red"][data-theme="dark"] {
   --syntax-constant: #ffcdd2;
   --syntax-tag: #ef9a9a;
   --syntax-attribute: #ef9a9a;
+  color-scheme: dark;
+}
+
+/* Ayu Mirage */
+html[data-color-scheme="ayu"][data-theme="light"] {
+  --color-bg: #fafafa;
+  --color-bg-secondary: #f0f0f0;
+  --color-text: #5c6166;
+  --color-text-secondary: #6b7279;
+  --color-text-tertiary: #828c99;
+  --color-border: #e0e0e0;
+  --color-border-secondary: #d0d0d0;
+  --color-link: #f4bf75;
+  --color-link-hover: #e0a950;
+  --color-accent: #f4bf75;
+  --color-accent-secondary: #39bae6;
+  --color-accent-tertiary: #ab9df2;
+  --color-code-bg: #f0f0f0;
+  --syntax-keyword: #39bae6;
+  --syntax-string: #86b300;
+  --syntax-function: #f4bf75;
+  --syntax-number: #ab9df2;
+  --syntax-type: #39bae6;
+  --syntax-constant: #f26d78;
+  --syntax-tag: #f4bf75;
+  --syntax-attribute: #39bae6;
+  color-scheme: light;
+}
+
+html[data-color-scheme="ayu"][data-theme="dark"] {
+  --color-bg: #1f2430;
+  --color-bg-secondary: #242936;
+  --color-text: #cbccc6;
+  --color-text-secondary: #707a8c;
+  --color-text-tertiary: #5c6773;
+  --color-border: #2f3545;
+  --color-border-secondary: #3a4155;
+  --color-link: #ffcc66;
+  --color-link-hover: #ffd580;
+  --color-accent: #ffcc66;
+  --color-accent-secondary: #5ccfe6;
+  --color-accent-tertiary: #d4bfff;
+  --color-code-bg: #232834;
+  --syntax-keyword: #5ccfe6;
+  --syntax-string: #bae67e;
+  --syntax-function: #ffcc66;
+  --syntax-number: #d4bfff;
+  --syntax-type: #5ccfe6;
+  --syntax-constant: #f28779;
+  --syntax-tag: #ffcc66;
+  --syntax-attribute: #5ccfe6;
+  color-scheme: dark;
+}
+
+/* Modus Vivendi */
+html[data-color-scheme="modus"][data-theme="light"] {
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f0f0f0;
+  --color-text: #000000;
+  --color-text-secondary: #595959;
+  --color-text-tertiary: #8b8b8b;
+  --color-border: #bfc0c4;
+  --color-border-secondary: #a0a0a0;
+  --color-link: #3548cf;
+  --color-link-hover: #1f2d99;
+  --color-accent: #3548cf;
+  --color-accent-secondary: #005f5f;
+  --color-accent-tertiary: #8b3a8b;
+  --color-code-bg: #f0f0f0;
+  --syntax-keyword: #3548cf;
+  --syntax-string: #005f5f;
+  --syntax-function: #3548cf;
+  --syntax-number: #8b3a8b;
+  --syntax-type: #005f5f;
+  --syntax-constant: #8b3a8b;
+  --syntax-tag: #3548cf;
+  --syntax-attribute: #8b3a8b;
+  color-scheme: light;
+}
+
+html[data-color-scheme="modus"][data-theme="dark"] {
+  --color-bg: #0d0e1c;
+  --color-bg-secondary: #141527;
+  --color-text: #ffffff;
+  --color-text-secondary: #c6c6c6;
+  --color-text-tertiary: #989898;
+  --color-border: #2e2f40;
+  --color-border-secondary: #3e3f51;
+  --color-link: #b6a0ff;
+  --color-link-hover: #c4b5ff;
+  --color-accent: #b6a0ff;
+  --color-accent-secondary: #6ae4b9;
+  --color-accent-tertiary: #ef9f9f;
+  --color-code-bg: #141527;
+  --syntax-keyword: #b6a0ff;
+  --syntax-string: #6ae4b9;
+  --syntax-function: #b6a0ff;
+  --syntax-number: #ef9f9f;
+  --syntax-type: #6ae4b9;
+  --syntax-constant: #ef9f9f;
+  --syntax-tag: #b6a0ff;
+  --syntax-attribute: #ef9f9f;
+  color-scheme: dark;
 }
 
 /* Apply theme colors */
@@ -366,12 +516,10 @@ body {
    FOCUS INDICATORS - Keyboard Navigation
    ============================================ */
 
-/* Remove default outline for mouse/touch interactions */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Modern focus indicator for keyboard navigation */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -379,7 +527,6 @@ body {
   transition: outline-offset var(--transition-fast);
 }
 
-/* Enhanced focus for interactive elements */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -390,14 +537,12 @@ summary:focus-visible {
   outline-offset: 3px;
 }
 
-/* Focus within for complex components */
 .post:focus-within .post-title,
 .collection-item:focus-within {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-/* Balance spacing for post-preview items when focused - use borders instead of outline */
 .post-preview.collection-item:focus-within {
   outline: none;
   border-top: 2px solid var(--color-accent) !important;

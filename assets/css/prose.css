@@ -1,7 +1,8 @@
-/* Prose page styles - consistent with blog and post */
+/* Prose page styles — typographic header in the editorial voice
+   shared with /playlists/ (serif title, italic description). */
 
 .prose header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 @media (min-width: 640px) {
@@ -10,22 +11,33 @@
   }
 }
 
-.prose header h1 {
+/* Default prose header treatment. Pages with bespoke headers
+   (e.g. .pl-header) opt out via the :not() — keeps their own styling. */
+.prose > header:not([class]) h1,
+.prose > header.prose-head h1 {
   margin: 0;
-  font-size: clamp(var(--font-size-xl), 5vw, var(--font-size-4xl));
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-  opacity: 0.5;
-  text-transform: uppercase;
+  font-family: var(--font-transitional);
+  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 1.95rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--color-text);
+  text-transform: none;
+  opacity: 1;
+  text-wrap: balance;
 }
 
-.prose header p {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
+.prose > header:not([class]) > p,
+.prose > header.prose-head > p {
+  margin-top: 0.45rem;
+  max-width: 60ch;
+  font-family: var(--font-transitional);
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.55;
   color: var(--color-text-secondary);
-  opacity: 0.7;
+  opacity: 0.85;
+  text-wrap: pretty;
 }
 
 .prose .content {

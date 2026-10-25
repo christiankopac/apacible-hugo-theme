@@ -1,0 +1,15 @@
+{
+	"name": "apacible-example-site",
+	"private": true,
+	"description": "Example site for the apacible Hugo theme. The theme bundles swup page transitions with Hugo's js.Build, which resolves these packages from this site's node_modules. Pagefind builds the site-search index used by the command palette.",
+	"scripts": {
+		"build": "hugo --themesDir ../.. --theme apacible-hugo-theme && pagefind --site public"
+	},
+	"dependencies": {
+		"@swup/head-plugin": "^2.3.1",
+		"swup": "^4.10.0"
+	},
+	"devDependencies": {
+		"pagefind": "^1.5.2"
+	}
+}

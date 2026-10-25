@@ -1,0 +1,61 @@
+{{ define "content" }}
+{{ $link := .Params.link }}
+{{ $host := "" }}
+{{ with $link }}
+  {{ $h := . | strings.TrimPrefix "https://" | strings.TrimPrefix "http://" }}
+  {{ $host = index (split $h "/") 0 | strings.TrimPrefix "www." }}
+{{ end }}
+<article class="found-single">
+  <header class="found-single-header">
+    <p class="found-kind">{{ i18n "found" | default "found" }}</p>
+    <h1 class="found-single-title">{{ .Title }}</h1>
+    <p class="found-single-meta">
+      {{ with $host }}
+        <a href="{{ $link }}" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade" class="found-host-link">{{ . }}</a>
+        <span class="found-sep" aria-hidden="true">·</span>
+      {{ end }}
+      {{ with .Params.via }}
+        {{ if ne . "" }}
+          <span class="found-via">via {{ . }}</span>
+          <span class="found-sep" aria-hidden="true">·</span>
+        {{ end }}
+      {{ end }}
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 January 2006" }}</time>
+    </p>
+    {{ if eq (.Params.via | default "") "github" }}
+      {{ with .Params.params }}
+        <p class="found-health">
+          {{ with .language }}<span class="found-lang">{{ . }}</span>{{ end }}
+          {{ with .stars }}<span class="found-stars" title="stars">★ {{ . }}</span>{{ end }}
+          {{ with .last_push }}<span class="found-pushed" title="last commit">↻ {{ . }}</span>{{ end }}
+          {{ if .archived }}<span class="found-archived" title="archived repo">archived</span>{{ end }}
+        </p>
+      {{ end }}
+    {{ end }}
+  </header>
+
+  {{ with .Content }}
+    <div class="found-take prose">{{ . }}</div>
+  {{ end }}
+
+  <div class="found-actions">
+    <a href="{{ $link }}" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade" class="found-cta">
+      <span class="found-cta-label">{{ i18n "visit" | default "Visit" }}</span>
+      {{ with $host }}<span class="found-cta-host">{{ . }}</span>{{ end }}
+      <span class="found-cta-arrow" aria-hidden="true">↗</span>
+    </a>
+    <a href="https://web.archive.org/web/*/{{ $link }}" rel="noopener" target="_blank" referrerpolicy="no-referrer-when-downgrade" class="found-secondary" title="{{ i18n "wayback" | default "Snapshot on the Wayback Machine" }}">
+      wayback
+    </a>
+  </div>
+
+  {{ with .Params.tags }}
+    <ul class="found-tags">
+      {{ range . }}
+        <li><a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}/">#{{ . }}</a></li>
+      {{ end }}
+    </ul>
+  {{ end }}
+  {{ if templates.Exists "partials/backlinks.html" }}{{ partial "backlinks.html" . }}{{ end }}
+</article>
+{{ end }}

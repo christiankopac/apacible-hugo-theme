@@ -1,0 +1,47 @@
+{{/* Returns dict with englishPage and mediaData for consumed content pages */}}
+{{ $englishPage := . }}
+{{ if ne .Language.Lang "en" }}
+    {{ range .Translations }}
+        {{ if eq .Language.Lang "en" }}
+            {{ $englishPage = . }}
+            {{ break }}
+        {{ end }}
+    {{ end }}
+    {{ if eq $englishPage.Language.Lang .Language.Lang }}
+        {{ $enPath := replace .File.Path "content/es/" "content/en/" }}
+        {{ $enPage := .Site.GetPage $enPath }}
+        {{ if $enPage }}
+            {{ $englishPage = $enPage }}
+        {{ end }}
+    {{ end }}
+{{ end }}
+
+{{ $mediaData := dict
+    "title" (.Params.title | default .Title)
+    "year" ($englishPage.Params.year | default "")
+    "director" ($englishPage.Params.director | default "")
+    "author" ($englishPage.Params.author | default "")
+    "artist" ($englishPage.Params.artist | default "")
+    "publisher" ($englishPage.Params.publisher | default "")
+    "label" ($englishPage.Params.label | default "")
+    "rating" ($englishPage.Params.rating | default 0)
+    "loved" ($englishPage.Params.loved | default false)
+    "img" ($englishPage.Params.img | default ($englishPage.Params.image | default ""))
+    "tmdb" ($englishPage.Params.tmdb | default "")
+    "letterboxd" ($englishPage.Params.letterboxd | default "")
+    "discogs" ($englishPage.Params.discogs | default "")
+    "discogsArtist" ($englishPage.Params.discogsArtist | default "")
+    "discogsLabel" ($englishPage.Params.discogsLabel | default "")
+    "openlibrary" ($englishPage.Params.openlibrary | default "")
+    "content" (.Params.content | default "")
+    "review" (.Params.review | default "")
+    "trailer" ($englishPage.Params.trailer | default "")
+    "genre" ($englishPage.Params.genre | default "")
+    "genres" ($englishPage.Params.genres | default slice)
+    "style" ($englishPage.Params.style | default "")
+    "songs" (.Params.songs | default slice)
+    "screenshots" ($englishPage.Params.screenshots | default slice)
+    "category" ($englishPage.Params.category | default "")
+}}
+
+{{ return (dict "englishPage" $englishPage "mediaData" $mediaData) }}
